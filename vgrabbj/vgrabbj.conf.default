@@ -64,6 +64,15 @@ ImageSize	cif
 SwitchColor	Off
 ;	If your output has red and green swapped, turn this switch
 ;	it swaps red and green; default: Off
+;DiscardFrames  0
+;	You can discard x frames before the actual picture is taken
+;	This might be helpful if your image is over- or underexposed
+;	(too bright/dark). vgrabbj tries to force the cam to adjust
+;	its exposure setting via multiple reads (only if mmap'ed
+;	transfer is possible on your cam - if your cam can't do this,
+;	the option is silently ignored).
+;	This costs a lot of time because x images are fully read before
+;	vgrabbj continues.
 ;ForcePalette	0
 ;	Force vgrabbj to use the specified palette; if that one is
 ;	not supported by your driver, vgrabbj falls back to a

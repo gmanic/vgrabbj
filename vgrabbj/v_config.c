@@ -83,6 +83,8 @@ void usage (char *pname)
 	  " -F <value>        Force usage of specified palette (see videodev.h for values)\n"
 	  "                   (Fallback to supported palette, if this one is not supported\n"
 	  "                   Value 4 refers to RGB24, you need this for the brightness adj.\n"
+	  " -z <value>        Discards <value> frames before the actual picture is taken and\n"
+	  "                   written to the output. Only works in mmap'ed mode.\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -142,6 +144,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->err_count  = 0;
   vconf->dev        = 0;
   vconf->forcepal   = 0;
+  vconf->discard    = 0;
   vconf->openonce   = FALSE;
   vconf->usetmpout  = TRUE;
   vconf->tmpout     = NULL;
@@ -560,6 +563,14 @@ struct vconfig *parse_config(struct vconfig *vconf){
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
+      else if ( !strcasecmp(option, "DiscardFrames") ) {
+	if ( (MIN_DISCARD > (vconf->discard=get_int((value=strtok(NULL, " \t\n"))))) ||
+	     (vconf->discard > MAX_DISCARD) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, vconf->conf_file);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
       else if ( !strcasecmp(option, "UseTmpOut") ) {
 	if ((tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
@@ -702,7 +713,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
   int is_width=0;
   int is_height=0;
 
-  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:n"))!=EOF) 
+  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:nz:"))!=EOF) 
     {
       switch (n) 
 	{
@@ -854,7 +865,14 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  exit(0);
 	  break;
 	case 'F':
-	  sscanf(optarg, "%d", &vconf->forcepal);
+	  if ( sscanf(optarg, "%d", &vconf->forcepal) != 1 || vconf->forcepal < MIN_PALETTE
+	       || vconf->forcepal > MAX_PALETTE )
+	    v_error(vconf, LOG_CRIT, "Wrong value for palette to be used");
+	  break;
+	case 'z':
+	  if ( sscanf(optarg, "%d", &vconf->discard) != 1 || vconf->discard < MIN_DISCARD
+	       || vconf->discard > MAX_DISCARD )
+	    v_error(vconf, LOG_CRIT, "Wrong value for frames to be discarded");
 	  break;
 	case 'n':
 	  vconf->usetmpout=FALSE;

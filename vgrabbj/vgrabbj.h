@@ -103,6 +103,8 @@
 #define RGB_DEFAULT 24
 #define MIN_PALETTE 1
 #define MAX_PALETTE 17
+#define MIN_DISCARD 0
+#define MAX_DISCARD 255
 #define MIN_LOOP 0
 
 #define DEFAULT_VIDEO_DEV "/dev/video"
@@ -154,6 +156,7 @@ struct vconfig {
   int quality;
   int outformat;
   int dev;
+  int discard;
   char *in;
   char *out;
   char *tmpout;
