@@ -23,8 +23,6 @@
 
 #include "vgrabbj.h"
 
-extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
-
 /* Function to write output data to a temporary file and then copy 
  * it to the final location via system-call to avoid problems with 
  * "same-time" access to the output file                           
@@ -168,7 +166,7 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
   } else {
     v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
   }
-#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+#ifdef LIBFTP
   if(vconf->ftp.enable == TRUE)
     ftp_upload(vconf);
 #endif

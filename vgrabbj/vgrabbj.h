@@ -25,6 +25,27 @@
 #include <config.h>
 #endif
 
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+#define LIBTTF 1
+#else
+#undef LIBTTF
+#endif
+
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+#define LIBFTP 1
+
+#define STATE_UNINITIALIZED 0
+#define STATE_CONNECT 1
+#define STATE_LOGIN 2
+#define STATE_CHDIR 3
+#define STATE_PUT 4
+#define STATE_RENAME 5
+#define STATE_FINISH 6
+
+#else
+#undef LIBFTP
+#endif
+
 #ifndef DEBUGGING
 #define DEBUGGING 0
 #endif
@@ -54,11 +75,11 @@
 #include <mcheck.h>
 #include <sys/mman.h>
 
-#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+#ifdef LIBTTF
 #include <freetype/freetype.h>
 #endif
 
-#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+#ifdef LIBFTP
 #include <ftplib.h>
 #endif
 
@@ -84,7 +105,7 @@
 #define MIN_DEBUG 0
 #define MAX_DEBUG 7
 
-#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+#ifdef LIBTTF
 #define DEFAULT_FONT "/usr/share/fonts/truetype/Arialn.ttf"
 #define DEFAULT_TIMESTAMP "%a, %e. %B %Y - %T"
 #define DEFAULT_FONTSIZE 12
@@ -125,19 +146,19 @@ struct vconfig {
   int inputnorm;
   int channel;
   int forcepal;
-#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+#ifdef LIBTTF
   char *font;
   char *timestamp;
   int font_size;
   int align;
   int border;
   int blend;
-  boolean openonce;
 #endif
+  boolean openonce;
   struct video_window win;
   struct video_picture vpic;
   struct video_capability vcap;
-#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+#ifdef LIBFTP
   struct FTP {
     boolean enable;
     boolean keepalive;
@@ -152,7 +173,7 @@ struct vconfig {
 #endif
 };
 
-#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+#ifdef LIBTTF
 struct ttneed {
   TT_Engine engine;
   TT_Face face;
@@ -173,15 +194,23 @@ struct palette_list {
 
 extern char *basename (const char *);
 
-extern struct vconfig *parse_config(struct vconfig *vconf, char *path); 
+extern struct vconfig *parse_config(struct vconfig *vconf, char *path);
 
-#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+extern struct vconfig *init_defaults(struct vconfig *vconf);
+
+extern struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]);
+
+extern void show_capabilities(char *in, char *pname);
+
+
 extern void ftp_upload(struct vconfig *vconf);
-#endif
+
 
 extern void write_image(struct vconfig *vconf, unsigned char *o_buffer);
 
-#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
+
+#ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
 extern int       Face_Open   (char *file, TT_Engine engine, TT_Face *face,
 			      TT_Face_Properties *prop, TT_Instance *inst,
@@ -197,8 +226,5 @@ extern void      Raster_Small_Init  (TT_Raster_Map *map, TT_Instance *inst);
 extern unsigned char *Render_String (TT_Glyph *gl, char *str, int len,
 				     TT_Raster_Map *bit, TT_Raster_Map *sbit,
 				     int border);
-
 #endif
-
-
 

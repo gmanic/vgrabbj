@@ -1,3 +1,8 @@
+2001-12-22  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Various changes for release 0.8.2
+			(no new features, make everything work).
+
 2001-12-05  Jens Gecius  <jens@gecius.de>
 
 	* v_writer.c: 	Changed back to system() for the call of
