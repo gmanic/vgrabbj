@@ -1,3 +1,23 @@
+2001-07-18  Jens Gecius  <jens@gecius.de> (no release)
+
+	* vgrabbj.c: 	Fixed handling of parameter -w, which was kind of
+			ignored. Now it is properly handled and vgrabbj
+			doesn't exit right away if it was set.
+			Update hereto can be found at
+			http://vgrabbj.gecius.de/vgrabbj/windowsize.diff
+			please apply by entering the following command:
+			cd <vgrabbj-source-dir>
+			patch -p1 < windowsize.diff
+			(ignore the missing header warning)
+			compile as usual. Now it should work
+
+	* configure.in: Added certain headers to check for compilation.
+
+	* <general>	Missed to point out that 0.7.x works on i386 only.
+			This is due to the conversion routines, which I
+			only have in asm so far. I hope to find some more
+			complete set in C, soon.
+	
 2001-07-14  Jens Gecius  <jens@gecius.de> (0.7.3)
 
 	* vgrabbj.c:	Finally fixed the memory leak while using timestamp.
