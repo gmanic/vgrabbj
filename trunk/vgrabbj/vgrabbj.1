@@ -134,7 +134,8 @@ colors.
 Sets the loglevel of \fBvgrabbj\fP. Valid for \fIvalue\fP are 0, 2, 3, 4, 6, 7
 (default: 4). 0 means no messages at all, 7 is debug. Don't use 7 if
 you are running \fBvgrabbj\fP in daemon mode, it'll surely fill your
-syslog.
+syslog. Be aware, that loglevel 7 will also write your ftp-password
+(if defined in \fBvgrabbj.conf\fP(5)) in the logfile!
 .TP
 \fB\-n\fP
 Disable the use of the temporary outputfile and write directly to the

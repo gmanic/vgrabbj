@@ -1,3 +1,9 @@
+2002-03-29  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c:	rewrote/enhanced archive handling
+			archivemax/archiveeach to manage
+			archived pictures added.
+
 2002-03-27  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c: 	(after release) Fixed bug in ttf

@@ -167,16 +167,18 @@ void write_image(struct vconfig *vconf) {
     if ( vconf->usetmpout ) {
       /* Handle rename to final output */
       v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
-      unlink(vconf->out);
+      if (unlink(vconf->out))
+	v_error(vconf, LOG_ERR, "Couldn't delete %s: %s", vconf->out, strerror(errno));
       if (-1 == link(vconf->tmpout, vconf->out))
 	v_error(vconf, LOG_ERR, "Couldn't link %s to %s: %s", vconf->tmpout, vconf->out, strerror(errno));
       else
 	v_error(vconf, LOG_DEBUG, "Temporary output %s moved to final destination %s", vconf->tmpout, vconf->out);
-      unlink(vconf->tmpout);
+      if (unlink(vconf->tmpout))
+	v_error(vconf, LOG_ERR, "Couldn't delete %s: %s", vconf->tmpout, strerror(errno));
     } else
       v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
 
-    if ((vconf->archive) && (!vconf->archivecount++)) {
+    if ((vconf->archive) && (!--vconf->archivecount)) {
       /* vconf->archive is a strftime format string, make the final path
        * to archive_path */
       char *ts;
@@ -184,11 +186,12 @@ void write_image(struct vconfig *vconf) {
 	v_error(vconf, LOG_ERR, "Couldn't link to archive file %s", ts);
       else {
 	v_error(vconf, LOG_DEBUG, "Archiving %s to %s", vconf->out, ts);
-	vconf->archnames[vconf->archivecount]=ts;
+	if (unlink(vconf->arch->filename))
+	  v_error(vconf, LOG_ERR, "Couldn't delete %s: %s", vconf->arch->filename, strerror(errno));
+	vconf->arch->filename=strcpy(realloc(vconf->arch->filename, strlen(ts)),ts);
       }
-      free_ptr(vconf->archnames[vconf->archivecount-1]);
-      if (vconf->archivecount==vconf->archiveeach)
-	vconf->archivecount=0;
+      vconf->archivecount=vconf->archiveeach;
+      vconf->arch=vconf->arch->next;
     }
 
 #ifdef LIBFTP
