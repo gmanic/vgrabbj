@@ -20,6 +20,8 @@
 #ifndef CCVT_H
 #define CCVT_H
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,20 +57,28 @@ extern "C" {
            Alpha, Alpha again a filler byte (0)
  */
 
-/* Functions in ccvt_i386.S/ccvt_c.c */
+/* Functions in ccvt_c.c */
 /* 4:2:0 YUV interlaced to RGB/BGR */
 void ccvt_420i_bgr24(int width, int height, void *src, void *dst);
 void ccvt_420i_rgb24(int width, int height, void *src, void *dst);
 void ccvt_420i_bgr32(int width, int height, void *src, void *dst);
 void ccvt_420i_rgb32(int width, int height, void *src, void *dst);
 
+/* 4:2:0 YUV planar to RGB/BGR */
+void ccvt_420p_bgr24(int width, int height, void *src, void *srcu, void *srcv, void *dst);
+void ccvt_420p_rgb24(int width, int height, void *src, void *srcu, void *srcv, void *dst);
+void ccvt_420p_bgr32(int width, int height, void *src, void *srcu, void *srcv, void *dst);
+void ccvt_420p_rgb32(int width, int height, void *src, void *srcu, void *srcv, void *dst);
+
 /* 4:2:2 YUYV interlaced to RGB/BGR */
 void ccvt_yuyv_rgb32(int width, int height, void *src, void *dst);
 void ccvt_yuyv_bgr32(int width, int height, void *src, void *dst);
+void ccvt_yuyv_rgb24(int width, int height, void *src, void *dst);
+void ccvt_yuyv_bgr24(int width, int height, void *src, void *dst);
 
 /* 4:2:0 YUV planar to RGB/BGR     */
-void ccvt_420p_rgb32(int width, int height, void *srcy, void *srcu, void *srcv, void *dst);
-void ccvt_420p_bgr32(int width, int height, void *srcy, void *srcu, void *srcv, void *dst);
+//void ccvt_420p_rgb32(int width, int height, void *srcy, void *srcu, void *srcv, void *dst);
+//void ccvt_420p_bgr32(int width, int height, void *srcy, void *srcu, void *srcv, void *dst);
 
 /* RGB/BGR to 4:2:0 YUV interlaced */
 
