@@ -84,6 +84,10 @@ void usage (char *pname)
 	  "                   adjustment.\n"
 	  " -z <value>        Discards <value> frames before the actual picture is taken\n"
 	  "                   and written to the output. Only works in mmap'ed mode.\n"
+	  " -A <path+file>    Path and filename to write archive images. See man strftime\n"
+	  "                   for possible tokens.\n"
+	  " -M <value>        Maximum number of images to keep in archive.\n"
+	  " -E <value>        Take a snapshot for the archive each <value> image.\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -192,7 +196,9 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
 #endif
   vconf->archive     = NULL;
   l_opt[36].var = (char *)vconf->archive;
-  vconf->arch = NULL;
+  vconf->arch = malloc(sizeof(struct s_arch));
+  vconf->arch->filename=NULL;
+  vconf->arch->next=NULL;
   vconf->archiveeach = 0;
   vconf->archivemax = 0;
   l_opt[37].var = &vconf->archiveeach;
@@ -255,7 +261,9 @@ void check_ftpconf(struct vconfig *vconf)
 struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int count)
 {
   archive=realloc(archive, sizeof(struct s_arch));
-  if ( --count )
+  archive->filename=NULL;
+  archive->next=NULL;
+  if ( count--<1 )
     archive->next=init_archive(vconf, archive->next, count);
   else
     archive->next=vconf->arch;
@@ -580,8 +588,10 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
   if (!vconf->buffer || !vconf->o_buffer) 
     v_error(vconf, LOG_CRIT, "Out of memory! Exiting...");
 
-  if (vconf->archive && vconf->archivemax)
-    vconf->arch=init_archive(vconf, vconf->arch, vconf->archivemax);
+  if (vconf->archive && vconf->archivemax) {
+    vconf->arch->next=init_archive(vconf, vconf->arch->next, vconf->archivemax-1);
+    vconf->archivecount=vconf->archiveeach;
+  }
   
   v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (out)",
 	  img_size(vconf, vconf->vpic.palette), img_size(vconf, VIDEO_PALETTE_RGB24));
