@@ -157,7 +157,12 @@ struct ttneed {
   boolean use;
 };
 #endif
-  
+
+struct s_arch {
+  char *filename;
+  struct s_arch *next;
+};
+
 struct vconfig {
   long int loop;
   int debug;
@@ -176,7 +181,7 @@ struct vconfig {
   char *buffer;
   char *o_buffer;
   char *archive;
-  char *archnames[MAX_ARCHIVE];
+  struct s_arch *arch;
   boolean usemmap;
   boolean usetmpout;
   boolean windowsize;

@@ -192,7 +192,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
 #endif
   vconf->archive     = NULL;
   l_opt[36].var = (char *)vconf->archive;
-  vconf->archnames[0] = NULL;
+  vconf->arch = NULL;
   vconf->archiveeach = 0;
   vconf->archivemax = 0;
   l_opt[37].var = &vconf->archiveeach;
@@ -249,6 +249,18 @@ void check_ftpconf(struct vconfig *vconf)
   }
 }
 #endif
+
+/* Initialize/Reinitialize pointers for archive-filenames */
+
+struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int count)
+{
+  archive=realloc(archive, sizeof(struct s_arch));
+  if ( --count )
+    archive->next=init_archive(vconf, archive->next, count);
+  else
+    archive->next=vconf->arch;
+  return archive;
+}
 
 /* Check if palette is supported by v4l device */
 
@@ -567,6 +579,9 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
   vconf->o_buffer=malloc(img_size(vconf, VIDEO_PALETTE_RGB24)); /* RGB24 (3 byte/pixel) */
   if (!vconf->buffer || !vconf->o_buffer) 
     v_error(vconf, LOG_CRIT, "Out of memory! Exiting...");
+
+  if (vconf->archive && vconf->archivemax)
+    vconf->arch=init_archive(vconf, vconf->arch, vconf->archivemax);
   
   v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (out)",
 	  img_size(vconf, vconf->vpic.palette), img_size(vconf, VIDEO_PALETTE_RGB24));

@@ -116,6 +116,8 @@ is \fIOff\fP. Use if you have odd colors.
 Sets the loglevel of vgrabbj. Valid for \fIvalue\fP are 0, 2, 3, 4, 6, 7
 (default: 4). 0 means no messages at all, 7 is debug. Don't use 7 if
 you are running vgrabbj in daemon mode, it'll surely fill your syslog.
+Be aware, that loglevel 7 will also post you ftp-password (if defined)
+in the logfile!
 .TP
 \fBUseTmpOut\fP \fIOn\fP|\fIOff\fP
 Sets the use of the temporary outputfile. Default is \fIOn\fP. Ignored in case
