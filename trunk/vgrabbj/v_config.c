@@ -34,17 +34,10 @@ int get_int(char *value) {
 
 char *get_str(char *value) {
   char *tmp;
-  tmp=malloc(strlen(value)+1);
-  if ( sscanf(value, "%s", tmp) != 1 )
+  if ( strlen(value)<1 )
     return NULL;
-  return tmp;
-}
-
-char *get_tsstr(char *value) {
-  char *tmp;
   tmp=malloc(strlen(value)+1);
-  if ( sscanf(value, "%s", tmp) != 1 )
-    return NULL;
+  tmp=strcpy(tmp, value);
   return tmp;
 }
 
@@ -270,13 +263,12 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "TimeStamp") ) {
-	if ( !(vconf->timestamp=get_tsstr((value=strtok(NULL, "\t\n")))) )
+	if ( !(vconf->timestamp=get_str((value=strtok(NULL, "\"\t\n")))) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
 	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
-
 	}
       }
       else if ( !strcasecmp(option, "FontSize") ) {
