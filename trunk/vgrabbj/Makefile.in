@@ -84,7 +84,7 @@ PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
 bin_PROGRAMS = vgrabbj
-vgrabbj_SOURCES = vgrabbj.c font.c ccvt_i386.S vcvt_c.c vgrabbj.h ccvt.h vcvt.h
+vgrabbj_SOURCES = vgrabbj.c font.c ccvt_c.c vgrabbj.h ccvt.h
 
 EXTRA_DIST = reconf
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -98,7 +98,7 @@ DEFS = @DEFS@ -I. -I$(srcdir) -I.
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-vgrabbj_OBJECTS =  vgrabbj.o font.o ccvt_i386.o vcvt_c.o
+vgrabbj_OBJECTS =  vgrabbj.o font.o ccvt_c.o
 vgrabbj_LDADD = $(LDADD)
 vgrabbj_DEPENDENCIES = 
 vgrabbj_LDFLAGS = 
@@ -116,8 +116,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/ccvt_i386.P .deps/font.P .deps/vcvt_c.P \
-.deps/vgrabbj.P
+DEP_FILES =  .deps/ccvt_c.P .deps/font.P .deps/vgrabbj.P
 SOURCES = $(vgrabbj_SOURCES)
 OBJECTS = $(vgrabbj_OBJECTS)
 
