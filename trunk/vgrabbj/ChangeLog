@@ -1,5 +1,24 @@
+2002-02-05  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Rearranged the initializing of vgrabbj to
+			accomodate a new function: the conf-file
+			will be re-read if you send a SIGHUP signal
+			to the daemon!
+			Moved more stuff to v_config, which has 
+			nothing to do with the actual grabbing.
+			Adjusted the changed commandline parameters
+			in the help output (thanks to Michael)			
+			Reorganized memory management (hopefully
+			without memory-leak - let me know if it
+			causes problems - I'm currently trying to
+			run it as long as possible here - 
+			unfortunately my usb-drivers are a little
+			irrational...
+
 2002-02-03  Jens Gecius  <jens@gecius.de>
 
+			(released 0.8.3)
+	
 	* v_config.c: 	The usage of a temporary file to be copied to
 			the output file is now switchable. If you
 			don't want it, use the appropriate command-
