@@ -826,8 +826,8 @@ int main(int argc, char *argv[])
 		      }
 		    else 
 		      {
-;			vpic.depth=24;
-;			vpic.palette=VIDEO_PALETTE_RGB24;
+			//			vpic.depth=24;
+			//			vpic.palette=VIDEO_PALETTE_RGB24;
 	    
 			if (ioctl(dev, VIDIOCGPICT, &vpic) < 0) 
 			  {
