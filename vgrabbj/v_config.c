@@ -1,6 +1,6 @@
 /* Simple Video4Linux image grabber. Made for my Philips Vesta Pro
  * 
- * Copyright (C) 2000, 2001 Jens Gecius, Larchmont, USA
+ * Copyright (C) 2001, 2002 Jens Gecius, Larchmont, USA
  * eMail: devel@gecius.de
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@ void usage (char *pname)
 	  " -l <seconds>      Daemonize & sleep <seconds> (min. 1!) between images\n"
 	  " -L <microseconds> Daemonize & sleep <microseconds> between images\n"
 	  " -b                Switch vgrabbj's brightness adjustment (default: off)\n"
+	  "                   You might need to set -F 4, too, if it doesn't work\n"
 	  " -q <quality>      Quality setting (%d-%d, default: %d), JPEG only\n"
 	  " -i <sqcif|qsif|qcif|sif|cif|vga|svga|xga|sxga|uxga>\n"
 	  "                   Sets the imagesize of input device to sqcif=128x96,\n"
@@ -80,6 +81,7 @@ void usage (char *pname)
 	  " -V                Display version information and exit\n"
 	  " -F <value>        Force usage of specified palette (see videodev.h for values)\n"
 	  "                   (Fallback to supported palette, if this one is not supported\n"
+	  "                   Value 4 refers to RGB24, you need this for the brightness adj.\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"

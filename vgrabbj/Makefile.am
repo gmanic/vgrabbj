@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2000, 2001 Jens Gecius, Larchmont, USA
+# Copyright (C) 2000, 2001, 2002 Jens Gecius, Larchmont, USA
 # eMail: devel@gecius.de
 # 
 # This program is free software; you can redistribute it and/or modify
