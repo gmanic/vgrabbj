@@ -283,14 +283,19 @@ int daemonize(struct vconfig *vconf, char *progname)
 char *timestring(char *format) {
   time_t td;
   struct tm *tm;
+  int i=1;
   char archive[512];
-  /* vconf->archive is a strftime format string, make the final path
+  /* for stamp and archive strftime format strings are used, make the final path
    * to archive_path */
   time(&td);
   tm = localtime(&td);
+  while (i<512) {
+    archive[i++]='0';
+  }
   archive[sizeof(archive)-1]='\0';
-  strftime(archive, sizeof(archive)-1, format, tm);
-  return (strcpy(malloc(strlen(archive)+1),archive));
+  i=strftime(archive, sizeof(archive)-1, format, tm);
+  fprintf(stdout, "ts=%s.%d\n", archive,i);
+  return (strcpy(malloc(++i),archive));
 }
 
 

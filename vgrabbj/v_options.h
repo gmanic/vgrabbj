@@ -86,5 +86,6 @@ static struct v_options l_opt[] = {
   {"SwapRL",          "R", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {"NoUseMmap",       "G", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {"SwapTB",          "U", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
+  {NULL,              "X", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {NULL, NULL, none, NULL, 0, 0, 0, 0, NULL}
 };

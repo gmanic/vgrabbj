@@ -58,7 +58,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
   TT_Raster_Map bit;
   TT_Raster_Map sbit;
 
-  v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
+  v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp. ts=%s.", vconf->timestamp);
 
   ts_len = strlen(ts_buff=timestring(vconf->timestamp));
 
