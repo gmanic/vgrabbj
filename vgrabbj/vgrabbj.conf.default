@@ -111,14 +111,15 @@ OutputFile	/dev/stdout
 VideoDevice	/dev/video
 ;	Where to get the data from. This device must be read/writeable by the
 ;	user running vgrabbj
-OpenOnce	Off
+OpenOnce	On
 ;	OpenOnce set to on lets vgrabbj open the VideoDevice only once after
 ;	all configuration is checked and closes it only when it ends. Hence,
 ;	it is a useful option in daemon mode only, if you suspect the 
 ;	open/close calls on VideoDevice for each image to be a problem with
 ;	your driver. Be aware, that no other application can use VideoDevice
 ;	even while vgrabbj sits idling, waiting it defined sleeptime.
-;	Default: Off
+;	To avoid memory fragmentation I strongly advise to set it to On.
+;	Default: On
 Daemon		0
 ;	Use vgrabbj in daemon mode, set the sleeptime in microseconds
 ;	1000000 equals a waiting time of 1 second (!). Daemon 0 (zero) means

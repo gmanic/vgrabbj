@@ -84,7 +84,7 @@ PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
 bin_PROGRAMS = vgrabbj
-vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c v_writer.c v_plist.h v_options.h
+vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c v_writer.c v_plist.h v_options.h v_utils.c v_stamp.c
 
 #sysconf_DATA = vgrabbj.conf.default
 EXTRA_DIST = vgrabbj.conf.default
@@ -102,7 +102,7 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 vgrabbj_OBJECTS =  vgrabbj.o v_config.o font.o ccvt_c.o v_ftp.o \
-v_writer.o
+v_writer.o v_utils.o v_stamp.o
 vgrabbj_LDADD = $(LDADD)
 vgrabbj_DEPENDENCIES = 
 vgrabbj_LDFLAGS = 
@@ -121,7 +121,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/ccvt_c.P .deps/font.P .deps/v_config.P .deps/v_ftp.P \
-.deps/v_writer.P .deps/vgrabbj.P
+.deps/v_stamp.P .deps/v_utils.P .deps/v_writer.P .deps/vgrabbj.P
 SOURCES = $(vgrabbj_SOURCES)
 OBJECTS = $(vgrabbj_OBJECTS)
 

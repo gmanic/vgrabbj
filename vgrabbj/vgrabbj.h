@@ -157,7 +157,6 @@ struct vconfig {
   int outformat;
   int dev;
   int discard;
-  int mmapsize;
   char *in;
   char *out;
   char *tmpout;
@@ -187,6 +186,9 @@ struct vconfig {
   struct video_window win;
   struct video_picture vpic;
   struct video_capability vcap;
+  struct video_mmap vmap;
+  struct video_mbuf vbuf;
+  char *map;
 #ifdef LIBFTP
   struct FTP {
     boolean enable;
@@ -225,23 +227,35 @@ enum { none, req, opt };
 
 /* External functions */
 
-extern char *basename (const char *);
-
+extern char           *basename (const char *);
 extern struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]);
-
 extern struct vconfig *v_reinit(struct vconfig *vconf);
+extern void            show_capabilities(char *in, char *pname);
+extern void            ftp_upload(struct vconfig *vconf);
+extern void            write_image(struct vconfig *vconf);
+extern void            v_error(struct vconfig *vconf, int msg, char *fmt, ...);
+extern int             img_size(struct vconfig *vconf, int palette);
+extern void           *free_ptr(void *buf);
+extern int             get_height(char *value);
+extern int             get_width(char *value);
+extern int             decode_size(char *value);
+extern int             get_position(char *value);
+extern int             get_format(char *value);
+extern int             get_bool(char *value);
+extern char           *get_str(char *value, char *var);
+extern int             get_int(char *value);
+extern int             daemonize(struct vconfig *vconf, char *progname);
+extern void            sighup();
+extern void            sigterm();
+extern int             brightness_adj(struct vconfig *vconf, int *brightness);
+extern unsigned char  *conv_rgb32_rgb24(struct vconfig *vconf);
+extern unsigned char  *switch_color(struct vconfig *vconf);
+extern void            init_mmap(struct vconfig *vconf);
+extern void            free_mmap(struct vconfig *vconf);
+extern void            open_device(struct vconfig *vconf);
+extern void            close_device(struct vconfig *vconf);
 
-extern void show_capabilities(char *in, char *pname);
-
-extern void ftp_upload(struct vconfig *vconf);
-
-extern void write_image(struct vconfig *vconf, unsigned char *o_buffer);
-
-extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
-
-extern int img_size(struct vconfig *vconf, int palette);
-
-extern void *free_ptr(void *buf);
+extern int             signal_terminate;
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
@@ -259,4 +273,7 @@ extern void      Raster_Small_Init  (TT_Raster_Map *map, TT_Instance *inst);
 extern unsigned char *Render_String (TT_Glyph *gl, char *str, int len,
 				     TT_Raster_Map *bit, TT_Raster_Map *sbit,
 				     int border);
+extern char      *inserttext (struct ttneed *ttinit, unsigned char *buffer,
+			      struct vconfig *vconf);
+extern struct ttneed *OpenFace(struct vconfig *vconf);
 #endif

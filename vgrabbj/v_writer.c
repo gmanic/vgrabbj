@@ -128,7 +128,7 @@ int write_ppm(struct vconfig *vconf, char *image, FILE *x)
 
 /* Function to write an image, called by main */
 
-void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
+void write_image(struct vconfig *vconf) {
   FILE *x;
 
   //  v_error(vconf, LOG_DEBUG, "vconf->out = %s", vconf->out);
@@ -144,15 +144,15 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
   switch (vconf->outformat) 
     {
     case 1:
-      while (write_jpeg(vconf, o_buffer, x))
+      while (write_jpeg(vconf, vconf->o_buffer, x))
 	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
       break;
     case 2:
-      while (write_png(vconf, o_buffer, x)) 
+      while (write_png(vconf, vconf->o_buffer, x)) 
 	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
       break;
     case 3:
-      while (write_ppm(vconf, o_buffer, x))
+      while (write_ppm(vconf, vconf->o_buffer, x))
 	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
       break;
     default:		// should never happen  
