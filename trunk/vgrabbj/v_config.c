@@ -100,7 +100,18 @@ void usage (char *pname)
 	  MIN_DEBUG, MAX_DEBUG, LOGLEVEL, DEFAULT_OUTPUT, basename(pname));
   exit (1);
 }
-
+#if DEBUGGING
+void debug_vconf(struct vconfig *vconf) {
+  fprintf(stderr, "Values of char* in vconf:\n"
+	  "vconf->in                 :%s*\nvconf->out                :%s*\n"
+	  "vconf->timestamp          :%s*\nvconf->font               :%s*\n"
+	  "vconf->ftp.remoteHost     :%s*\nvconf->ftp.remoteDir      :%s*\n"
+	  "vconf->ftp.remoteImageName:%s*\nvconf->ftp.username       :%s*\n"
+	  "vconf->ftp.password       :%s*\n", vconf->in, vconf->out, vconf->timestamp,
+	  vconf->font, vconf->ftp.remoteHost, vconf->ftp.remoteDir,
+	  vconf->ftp.remoteImageName, vconf->ftp.username, vconf->ftp.password);
+}  
+#endif
 
 struct vconfig *init_defaults(struct vconfig *vconf) {
   /* Set defaults */
@@ -177,6 +188,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[28].var = (char *)vconf->ftp.password;
   l_opt[29].var = &vconf->ftp.keepalive;
   l_opt[30].var = &(unsigned int)vconf->ftp.tryharder;
+  l_opt[31].var = (char *)vconf->ftp.remoteDir;
 #endif
   return vconf;
 }  
@@ -211,6 +223,24 @@ void check_files(struct vconfig *vconf) {
 #endif
 }
 
+#ifdef LIBFTP
+void check_ftpconf(struct vconfig *vconf)
+{
+  /* This function checks for proper settings if ftp-enable is set to on
+     In case any essential setting is not set to a proper value, ftp-enable
+     will be disabled automagically                                          */
+  if (vconf->ftp.enable) {
+    if ( (!vconf->ftp.remoteHost) | (!vconf->ftp.remoteImageName) |
+	 (!vconf->ftp.username) )
+      {
+	v_error(vconf, LOG_ERR, "ftp settings do not meet minimum requirements");
+	v_error(vconf, LOG_ERR, "check remoteHost, remoteImageName, and Username in config");
+	v_error(vconf, LOG_ERR, "ftp-upload disabled");
+	vconf->ftp.enable=FALSE;
+      }
+  }
+}
+#endif
 
 /* Check if palette is supported by v4l device */
 
@@ -321,6 +351,7 @@ void v_update_ptr(struct vconfig *vconf) {
   vconf->ftp.remoteImageName=(char *)l_opt[26].var;
   vconf->ftp.username=(char *)l_opt[27].var;
   vconf->ftp.password=(char *)l_opt[28].var;
+  vconf->ftp.remoteDir=(char *)l_opt[31].var;
 #endif
   v_error(vconf, LOG_DEBUG, "Updated pointers to new allocated memory.");
 }
@@ -343,7 +374,7 @@ struct vconfig *parse_config(struct vconfig *vconf){
   }
 
   /* read every line */
-  v_error(vconf, LOG_DEBUG, "Starting to read arguments from file %s", vconf->conf_file);
+  v_error(vconf, LOG_INFO, "Starting to read arguments from file %s", vconf->conf_file);
 
   while (fgets(line, sizeof(line), fd)) {
     n++;
@@ -353,10 +384,15 @@ struct vconfig *parse_config(struct vconfig *vconf){
       *p='\0';
     if ( (p=index(line, ';')) )
       *p='\0';
-
+    line[strcspn(line, "\n")]='\0';
+    option=strcpy(malloc(strlen(line)+1), line);
     /* Check options */
 
-    if ( (option=strtok(line," \t")) && (value=strtok(NULL, "\n")) ) {
+    if ( (strlen(option)>0) && (p=strpbrk(option," \t")) ) {
+      *p='\0';
+      p++;
+      value=strcpy(malloc(strlen(p)+1),p);
+      //    if ( (option=strtok(line," \t")) && (value=strtok(NULL, "\n")) ) {
       /* eliminate whitespaces in value */
       value=strip_white(value);
       for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
@@ -377,8 +413,8 @@ struct vconfig *parse_config(struct vconfig *vconf){
 	      ? TRUE : FALSE;
 	    break;
 	  case opt_charptr:
-	    (char *)l_opt[i].var=check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
-						     l_opt[i],n);
+	    (int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
+						  l_opt[i],n);
 	    break;
 	  case opt_format:
 	    *(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_format(value), n, l_opt[i]);
@@ -397,10 +433,13 @@ struct vconfig *parse_config(struct vconfig *vconf){
 	}      
       }
     }
+    free_ptr(option);
   }
   v_update_ptr(vconf);
   fclose(fd);
-
+#if DEBUGGING
+  debug_vconf(vconf);
+#endif
   v_error(vconf, LOG_INFO, "Done parsing config file %s", vconf->conf_file);
 
   return(vconf);
@@ -430,7 +469,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  *(boolean *)l_opt[i].var=*(boolean *)l_opt[i].var ? FALSE : TRUE;
 	  break;
 	case opt_charptr:
-	  (char *)l_opt[i].var=check_maxlen(vconf, get_str(optarg, (char *)l_opt[i].var),
+	  *(int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(optarg, (char *)l_opt[i].var),
 						   l_opt[i],0);
 	  break;
 	case opt_format:
@@ -445,7 +484,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  break;
 	case opt_conf:
 	  if (vconf->conf_file)
-	    v_error(vconf, LOG_DEBUG, "Discarding old conf (%s), reading new conf (%s)",
+	    v_error(vconf, LOG_DEBUG, "Overwriting old conf (%s) settings with new conf (%s)",
 		    vconf->conf_file, optarg);
 	  vconf->conf_file=free_ptr(vconf->conf_file);
 	  vconf->conf_file=strcpy(malloc(strlen(optarg)+1), optarg);
@@ -472,7 +511,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
     }
   }
 
-  v_update_ptr(vconf);
+  //  v_update_ptr(vconf);
   
   v_error(vconf, LOG_INFO, "Done parsing commandline");
 
@@ -512,6 +551,10 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
   }
   
   check_files(vconf);
+
+#ifdef LIBFTP
+  check_ftpconf(vconf);
+#endif
 
   vconf=check_device(vconf);
 
