@@ -18,6 +18,6 @@
 # USA  
 
 bin_PROGRAMS = vgrabbj
-vgrabbj_SOURCES = vgrabbj.c font.c ccvt_c.c vgrabbj.h ccvt.h
+vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h
 
 EXTRA_DIST = reconf
