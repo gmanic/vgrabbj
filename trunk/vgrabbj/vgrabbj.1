@@ -1,0 +1,237 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH VGRABBJ 1 "February  24, 2002"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+vgrabbj \- grab images from a v4l-compatible webcam
+.SH SYNOPSIS
+.B vgrabbj
+.RI [ options ]
+.br
+.SH DESCRIPTION
+This manual page documents briefly the
+.B vgrabbj
+command.
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+\fBvgrabbj\fP is a program that will grab images from any v4l-capable 
+device which supports one of the rgb24, rgb32, yuv420, yuv420p, yuyv, 
+or yuv422 palettes and saves the image as a .jpg, .png, or .pnm file. 
+.PP
+Optional, it can timestamp the resulting image, and/or upload it to 
+a ftp-server. Additionally, a daemon-mode is available to do the 
+above regularly.
+.PP
+On startup, the default configuration file \fI/etc/vgrabbj.conf\fP is
+read and evaluated. If a configuration file is specified via the
+\fB-c\fP parameter (see below), that file is read and parsed. Values
+which are present in the default config file keep their values.
+Finally, the commandline is evaluated. If an option is presented 
+more than once, the last in the commandline is taken.
+If no options given, vgrabbj tries to open the default v4l-device
+\fI/dev/video\fP, grab an image and return it on \fI/dev/stdout\fP.
+So be aware.
+.SH OPTIONS
+.TP
+\fB\-h\fP
+Show summary of options and version number.
+\fB\-c\fP <\fIfilename\fP>
+Specifies \fIfilename\fP as alternative configuration file.
+.TP
+\fB\-l\fP <\fIseconds\fP> 
+Daemonize & loop with \fIseconds\fP intervals (min. 1).
+.TP
+\fB\-L\fP <\fImicroseconds\fP> 
+Daemonize & loop \fImicroseconds\fP intervals (min. 1). Same as \fB\-l\fP
+except you can control it more precisely.
+.TP
+\fB\-b\fP 
+Enable vgrabbj's brightness adjustment (default: disabled). To use \fBvgrabbj\fP's
+brightness adjustment, RGB24 support of the device is necessary. You may
+have to provide it to your device via the \fB-F\fP parameter (see below).
+If your device does not support RGB24, this setting is silently ignored.
+.TP
+\fB\-q\fP <\fIquality\fP> 
+Sets the quality of a jpeg output to \fIquality\fP (1-100, default: 75).
+.TP
+\fB\-i\fP <\fIimagesize\fP>
+Sets the imagesize of input device, where \fIimagesize\fP is one of: 
+.IP
+.nf
+.ta 5 \w' sqcif = 128x96      '\u
+ sqcif= 128x96,     qsif = 160x120, 
+ qcif = 176x144,    sif  = 320x240, 
+ cif  = 352x288,    vga  = 640x480, 
+ svga = 800x600,    xga  = 1024x768, 
+ sxga = 1280x1024,  uxga = 1600x1200, 
+.fi
+.IP
+(default: cif)
+.TP
+\fB\-w\fP <\fIwidth\fP>
+Sets the width of the image to \fIwidth\fP. Needs \fB\-H\fP.
+The v4l-device has to support the image width you set with
+this option.
+.TP
+\fB\-H\fP <\fIheight\fP>
+Sets the height of the image to \fIheight\fP. Needs \fB\-w\fP.
+The v4l-device has to support the image height you set with
+this option.
+.TP 
+\fB\-o\fP <\fIformat\fP> 
+Sets the output to \fIformat\fP (either \fBjpeg\fP, \fBpng\fP, or 
+\fBpnm\fP, default: jpeg)
+.TP
+\fB\-f\fP <\fIfilename\fP>
+Output is written to \fIfilename\fP (default: \fI/dev/stdout\fP)
+.TP
+\fB\-A\fP <\fIpath+filename\fP>
+Additional to the output of \fB-f\fP another file is written to the
+named \fIpath+filename\fP, whereas the whole may be formatted
+according to \fBstrftime\fP(2). This enables the creation of an archive
+of images. Currently, the output is only supported on the same
+filesystem as the original output.
+.TP
+\fB\-d\fP <\fIdevice\fP> 
+Sets the input device to \fIdevice\fP (default: \fI/dev/video\fP)
+.TP
+\fB\-s\fP <\fIdevice\fP>
+This flag causes vgrabbj to print the v4l capabilities of <\fIdevice\fP>
+and exit. 
+.TP
+\fB\-C\fP 
+Causes vgrabbj to open the device only while image data is grabbed. 
+This is helpful if you need access to the device besides vgrabbj. It's
+use is discouraged due to possible problems with memory fragmentation.
+Default is to keep the v4l-device open while \fBvgrabbj\fP is running.
+.TP
+\fB\-g\fP
+Disables setting of the image size (see \fB\-i\fP, \fB\-H\fP, and 
+\fB\-w\fP. Necessary for certain v4l-devices which do not support to be
+set to a particular image size (e.g. IBM-usb-cam, QuickCam). For these
+devices you have to specify the size at module load time.
+.TP
+\fB\-S\fP
+Switches colormap from BGR to RGB (or vice versa). Use if you have odd
+colors.
+.TP
+\fB\-D\fP <\fIvalue\fP>
+Sets the loglevel of \fBvgrabbj\fP. Valid for \fIvalue\fP are 0, 2, 3, 4, 6, 7
+(default: 4). 0 means no messages at all, 7 is debug. Don't use 7 if
+you are running \fBvgrabbj\fP in daemon mode, it'll surely fill your
+syslog.
+.TP
+\fB\-n\fP
+Disable the use of the temporary outputfile and write directly to the
+output-file specified with \fB-f\fP. Output to \fI/dev/stdout\fP is always
+written directly without the use of a temporary file.
+.Sp
+If a \fIfilename\fP different from \fI/dev/stdout\fP was given with the \fB-f\fP
+parameter, \fBvgrabbj\fP defaults to use a temporary file called \fIfilename\fP.tmp
+to write the image. This file is then renamed to \fIfilename\fP to shorten the
+time period corrupt data may be read from \fIfilename\fP.
+.TP
+\fB\-F\fP <\fIpalette\fP>
+Force the usage of the specified \fIpalette\fP. If \fIpalette\fP is not
+supported by either \fBvgrabbj\fP or the v4l-device, fallback to a palette supported
+by both is provided. If no common denominator is available, \fBvgrabbj\fP exits. See
+\fBDESCRIPTION\fP for details on palettes supported by \fBvgrabbj\fP. Possible values
+are (copy from videodev.h):
+.IP
+.nf
+.ta 5 \w' 2  VIDEO_PALETTE_HI240     High 240 cube (BT848) '\u
+ 1  VIDEO_PALETTE_GREY      Linear greyscale
+ 2  VIDEO_PALETTE_HI240     High 240 cube (BT848)
+ 3  VIDEO_PALETTE_RGB565    565 16 bit RGB
+ 4  VIDEO_PALETTE_RGB24     24bit RGB
+ 5  VIDEO_PALETTE_RGB32     32bit RGB
+ 6  VIDEO_PALETTE_RGB555    555 15bit RGB
+ 7  VIDEO_PALETTE_YUV422    YUV422 capture
+ 8  VIDEO_PALETTE_YUYV
+ 9  VIDEO_PALETTE_UYVY
+ 10 VIDEO_PALETTE_YUV420
+ 10 VIDEO_PALETTE_YUV411    YUV411 capture
+ 11 VIDEO_PALETTE_RAW       RAW capture (BT848)
+ 12 VIDEO_PALETTE_YUV422P   YUV 4:2:2 Planar
+ 13 VIDEO_PALETTE_YUV411P   YUV 4:1:1 Planar
+ 14 VIDEO_PALETTE_YUV420P   YUV 4:2:0 Planar
+ 15 VIDEO_PALETTE_YUV410P   YUV 4:1:0 Planar
+ 16 VIDEO_PALETTE_PLANAR
+ 17 VIDEO_PALETTE_COMPONENT
+.fi
+.IP
+(no default, depends on v4l-device)
+.TP
+\fB\-z\fP <\fIvalue\fP>
+\fIvalue\fP images are grabbed and immediately discarded. Only the
+last image is written to the output. This might be helpful if your v4l-device
+needs to take a couple of images to auto-adjust to the current light.
+.SH TIMESTAMP OPTIONS
+.Sp
+The following options are available only if \fBvgrabbj\fP was compiled with
+the freetype library available. If you set any one of these options on the
+commandline timestamp will be enabled with default values for all other
+options.
+.TP
+\fB\-t\fP <\fIfilename\fP> 
+The TrueType font to be used for the timestamp
+(default \fI/usr/X11R6/lib/X11/fonts/TrueType/Arialn.ttf\fP)
+.TP
+\fB\-T\fP <\fIsize\fP>
+Set the fontsize to \fIsize\fP for timestamp (3-100, default: 12).
+.TP
+\fB\-p\fP "<\fIformat-str\fP>"
+Defines the timestamp. \fIformat-str\fP can be plain text or any
+strftime format and has to be enclosed with '""' (default: "%a, %e.
+%B %Y \- %T" \- see \fBstrftime\fP(3) for details)
+.TP
+\fB\-a\fP <\fIvalue\fP>
+Alignment of the timestamp in the image. Possible 
+\fIvalue\fP:
+.IP
+.nf
+.ta \w' 0 = upper left,    '\u
+0 = upper left,    1 = upper right,
+2 = lower left,    3 = lower right,
+4 = upper center,  5 = lower center
+.fi
+.IP
+(default: 1).
+.TP
+\fB\-m\fP <\fIvalue\fP>
+Defines the blend between font background and image (1-100, default: 60).
+.TP
+\fB\-B\fP <\fIvalue\fP>
+\fIvalue\fP pixels will be used as border around the timestamp string (1-255,
+default: 2).
+.TP
+\fB\-e\fP Enables timestamp with the defaults on.
+.SH FTP OPTIONS
+.P
+There are no options for ftp-upload on the command line. This is due to the need
+to provide a password which would be visible via the \fBps\fP(1) command. See
+\fBvgrabbj.conf\fP for details on how to set-up the ftp-upload option.
+.SH BUGS
+.P
+No bugs are known at this time.
+.SH SEE ALSO
+\fBvgrabbj.conf\fP(4), \fBstrftime\fP(3), \fBps\fP(1)
+.SH AUTHOR
+This manual page was originally written by Michael Janssen 
+<janssen@cns.uni.edu>, for the Debian GNU/Linux system and enhanced by 
+Jens Gecius <devel@gecius.de>.
