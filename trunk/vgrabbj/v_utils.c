@@ -86,7 +86,7 @@ void close_device(struct vconfig *vconf) {
 /* Returns the actual byte-size of the image */
 
 int img_size(struct vconfig *vconf, int palette) {
-  return (plist[palette].mul * vconf->win.width * vconf->win.height) / plist[palette].div;
+  return ( (plist[palette].mul * vconf->win.width * vconf->win.height) >> (plist[palette].div==2?1:0) );
 }
 
 
@@ -122,7 +122,7 @@ unsigned char *swap_left_right(char *buffer, int width, int height)
   char a, b, c;
   int i, j;
   for (j=0;j < height;j++) {
-    for (i=0;i < width/2;i++) {
+    for (i=0;i < width>>2;i++) {
       a = buffer[(j*width*3)+(i*3)];
       b = buffer[(j*width*3)+(i*3)+1];
       c = buffer[(j*width*3)+(i*3)+2];

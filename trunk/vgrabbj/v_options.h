@@ -77,6 +77,7 @@ static struct v_options l_opt[] = {
   {"Archive",         "A", req,  NULL, opt_charptr, 0,            0,            255},
   {"ArchiveEach",     "E", req,  NULL, opt_int,     MIN_ARCHIVE,  MAX_ARCHIVE,  0  },
   {"ArchiveMax",      "M", req,  NULL, opt_int,     MIN_ARCHIVE,  MAX_ARCHIVE,  0  },
-  {"SwapRL",          "R", none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     0},
+  {"SwapRL",          "R", none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     0  },
+  {"NoUseMmap",       "G", none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     0  },
   {NULL, NULL, none, NULL, 0, 0, 0, 0}
 };

@@ -116,6 +116,12 @@ is \fIOff\fP. Use if you have odd colors.
 Swaps left and right of the image like a mirror.. Default
 is \fIOff\fP.
 .TP
+\fBNoUseMmap\fP \fIOn\fP|\fIOff\fP
+Turns off the use of mmap'ed (better) memory allocation for grabbing frames.
+Some (very rare) cams cannot use mmap'ed memory and have to use read. If you
+want to switch easily, use this switch. If you don't know what I'm talking
+about, leafe it like it is: Default is \fIOff\fP.
+.TP
 \fBDebugLevel\fP \fIvalue\fP
 Sets the loglevel of vgrabbj. Valid for \fIvalue\fP are 0, 2, 3, 4, 6, 7
 (default: 4). 0 means no messages at all, 7 is debug. Don't use 7 if

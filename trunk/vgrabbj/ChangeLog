@@ -1,3 +1,13 @@
+2002-10-15  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.h: 	Added option nousemmap needed for
+			certain cams not switchable to
+			palette RGB24 but unable to use
+			mmap'ed memory.
+
+	* v_options.h:	Fixed a small bug for ForcePalette.
+			Improved img_size calculation.
+
 2002-10-14  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c: 	Fixed nasty bug causing boolean
