@@ -61,27 +61,44 @@
 /* Defines, defaults */
 
 #define DEFAULT_QUALITY 75
+#define MIN_QUALITY 0
+#define MAX_QUALITY 100
 #define DEFAULT_WIDTH 352
 #define DEFAULT_HEIGHT 288
 #define RGB_DEFAULT 24
+#define MIN_PALETTE 1
+#define MAX_PALETTE 17
+#define MIN_LOOP 0
+
 #define DEFAULT_VIDEO_DEV "/dev/video"
 #define DEFAULT_OUTPUT "/dev/stdout"
 #define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png
 #define DEFAULT_BRIGHTNESS FALSE
 #define MAX_ERRORMSG_LENGTH 1024
+#define DEFAULT_CONFIG "/etc/vgrabbj.conf"
 #define LOGLEVEL 4
-
+#define MIN_DEBUG 0
+#define MAX_DEBUG 7
 
 #ifdef HAVE_LIBTTF
 #define DEFAULT_FONT "/usr/share/fonts/truetype/Arialn.ttf"
 #define DEFAULT_TIMESTAMP "%a, %e. %B %Y - %T"
 #define DEFAULT_FONTSIZE 12
+#define MIN_FONTSIZE 3
+#define MAX_FONTSIZE 100
 #define DEFAULT_BORDER 2
+#define MIN_BORDER 1
+#define MAX_BORDER 255
 #define DEFAULT_BLEND 60
+#define MIN_BLEND 1
+#define MAX_BLEND 100
 #define DEFAULT_ALIGN 1
+#define MIN_ALIGN 0
+#define MAX_ALIGN 5
 #endif
 
 #define TS_MAX 128
+#define MAX_LINE 1024
 
 /* Structure definitions */
   
@@ -146,6 +163,8 @@ struct palette_list {
 /* External functions */
 
 extern char *basename (const char *);
+
+extern struct vconfig *parse_config(struct vconfig *vconf, char *path); 
 
 #ifdef HAVE_LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
