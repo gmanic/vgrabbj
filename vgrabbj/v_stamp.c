@@ -52,10 +52,7 @@ struct ttneed *OpenFace(struct vconfig *vconf)
 
 char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *vconf)
 {
-    
-  time_t t;
-  struct tm *tm;
-  char ts_buff[TS_MAX+1];
+  char *ts_buff;
   int ts_len;
   TT_Glyph *glyphs = NULL;
   TT_Raster_Map bit;
@@ -63,11 +60,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
 
   v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
 
-  time (&t);
-  tm = localtime (&t);
-  ts_buff[TS_MAX] = '\0';
-  strftime (ts_buff, TS_MAX, vconf->timestamp, tm);
-  ts_len = strlen (ts_buff);
+  ts_len = strlen(ts_buff=timestring(vconf->timestamp));
 
   v_error(vconf, LOG_DEBUG, "Stamp: %s, length: %d", ts_buff, ts_len);
 
@@ -86,6 +79,8 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
   v_error(vconf, LOG_DEBUG, "Returned from Raster_Small_Init");
 
   Render_String(glyphs, ts_buff, ts_len, &bit, &sbit, vconf->border);
+  
+  free_ptr(ts_buff);
 
   v_error(vconf, LOG_DEBUG, "Returned from Render_String");
 

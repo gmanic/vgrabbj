@@ -189,6 +189,19 @@ int daemonize(struct vconfig *vconf, char *progname)
 
 /* These are more or less self-explanatory */
 
+char *timestring(char *format) {
+  time_t td;
+  struct tm *tm;
+  char archive[512];
+  /* vconf->archive is a strftime format string, make the final path
+   * to archive_path */
+  time(&td);
+  tm = localtime(&td);
+  archive[sizeof(archive)-1]='\0';
+  strftime(archive, sizeof(archive)-1, format, tm);
+  return (strcpy(malloc(strlen(archive)+1),archive));
+}
+
 
 char *strip_white(char *value) {
   long int tmp=0;
