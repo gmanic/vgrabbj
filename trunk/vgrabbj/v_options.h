@@ -36,10 +36,10 @@ static struct v_options long_options[] = {
   {"DaemonSeconds",   "l", req,  NULL, opt_longint, MIN_LOOP,     0,            0  },
   {"Brightness",      "b", none, NULL, opt_bool,    0,            0,            0  },
   {"ImageQuality",    "q", req,  NULL, opt_int,     MIN_QUALITY,  MAX_QUALITY,  0  },
-  {"ImageSize",       "i", req,  NULL, opt_void,    0,            0,            0  },
+  {"ImageSize",       "i", req,  NULL, opt_size,    0,            0,            0  },
   {"ImageWidth",      "w", req,  NULL, opt_int,     0,            0,            0  },
   {"ImageHeight",     "H", req,  NULL, opt_int,     0,            0,            0  },
-  {"OutputFormat",    "o", req,  NULL, opt_int,     0,            0,            0  },
+  {"OutputFormat",    "o", req,  NULL, opt_format,  0,            0,            0  },
   {"OutputFile",      "f", req,  NULL, opt_charptr, 0,            0,            255},
   {"VideoDevice",     "d", req,  NULL, opt_charptr, 0,            0,            255},
   {"OpenOnce",        "C", none, NULL, opt_bool,    0,            0,            0  },
@@ -53,7 +53,7 @@ static struct v_options long_options[] = {
   {"FontFile",        "t", req,  NULL, opt_bool,    0,            0,            255},
   {"TimeStamp",       "p", req,  NULL, opt_charptr, 0,            0,            255},
   {"FontSize",        "T", req,  NULL, opt_int,     MIN_FONTSIZE, MAX_FONTSIZE, 0  },
-  {"Position",        "a", req,  NULL, opt_int,     MIN_ALIGN,    MAX_ALIGN,    0  },
+  {"Position",        "a", req,  NULL, opt_position,MIN_ALIGN,    MAX_ALIGN,    0  },
   {"Blend",           "m", req,  NULL, opt_int,     MIN_BLEND,    MAX_BLEND,    0  },
   {"BorderSize",      "B", req,  NULL, opt_int,     MIN_BORDER,   MAX_BORDER,   0  },
 #endif
@@ -68,6 +68,7 @@ static struct v_options long_options[] = {
 #endif
     /* and here's the commandline options which have no conf-file equivalent */
   {NULL,              "V", none, NULL, opt_void,    0,            0,            0  },
-  {NULL,              "s", req,  NULL, opt_char,    0,            0,            255},
-  {NULL,              "h", none, NULL, opt_void,    0,            0,            0  }
+  {NULL,              "s", req,  NULL, opt_charptr, 0,            0,            255},
+  {NULL,              "h", none, NULL, opt_void,    0,            0,            0  },
+  {NULL, NULL, none, NULL, 0, 0, 0, 0}
 };

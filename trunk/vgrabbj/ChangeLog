@@ -1,3 +1,11 @@
+2002-02-12  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Changed handling of open-device in case
+			of openonce (it is really opened only once
+			now), avoiding lot's of kernel-uhci-msgs
+			on my box. Hope you guys benefit, too.
+			Again, I strongly recommend to use OpenOnce
+
 2002-02-11  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c: 	More split-up of source to make it more

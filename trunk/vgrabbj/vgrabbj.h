@@ -113,7 +113,7 @@
 #define DEFAULT_BRIGHTNESS FALSE
 #define MAX_ERRORMSG_LENGTH 1024
 #define DEFAULT_CONFIG SYSCONF_DIR
-#define LOGLEVEL 4
+#define LOGLEVEL 7
 #define MIN_DEBUG 0
 #define MAX_DEBUG 7
 
@@ -215,14 +215,14 @@ struct v_options {
   const char *name;
   const char *short_name;
   int has_arg;
-  int *var;
+  void *var;
   int var_type;
   int min_value;
   int max_value;
   int max_length;
 };
 
-enum { opt_void, opt_int, opt_longint, opt_char, opt_bool, opt_intptr, opt_longintptr, opt_charptr };
+enum { opt_void, opt_int, opt_longint, opt_char, opt_bool, opt_format, opt_size, opt_charptr };
 enum { none, req, opt };
 
 /* External functions */
@@ -256,6 +256,7 @@ extern void            open_device(struct vconfig *vconf);
 extern void            close_device(struct vconfig *vconf);
 
 extern int             signal_terminate;
+extern struct v_options long_options[];
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

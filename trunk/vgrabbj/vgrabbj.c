@@ -201,17 +201,18 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 	  plist[vconf->vpic.palette].name, vconf->vpic.palette, img_size(vconf, vconf->vpic.palette));
 
   // Opening input device
-  if ( !vconf->openonce )
+  if ( !vconf->openonce ) {
     open_device(vconf);
 
   // Re-initialize the palette, in case someone changed it meanwhile
 
-  while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0 )
-    v_error(vconf, LOG_ERR, "Device %s couldn't be reset to known palette %s",
-	    vconf->in, vconf->vpic.palette);
-  if (vconf->windowsize)
-    while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
-      v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
+    while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0 )
+      v_error(vconf, LOG_ERR, "Device %s couldn't be reset to known palette %s",
+	      vconf->in, vconf->vpic.palette);
+    if (vconf->windowsize)
+      while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
+	v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
+  }
   
   // Read image via read()
 

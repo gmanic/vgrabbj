@@ -106,8 +106,9 @@ void usage (char *pname)
 
 struct vconfig *init_defaults(struct vconfig *vconf) {
   // Set defaults
+  vconf->debug      = LOGLEVEL;
   vconf->quality    = DEFAULT_QUALITY;
-  long_options[4].var = &vconf->quality;
+  long_options[4].var = &(int)vconf->quality;
   vconf->in         = strcpy(malloc(strlen(DEFAULT_VIDEO_DEV)+1),DEFAULT_VIDEO_DEV);
   vconf->out        = strcpy(malloc(strlen(DEFAULT_OUTPUT)+1),DEFAULT_VIDEO_DEV);
   vconf->conf_file  = strcpy(malloc(strlen(DEFAULT_CONFIG)+1),DEFAULT_CONFIG);
@@ -120,7 +121,6 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->loop       = 0;
   vconf->use_ts     = FALSE;
   vconf->init_done  = FALSE;
-  vconf->debug      = LOGLEVEL;
   vconf->err_count  = 0;
   vconf->dev        = 0;
   vconf->forcepal   = 0;
@@ -273,7 +273,8 @@ struct vconfig *check_device(struct vconfig *vconf) {
        ((vconf->brightness) && (vconf->vpic.palette==VIDEO_PALETTE_RGB24)) )
     vconf->usemmap=FALSE;
 
-  close_device(vconf);
+  if (!vconf->openonce)
+    close_device(vconf);
 
   return vconf;
 }
@@ -283,7 +284,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
 
 struct vconfig *parse_config(struct vconfig *vconf){
 
-  int           n=0, tmp, is_width=0, is_height=0;
+  int           i=0, n=0, tmp=0, is_width=0, is_height=0;
   char          line[MAX_LINE];
   char          *option=NULL, *value=NULL, *p=NULL;
   FILE          *fd;
@@ -313,14 +314,65 @@ struct vconfig *parse_config(struct vconfig *vconf){
     if ( (option=strtok(line," \t\n")) && (value=p+strlen(option)) ) {
       if ( (p=strchr(option, ';')) )
 	continue;
-      if ( !strcasecmp(option, "ImageQuality")) {
-	if ( (MIN_QUALITY > (vconf->quality=get_int((value=strtok(NULL, " \t\n"))))) ||
+      if ( !strcasecmp(option, long_options[4].name) ) {
+	switch (long_options[4].var_type) {
+	case opt_int:
+	  if (long_options[4].max_value)
+	    if (long_options[4].min_value > (tmp=(int)get_int(value=strtok(NULL, " \t\n")))
+		> long_options[4].max_value)
+	      v_error(vconf, LOG_CRIT, "Wrong value \"%d\" for %s (line %d, %s, min %d, max %d)",
+		      tmp, option, n, vconf->conf_file, long_options[4].min_value, long_options[4].max_value);
+	  *(int *)long_options[4].var=tmp;
+	  v_error(vconf, LOG_DEBUG, "Set option %s to value %d", option, *(int *)long_options[4].var);
+	  break;
+	case opt_longint:
+	  if (long_options[i].max_value)
+	    if (long_options[i].min_value > (tmp=get_int(value=strtok(NULL, " \t\n")))
+		> long_options[i].max_value)
+	      v_error(vconf, LOG_CRIT, "Wrong value \"%d\" for %s (line %d, %s, min %d, max %d)",
+		      tmp, option, n, vconf->conf_file, long_options[i].min_value, long_options[i].max_value);
+	  *(long *)long_options[i].var=tmp;
+	  v_error(vconf, LOG_DEBUG, "Set option %s to value %d", option, *(long *)long_options[i].var);
+	  break;
+	case opt_bool:
+	  if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0)
+	    v_error(vconf, LOG_CRIT, "Wrong value \"%d\" for %s", value, option);
+	  else if (tmp==1)
+	    *(boolean *)long_options[i].var=TRUE;
+	  else
+	    *(boolean *)long_options[i].var=FALSE;
+	  v_error(vconf, LOG_DEBUG, "Set option %s to value %d", option, *(int *)long_options[i].var);
+	  break;
+	case opt_charptr:
+	  if (long_options[i].max_length)
+	    if (strlen((value=strtok(NULL, " \t\n"))) > long_options[i].max_length)
+	      v_error(vconf, LOG_CRIT, "Value %s too long (max. %d)", value, long_options[i].max_length);
+	  (char *)long_options[i].var=get_str(value, (char *)long_options[i].var);
+	  v_error(vconf, LOG_DEBUG, "Set option %s to value %s", option, (char *)long_options[i].var);
+	  break;
+	case opt_format:
+
+	  break;
+	case opt_size:
+
+	  break;
+	case opt_position:
+
+	  break;
+	default:
+	  v_error(vconf, LOG_DEBUG, "Unknown option, ignoring");
+	  break;
+	}
+	      
+      /*      if ( !strcasecmp(option, "ImageQuality")) {
+	
+        if ( (MIN_QUALITY > (vconf->quality=get_int((value=strtok(NULL, " \t\n"))))) ||
 	      (vconf->quality > MAX_QUALITY) ) 
 	  
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)", 
 		  value, option, n, vconf->conf_file);
 	else
-	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value); */
       }
       else if ( !strcasecmp(option, "VideoDevice") ) {
 	vconf->in=get_str((value=strtok(NULL, " \t\n")), vconf->in);
@@ -859,7 +911,6 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
   vconf->vmap.frame=0;
   vconf->vmap.format=vconf->vpic.palette;
   if (vconf->openonce) {
-    open_device(vconf);
     init_mmap(vconf);
   }
 #ifdef LIBTTF
