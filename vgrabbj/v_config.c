@@ -122,7 +122,7 @@ int get_height(char *value) {
 
 struct vconfig *parse_config(struct vconfig *vconf, char *path){
 
-  int           n=0, tmp, dev;
+  int           n=0, tmp, dev, is_width=0, is_height=0;
   char          line[MAX_LINE];
   char          *option=NULL, *value=NULL, *p=NULL;
   FILE          *fd, *x;
@@ -247,16 +247,20 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "ImageWidth") ) {
-	if ( is_width=get_int((value=strtok(NULL, " \t\n"))) ) 
+	if ( (is_width=get_int((value=strtok(NULL, " \t\n")))) ) {
 	  v_error(vconf, LOG_CRIT, "Wrong value '%s' for %s (line %d, %s)",
 		  value, option, n, path);
+	  is_width=0;
+	}
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "ImageHeight") ) {
-	if ( is_height=get_int((value=strtok(NULL, " \t\n"))) )
+	if ( (is_height=get_int((value=strtok(NULL, " \t\n")))) ) {
 	  v_error(vconf, LOG_CRIT, "Wrong value '%s' for %s (line %d, %s)",
 		  value, option, n, path);
+	  is_height=0;
+	}
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
@@ -399,9 +403,9 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
   fclose(fd);
 
   if ( (is_width!=0) && (is_height!=0) ) {
-    vconf->win.width = width;
-    vconf->win.height = height;
-    v_error(vconf, LOG_WARN, "Imagesize set to unchecked individual size!\n");
+    vconf->win.width = is_width;
+    vconf->win.height = is_height;
+    v_error(vconf, LOG_WARNING, "Imagesize set to unchecked individual size!\n");
   }
 
   return(vconf);
