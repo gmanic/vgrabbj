@@ -65,7 +65,7 @@ static struct v_options l_opt[] = {
   {"Password",        NULL,none, NULL, opt_charptr, 0,            0,            255},
   {"KeepAlive",       NULL,none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     255},
   {"TryHarder",       NULL,none, NULL, opt_int,     0,            0,            0  },
-  {"remoteDir",       NULL,none, NULL, opt_charptr, 0,            0,            255},
+  {"RemoteDir",       NULL,none, NULL, opt_charptr, 0,            0,            255},
 #endif
     /* and here's the commandline options which have no conf-file equivalent */
   {NULL,              "c", none, NULL, opt_conf,    0,            0,            0  },
@@ -74,5 +74,6 @@ static struct v_options l_opt[] = {
   {NULL,              "h", none, NULL, opt_help,    0,            0,            0  },
   /* New options are to be added in front of this line, which serves as a    */
   /* marker for the config-parser (no long- and no short-option)             */
+  {"Archive",         "A", req,  NULL, opt_charptr, 0,            0,            255},
   {NULL, NULL, none, NULL, 0, 0, 0, 0}
 };

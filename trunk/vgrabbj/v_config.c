@@ -190,6 +190,8 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[30].var = &(unsigned int)vconf->ftp.tryharder;
   l_opt[31].var = (char *)vconf->ftp.remoteDir;
 #endif
+  vconf->archive     = NULL;
+  l_opt[36].var = (char *)vconf->archive;
   return vconf;
 }  
 
@@ -353,6 +355,7 @@ void v_update_ptr(struct vconfig *vconf) {
   vconf->ftp.password=(char *)l_opt[28].var;
   vconf->ftp.remoteDir=(char *)l_opt[31].var;
 #endif
+  vconf->archive=(char *)l_opt[36].var;
   v_error(vconf, LOG_DEBUG, "Updated pointers to new allocated memory.");
 }
 
@@ -451,7 +454,7 @@ struct vconfig *parse_config(struct vconfig *vconf){
 struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
   int n, i;
 
-  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:nz:"))!=EOF) {
+  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:nz:A:"))!=EOF) {
     if (optarg) optarg=strip_white(optarg);
     for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
       if ( l_opt[i].short_name &&  n==(int)*l_opt[i].short_name ) {
@@ -591,7 +594,6 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
   } else {
     vconf->ttinit = malloc(sizeof(*vconf->ttinit));
     vconf->ttinit->properties = malloc(sizeof(*vconf->ttinit->properties));
-    v_error(vconf, LOG_DEBUG, "Allocated memory for TT-engine");
     if ( !vconf->ttinit->properties || !vconf->ttinit ) {
       v_error(vconf, LOG_WARNING, "No memory for timestamp, disabled!");
       vconf->use_ts=FALSE;
@@ -605,6 +607,7 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
       vconf->use_ts=FALSE;
     }
   if (vconf->use_ts)
+    debug_vconf(vconf);
     OpenFace(vconf);
 #endif
 

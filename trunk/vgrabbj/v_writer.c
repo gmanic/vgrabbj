@@ -165,7 +165,23 @@ void write_image(struct vconfig *vconf) {
     v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
     unlink(vconf->out);
     if (-1 == link(vconf->tmpout, vconf->out)) {
-      v_error(vconf, LOG_ERR, "Couldn't link %s to %s: %s\n", vconf->tmpout, vconf->out, strerror(errno));
+      v_error(vconf, LOG_ERR, "Couldn't link %s to %s: %s", vconf->tmpout, vconf->out, strerror(errno));
+    }
+    if (vconf->archive) {
+      time_t td;
+      struct tm *tm;
+      char archive[255];
+      /* vconf->archive is a strftime format string, make the final path
+       * to archive_path */
+      time(&td);
+      tm = localtime(&td);
+      strftime(archive, sizeof(archive)-1, vconf->archive, tm);
+      if (-1 == link(vconf->tmpout, archive) ) {
+	v_error(vconf, LOG_ERR, "Couldn't link to archive file %s", vconf->archive);
+      }
+      else {
+	v_error(vconf, LOG_DEBUG, "Archiving %s to %s", vconf->out, archive);
+      }
     }
     unlink(vconf->tmpout);
     v_error(vconf, LOG_DEBUG, "Temporary output %s moved to final destination %s", vconf->tmpout, vconf->out);
