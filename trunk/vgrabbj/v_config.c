@@ -27,7 +27,6 @@ extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
 
 int get_int(char *value) {
   int tmp;
-  value=strtok(NULL, " \t\n");
   if ( sscanf(value, "%d", &tmp) != 1 )
     return -1;
   return tmp;
@@ -35,7 +34,6 @@ int get_int(char *value) {
 
 char *get_str(char *value) {
   char *tmp;
-  value=strtok(NULL, " \t\n");
   tmp=malloc(strlen(value)+1);
   if ( sscanf(value, "%s", tmp) != 1 )
     return NULL;
@@ -44,7 +42,6 @@ char *get_str(char *value) {
 
 char *get_tsstr(char *value) {
   char *tmp;
-  value=strtok(NULL, "\t\n");
   tmp=malloc(strlen(value)+1);
   if ( sscanf(value, "%s", tmp) != 1 )
     return NULL;
@@ -52,7 +49,6 @@ char *get_tsstr(char *value) {
 }
 
 int get_bool(char *value) {
-  value=strtok(NULL, " \t\n");
   if ( !(strcasecmp(value, "On")) )
     return 1;
   else if ( !(strcasecmp(value, "Off")) )
@@ -62,7 +58,6 @@ int get_bool(char *value) {
 
 int get_format(char *value) {
   int tmp;
-  value=strtok(NULL, " \t\n");
   if ( !(strcasecmp(value, "JPEG")) || !(strcasecmp(value,"JPG")) )
     tmp=1;
   else if ( !(strcasecmp(value, "PNG")) )
@@ -74,7 +69,6 @@ int get_format(char *value) {
 
 int get_position(char *value) {
   int tmp;
-  value=strtok(NULL, " \t\n");
   if ( (!(strcasecmp(value, "UL"))) || (!(strcasecmp(value, "UpperLeft"))) )
     tmp=0;
   else if ( (!(strcasecmp(value, "UR"))) || (!(strcasecmp(value, "UpperRight"))) )
@@ -112,12 +106,10 @@ int decode_size(char *value) {
 }
 
 int get_width(char *value) {
-  value=strtok(NULL, " \t\n");
   return (16 * decode_size(value));
 }
 
 int get_height(char *value) {
-  value=strtok(NULL, " \t\n");
   if ( decode_size(value) == 11 )
     return 144;
   else if ( decode_size(value) == 22 )
@@ -158,14 +150,15 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
       if ( (p=strchr(option, ';')) )
 	continue;
       if ( !strcasecmp(option, "ImageQuality")) {
-	if ( (MIN_QUALITY > (vconf->quality=get_int(value))) || (vconf->quality > MAX_QUALITY) ) 
+	if ( (MIN_QUALITY > (vconf->quality=get_int((value=strtok(NULL, " \t\n"))))) ||
+	      (vconf->quality > MAX_QUALITY) ) 
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)", 
 		  value, option, n, path);
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "VideoDevice") ) {
-	if ( (dev=open( (vconf->in=get_str(value)), O_RDONLY)) < 0 ) {
+	if ( (dev=open( (vconf->in=get_str((value=strtok(NULL, " \t\n")))), O_RDONLY)) < 0 ) {
 	  close(dev);
 	  v_error(vconf, LOG_CRIT, "Can't open %s as %s (line %d, %s)", 
 		  value, option, n, path);
@@ -176,7 +169,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "OutputFile") ) {
-	if ( !(x=fopen((vconf->out=get_str(value)), "w+")) )
+	if ( !(x=fopen((vconf->out=get_str((value=strtok(NULL, " \t\n")))), "w+")) )
 	  v_error(vconf, LOG_CRIT, "Can't open %s as %s (line %d, %s)",
 		  value, option, n, path);
 	else {
@@ -185,7 +178,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "ImageSize") ) {
-	if ( (vconf->win.width=get_width(value)) == 0 )
+	if ( (vconf->win.width=get_width((value=strtok(NULL, " \t\n")))) == 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else
@@ -197,14 +190,14 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %d", option, vconf->win.height);
       }
       else if ( !strcasecmp(option, "OutputFormat") ) {
-	if ( (vconf->outformat=get_format(value)) < 0 )
+	if ( (vconf->outformat=get_format((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %d", option, vconf->outformat);
       }
       else if ( !strcasecmp(option, "Brightness") ) {
-	if ( (tmp=get_bool(value)) < 0 )
+	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else if (tmp==1)
@@ -214,7 +207,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "SwitchColor") ) {
-	if ((tmp=get_bool(value)) < 0)
+	if ((tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0)
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else if (tmp==1)
@@ -224,7 +217,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "SetImageSize") ) {
-	if ((tmp=get_bool(value)) < 0 )
+	if ((tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else if (tmp==1)
@@ -234,14 +227,14 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "Daemon") ) {
-	if ( ((vconf->loop=get_int(value)) < MIN_LOOP) && (vconf->loop != 0 ) )
+	if ( ((vconf->loop=get_int((value=strtok(NULL, " \t\n")))) < MIN_LOOP) && (vconf->loop != 0 ) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "UseTimestamp") ) {
-	if ( (tmp=get_bool(value)) < 0 )
+	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else if (tmp==1)
@@ -251,14 +244,16 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "DebugLevel") ) {
-	if ( (MIN_DEBUG > (vconf->debug=get_int(value))) || (vconf->debug > MAX_DEBUG))
+	if ( (MIN_DEBUG > (vconf->debug=get_int((value=strtok(NULL, " \t\n"))))) ||
+	     (vconf->debug > MAX_DEBUG))
 	  v_error(vconf, LOG_CRIT, "Wrong value '%s' for %s (line %d, %s)",
 		  value, option, n, path);
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "ForcePalette") ) {
-	if ( (MIN_PALETTE > (vconf->forcepal=get_int(value))) || (vconf->forcepal > MAX_PALETTE) )
+	if ( (MIN_PALETTE > (vconf->forcepal=get_int((value=strtok(NULL, " \t\n"))))) ||
+	     (vconf->forcepal > MAX_PALETTE) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else
@@ -266,7 +261,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
       }
 #ifdef HAVE_LIBTTF
       else if ( !strcasecmp(option, "FontFile") ) {
-	if (!fopen((vconf->font=get_str(value)), "r") )
+	if (!fopen((vconf->font=get_str((value=strtok(NULL, " \t\n")))), "r") )
 	  v_error(vconf, LOG_CRIT, "Can't not open %s as %s (line %d, %s)",
 		  value, option, n, path);
 	else {
@@ -275,7 +270,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "TimeStamp") ) {
-	if ( !(vconf->timestamp=get_tsstr(value)) )
+	if ( !(vconf->timestamp=get_tsstr((value=strtok(NULL, "\t\n")))) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
@@ -285,7 +280,8 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "FontSize") ) {
-	if ( (MIN_FONTSIZE > (vconf->font_size=get_int(value))) || (vconf->font_size > MAX_FONTSIZE) )
+	if ( (MIN_FONTSIZE > (vconf->font_size=get_int((value=strtok(NULL, " \t\n"))))) ||
+	     (vconf->font_size > MAX_FONTSIZE) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
@@ -294,7 +290,8 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "BorderSize") ) {
-	if ( (MIN_BORDER > (vconf->border=get_int(value))) || (vconf->border > MAX_BORDER) )
+	if ( (MIN_BORDER > (vconf->border=get_int((value=strtok(NULL, " \t\n"))))) ||
+	     (vconf->border > MAX_BORDER) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
@@ -303,7 +300,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "Position") ) {
-	if ( (vconf->align=get_position(value)) < 0 )
+	if ( (vconf->align=get_position((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
@@ -312,7 +309,8 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
       else if ( !strcasecmp(option, "Blend") ) {
-	if ( (MIN_BLEND > (vconf->blend=get_int(value))) || (vconf->blend > MAX_BLEND) )
+	if ( (MIN_BLEND > (vconf->blend=get_int((value=strtok(NULL, " \t\n"))))) ||
+	     (vconf->blend > MAX_BLEND) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
