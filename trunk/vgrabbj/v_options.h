@@ -68,12 +68,13 @@ static struct v_options l_opt[] = {
   {"RemoteDir",       NULL,none, NULL, opt_charptr, 0,            0,            255},
 #endif
     /* and here's the commandline options which have no conf-file equivalent */
-  {NULL,              "c", none, NULL, opt_conf,    0,            0,            0  },
+  {NULL,              "c", req, NULL, opt_conf,    0,            0,            0  },
   {NULL,              "V", none, NULL, opt_version, 0,            0,            0  },
   {NULL,              "s", req,  NULL, opt_setting, 0,            0,            255},
   {NULL,              "h", none, NULL, opt_help,    0,            0,            0  },
   /* New options are to be added in front of this line, which serves as a    */
   /* marker for the config-parser (no long- and no short-option)             */
   {"Archive",         "A", req,  NULL, opt_charptr, 0,            0,            255},
+  {"ArchiveEach",     "E", req,  NULL, opt_int,     1,        65536,            0  },
   {NULL, NULL, none, NULL, 0, 0, 0, 0}
 };

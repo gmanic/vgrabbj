@@ -85,7 +85,7 @@
 #endif
 
 #ifndef DEBUGGING
-#define DEBUGGING 1
+#define DEBUGGING 0
 #endif
 
 /* Defines, defaults */
@@ -286,6 +286,8 @@ extern long int        check_minmax(struct vconfig *vconf, char *value, long int
 				    struct v_options l_opt);
 extern void            v_update_ptr(struct vconfig *vconf);
 extern char           *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n);
+extern FILE           *open_outfile(char *filename);
+extern char           *timestring(char *format);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

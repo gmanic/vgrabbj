@@ -126,67 +126,69 @@ int write_ppm(struct vconfig *vconf, char *image, FILE *x)
   return(0);
 }
 
+FILE *open_outfile(char *filename) {
+  FILE * x;
+  int err_count=0;
+  while (! (x = fopen(filename, "w+") ) && (err_count++ > 200) )
+    usleep(25000);
+  if (err_count>200) {
+    return 0;
+  }
+  return x;
+}
+
 /* Function to write an image, called by main */
 
 void write_image(struct vconfig *vconf) {
   FILE *x;
 
   //  v_error(vconf, LOG_DEBUG, "vconf->out = %s", vconf->out);
-  if ( vconf->usetmpout ) {
-    while (! (x = fopen(vconf->tmpout, "w+") ) )
-      v_error(vconf, LOG_ERR, "Could not open temporary outputfile %s", vconf->tmpout);
-    v_error(vconf, LOG_DEBUG, "Opened temporary output-file %s", vconf->tmpout);
-  } else {
-    while (! (x = fopen(vconf->out, "w+") ) )
-      v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
-    v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
+  
+  if ( (x = open_outfile(vconf->usetmpout?vconf->tmpout:vconf->out)) ) {
+    switch (vconf->outformat) 
+      {
+      case 1:
+	while (write_jpeg(vconf, vconf->o_buffer, x))
+	  v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+	break;
+      case 2:
+	while (write_png(vconf, vconf->o_buffer, x)) 
+	  v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+	break;
+      case 3:
+	while (write_ppm(vconf, vconf->o_buffer, x))
+	  v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+	break;
+      default:		// should never happen  
+	v_error(vconf, LOG_CRIT, "Unknown outformat %d (should not happen!!)", vconf->outformat);
+	break;
+      }
+    fclose(x);
+    if ( vconf->usetmpout ) {
+      /* Handle rename to final output */
+      v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
+      unlink(vconf->out);
+      if (-1 == link(vconf->tmpout, vconf->out))
+	v_error(vconf, LOG_ERR, "Couldn't link %s to %s: %s", vconf->tmpout, vconf->out, strerror(errno));
+      else
+	v_error(vconf, LOG_DEBUG, "Temporary output %s moved to final destination %s", vconf->tmpout, vconf->out);
+      unlink(vconf->tmpout);
+    } else {
+      v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+    }
   }
-  switch (vconf->outformat) 
-    {
-    case 1:
-      while (write_jpeg(vconf, vconf->o_buffer, x))
-	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-      break;
-    case 2:
-      while (write_png(vconf, vconf->o_buffer, x)) 
-	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-      break;
-    case 3:
-      while (write_ppm(vconf, vconf->o_buffer, x))
-	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-      break;
-    default:		// should never happen  
-      v_error(vconf, LOG_CRIT, "Unknown outformat %d (should not happen!!)", vconf->outformat);
-      break;
-    }
-  fclose(x);
-  if ( vconf->usetmpout ) {
-    //    v_error(vconf, LOG_DEBUG, "vconf->out = %s", vconf->out);
-    v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
-    unlink(vconf->out);
-    if (-1 == link(vconf->tmpout, vconf->out)) {
-      v_error(vconf, LOG_ERR, "Couldn't link %s to %s: %s", vconf->tmpout, vconf->out, strerror(errno));
-    }
-    if (vconf->archive) {
-      time_t td;
-      struct tm *tm;
-      char archive[255];
-      /* vconf->archive is a strftime format string, make the final path
-       * to archive_path */
-      time(&td);
-      tm = localtime(&td);
-      strftime(archive, sizeof(archive)-1, vconf->archive, tm);
-      if (-1 == link(vconf->tmpout, archive) ) {
-	v_error(vconf, LOG_ERR, "Couldn't link to archive file %s", vconf->archive);
-      }
-      else {
-	v_error(vconf, LOG_DEBUG, "Archiving %s to %s", vconf->out, archive);
-      }
-    }
-    unlink(vconf->tmpout);
-    v_error(vconf, LOG_DEBUG, "Temporary output %s moved to final destination %s", vconf->tmpout, vconf->out);
-  } else {
-    v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+  else {
+    v_error(vconf, LOG_ERR, "Could not open outfile %s", vconf->usetmpout?vconf->tmpout:vconf->out);
+  }
+  if (vconf->archive) {
+    /* vconf->archive is a strftime format string, make the final path
+     * to archive_path */
+    char *ts;
+    if (-1 == link(vconf->out, (ts=timestring(vconf->archive))) )
+      v_error(vconf, LOG_ERR, "Couldn't link to archive file %s", ts);
+    else
+      v_error(vconf, LOG_DEBUG, "Archiving %s to %s", vconf->out, ts);
+    free_ptr(ts);
   }
 #ifdef LIBFTP
   if(vconf->ftp.enable == TRUE)

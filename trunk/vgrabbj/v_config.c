@@ -448,14 +448,31 @@ struct vconfig *parse_config(struct vconfig *vconf){
   return(vconf);
 }
 
+char *build_opt(struct v_options l_opt[]) {
+  int i, n=0;
+  char string[255];
+  for (i=0; l_opt[i].name || l_opt[i].short_name; i++ ) {
+    if (l_opt[i].short_name) {
+      string[n++]=*l_opt[i].short_name;
+      if (l_opt[i].has_arg==req)
+	string[n++]=':';
+    }
+  }
+  string[n]='\0';
+  return (strcpy(malloc(strlen(string)+1), string));
+}
 
 /* Parse the commandline */
 
 struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
   int n, i;
+  char *opt_str;
+  
+  opt_str=build_opt(l_opt);
 
-  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:nz:A:"))!=EOF) {
-    if (optarg) optarg=strip_white(optarg);
+  while ( (n = getopt (argc, argv, opt_str) ) !=EOF ) {
+		      //"c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:nz:A:"))!=EOF) {
+    //if (optarg) optarg=strip_white(optarg);
     for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
       if ( l_opt[i].short_name &&  n==(int)*l_opt[i].short_name ) {
 	switch (l_opt[i].var_type) {
@@ -472,7 +489,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  *(boolean *)l_opt[i].var=*(boolean *)l_opt[i].var ? FALSE : TRUE;
 	  break;
 	case opt_charptr:
-	  *(int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(optarg, (char *)l_opt[i].var),
+	  (int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(optarg, (char *)l_opt[i].var),
 						   l_opt[i],0);
 	  break;
 	case opt_format:
@@ -489,8 +506,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  if (vconf->conf_file)
 	    v_error(vconf, LOG_DEBUG, "Overwriting old conf (%s) settings with new conf (%s)",
 		    vconf->conf_file, optarg);
-	  vconf->conf_file=free_ptr(vconf->conf_file);
-	  vconf->conf_file=strcpy(malloc(strlen(optarg)+1), optarg);
+	  vconf->conf_file=get_str(optarg, vconf->conf_file);
 	  parse_config(vconf);
 	  break;
 	case opt_version:
@@ -513,8 +529,8 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
       }      
     }
   }
-
-  //  v_update_ptr(vconf);
+  //free_ptr(opt_str);
+  v_update_ptr(vconf);
   
   v_error(vconf, LOG_INFO, "Done parsing commandline");
 
@@ -606,9 +622,12 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
       v_error(vconf, LOG_WARNING, "Could not initialize Font-Engine, timestamp disabled");
       vconf->use_ts=FALSE;
     }
-  if (vconf->use_ts)
+  if (vconf->use_ts) {
+#if DEBUGGING
     debug_vconf(vconf);
+#endif
     OpenFace(vconf);
+  }
 #endif
 
   return vconf;

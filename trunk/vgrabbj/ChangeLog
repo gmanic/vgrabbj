@@ -1,5 +1,8 @@
 2002-03-27  Jens Gecius  <jens@gecius.de>
 
+	* v_config.c: 	(after release) Fixed bug in ttf
+			init. Changed internals slightly.
+
 	* General: 	Update manuals, uploaded man's to
 			cvs, increased version no. to 0.8.9,
 			release.
