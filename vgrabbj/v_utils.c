@@ -82,6 +82,8 @@ void close_device(struct vconfig *vconf) {
     v_error(vconf, LOG_WARNING, "Device %s was already closed...", vconf->in);
 }
 
+/* following code thanks to David Austin */ 
+
 int set_picture_parms(struct vconfig *vconf) {
   if ((vconf->hue < 0) && (vconf->brightness < 0) &&
       (vconf->colour < 0) && (vconf->contrast < 0) &&
@@ -172,9 +174,8 @@ unsigned char *swap_left_right(char *buffer, int width, int height)
   return buffer;
 }
 
-
-
 /* Swap Top to Bottom (like a mirror) */
+/* Thanks to Koos van den Hout and Arthur van Leeuwen */
 
 unsigned char *swap_top_bottom(char *buffer, int width, int height) 
 {
