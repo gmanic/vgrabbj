@@ -103,28 +103,6 @@ void usage (char *pname)
   exit (1);
 }
 
-/* Event handler for SIGKILL */
-/* to properly clean up on externally requested termination */
-
-void sigterm();
-
-void sigterm() {
-  signal(SIGTERM,sigterm); /* reset signal */
-  syslog(LOG_WARNING, "Caught sigterm, cleaning up...");
-  signal_terminate=SIGTERM;
-}
-
-/* Event handler for SIGHUP */
-/* to re-read the configuration file */
-
-void sighup();
-
-void sighup() {
-  signal(SIGHUP,sighup); /* reset signal */
-  syslog(LOG_WARNING, "Caught sighup, re-reading config-file...");
-  signal_terminate=SIGHUP;
-}
-
 
 struct vconfig *init_defaults(struct vconfig *vconf) {
   // Set defaults
@@ -147,9 +125,8 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->dev        = 0;
   vconf->forcepal   = 0;
   vconf->discard    = 0;
-  vconf->mmapsize   = 0;
   vconf->usemmap    = TRUE;
-  vconf->openonce   = FALSE;
+  vconf->openonce   = TRUE;
   vconf->usetmpout  = TRUE;
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
@@ -231,34 +208,30 @@ int try_palette(struct vconfig *vconf, int palette, int dev)
 struct vconfig *check_device(struct vconfig *vconf) {
 
   struct video_window twin;
-  int dev;
-  struct video_mbuf vbuf;
 
-  while ((dev=open(vconf->in, O_RDONLY)) < 0)
-    v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
+  open_device(vconf);
 
-  v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
   v_error(vconf, LOG_INFO, "Checking settings of device %s", vconf->in);
   
-  while (ioctl(dev, VIDIOCGCAP, &vconf->vcap) < 0)
+  while (ioctl(vconf->dev, VIDIOCGCAP, &vconf->vcap) < 0)
     v_error(vconf, LOG_ERR, "Problem getting video capabilities"); // exit
   if ( (vconf->vcap.maxwidth < vconf->win.width) ||
        (vconf->vcap.minwidth > vconf->win.width) ||
        (vconf->vcap.maxheight < vconf->win.height) ||
        (vconf->vcap.minheight > vconf->win.height) )
     v_error(vconf, LOG_CRIT, "Device doesn't support width/height"); // exit
-  while (ioctl(dev, VIDIOCGWIN, &twin))
+  while (ioctl(vconf->dev, VIDIOCGWIN, &twin))
     v_error(vconf, LOG_ERR, "Problem getting window information"); // exit
   vconf->win.flags=twin.flags;
   vconf->win.x=twin.x;
   vconf->win.y=twin.y;
   vconf->win.chromakey=twin.chromakey;
   if (vconf->windowsize)
-    while (ioctl(dev, VIDIOCSWIN, &vconf->win) )
+    while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
       v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
-  while (ioctl(dev, VIDIOCGWIN, &vconf->win) <0)
+  while (ioctl(vconf->dev, VIDIOCGWIN, &vconf->win) <0)
     v_error(vconf, LOG_ERR, "Problem getting window size"); // exit
-  while (ioctl(dev, VIDIOCGPICT, &vconf->vpic) < 0)
+  while (ioctl(vconf->dev, VIDIOCGPICT, &vconf->vpic) < 0)
     v_error(vconf, LOG_ERR, "Problem getting picture properties"); // exit
 
   // HERE we actually TRY to get a palette the device delivers.
@@ -273,7 +246,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
   // Sorry for the inconvenience!
 
   if (vconf->forcepal)
-    if ( (vconf->vpic.palette=try_palette(vconf, vconf->forcepal, dev)) )
+    if ( (vconf->vpic.palette=try_palette(vconf, vconf->forcepal, vconf->dev)) )
       v_error(vconf, LOG_INFO, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
   
   switch(vconf->vpic.palette) {
@@ -285,135 +258,28 @@ struct vconfig *check_device(struct vconfig *vconf) {
   case VIDEO_PALETTE_RGB32:
     break;
   default:
-    if ( (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB24, dev))  ||
-	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB32, dev))  ||
-	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUYV, dev))   ||
-	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420, dev)) ||
-	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, dev)) )
+    if ( (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB24, vconf->dev))  ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB32, vconf->dev))  ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUYV, vconf->dev))   ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420, vconf->dev)) ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, vconf->dev)) )
       v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
     else
       v_error(vconf, LOG_CRIT, "Unable to set supported video-palette"); // exit
     break;
   }
     
-  if ( (ioctl(dev, VIDIOCGMBUF, &vbuf) < 0) || 
+  if ( (ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) || 
        ((vconf->brightness) && (vconf->vpic.palette==VIDEO_PALETTE_RGB24)) )
     vconf->usemmap=FALSE;
-  else
-    vconf->mmapsize=vbuf.size;
 
-  while ( close(dev) )
-    v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
-  
-  v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  close_device(vconf);
 
   return vconf;
 }
 
 
-int get_int(char *value) {
-  int tmp;
-  if ( sscanf(value, "%d", &tmp) != 1 )
-    return -1;
-  return tmp;
-}
-
-
-char *get_str(char *value, char *var) {
-  if (var) free(var);
-  if ( strlen(value)<1 )
-    return NULL;
-  var=strcpy(malloc(strlen(value)+1),value);
-  return var;
-}
-
-
-int get_bool(char *value) {
-  if ( !(strcasecmp(value, "oN")) || !(strcasecmp(value, "Yes")))
-    return 1;
-  else if ( !(strcasecmp(value, "Off")) || !(strcasecmp(value, "No")) )
-    return 0;
-  return -1;
-}
-
-
-int get_format(char *value) {
-  int tmp;
-  if ( !(strcasecmp(value, "JPEG")) || !(strcasecmp(value,"JPG")) )
-    tmp=1;
-  else if ( !(strcasecmp(value, "PNG")) )
-    tmp=2;
-  else if ( !(strcasecmp(value, "PPM")) )
-    tmp=3;
-  else
-    tmp=-1;
-  return tmp;
-}
-
-
-int get_position(char *value) {
-  int tmp;
-  if ( (!(strcasecmp(value, "UL"))) || (!(strcasecmp(value, "UpperLeft"))) )
-    tmp=0;
-  else if ( (!(strcasecmp(value, "UR"))) || (!(strcasecmp(value, "UpperRight"))) )
-    tmp=1;
-  else if ( (!(strcasecmp(value, "LL"))) || (!(strcasecmp(value, "LowerLeft"))) )
-    tmp=2;
-  else if ( (!(strcasecmp(value, "LR"))) || (!(strcasecmp(value, "LowerRight"))) )
-    tmp=3;
-  else if ( (!(strcasecmp(value, "UC"))) || (!(strcasecmp(value, "UpperCenter"))) )
-    tmp=4;
-  else if ( (!(strcasecmp(value, "LC"))) || (!(strcasecmp(value, "LowerCenter"))) )
-    tmp=5;
-  else
-    tmp=-1;
-  return tmp;
-}
-
-
-int decode_size(char *value) {
-  int tmp;
-  if ( !(strcasecmp(value, "sqcif")) )
-    tmp=8;
-  else if ( !(strcasecmp(value, "qsif")) )
-    tmp=10;
-  else if ( !(strcasecmp(value, "qcif")) )
-    tmp=11;
-  else if ( !(strcasecmp(value, "sif")) )
-    tmp=20;
-  else if ( !(strcasecmp(value, "cif")) )
-    tmp=22;
-  else if ( !(strcasecmp(value, "vga")) )
-    tmp=40;
-  else if ( !(strcasecmp(value, "svga")) )
-    tmp=50;
-  else if ( !(strcasecmp(value, "xga")) )
-    tmp=64;
-  else if ( !(strcasecmp(value, "sxga")) )
-    tmp=80;
-  else if ( !(strcasecmp(value, "uxga")) )
-    tmp=100;
- else
-    tmp=0;
-  return tmp;
-}
-
-
-int get_width(char *value) {
-  return (16 * decode_size(value));
-}
-
-
-int get_height(char *value) {
-  if ( decode_size(value) == 11 )
-    return 144;
-  else if ( decode_size(value) == 22 )
-    return 288;
-  else if ( decode_size(value) == 80 )
-    return 1024;
-  return (12 * decode_size(value));
-}
-
+/* Parse a config-file for options */
 
 struct vconfig *parse_config(struct vconfig *vconf){
 
@@ -727,9 +593,10 @@ struct vconfig *parse_config(struct vconfig *vconf){
 }
 
 
+/* Parse the commandline */
+
 struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
   int n;
-  int dev=0;
   int is_width=0;
   int is_height=0;
 
@@ -882,10 +749,10 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  vconf->brightness = !DEFAULT_BRIGHTNESS;
 	  break;
 	case 's':
-	  if ( (dev = open(vconf->in = optarg, O_RDONLY) ) < 0 ) 
+	  if ( (vconf->dev = open(vconf->in = optarg, O_RDONLY) ) < 0 ) 
 	    v_error(vconf, LOG_CRIT, "Device %s not accessible", vconf->in); // exit
-	  dev=close(dev);
-	  if (dev)
+	  vconf->dev=close(vconf->dev);
+	  if (vconf->dev)
 	    v_error(vconf, LOG_CRIT, "Device %s error occured", vconf->in); // exit
 	  show_capabilities(vconf->in, argv[0]);
 	  break;
@@ -944,6 +811,10 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
     vconf=malloc(sizeof(*vconf));
     vconf=init_defaults(vconf);
   }
+  else if (vconf->openonce) {
+    free_mmap(vconf);
+    close_device(vconf);
+  }
 
   vconf=parse_config(vconf);
 
@@ -967,7 +838,10 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
 
   /* re/initialize appropriate memory */
   
-  v_error(vconf, LOG_DEBUG, "Re-initializing memory");
+  if (reinit==0)
+    v_error(vconf, LOG_DEBUG, "Initializing memory");
+  else
+    v_error(vconf, LOG_DEBUG, "Reinitializing memory");
 
   vconf->buffer=free_ptr(vconf->buffer);
   vconf->o_buffer=free_ptr(vconf->o_buffer);
@@ -980,31 +854,38 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
   v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (out)",
 	  img_size(vconf, vconf->vpic.palette), img_size(vconf, VIDEO_PALETTE_RGB24));
   
+  vconf->vmap.height=vconf->win.height;
+  vconf->vmap.width=vconf->win.width;
+  vconf->vmap.frame=0;
+  vconf->vmap.format=vconf->vpic.palette;
+  if (vconf->openonce) {
+    open_device(vconf);
+    init_mmap(vconf);
+  }
 #ifdef LIBTTF
   if ( reinit==1 ) {
-    if ( vconf->use_ts ) TT_Done_FreeType(vconf->ttinit->engine);
-    vconf->ttinit->properties=free_ptr(vconf->ttinit->properties);
-    vconf->ttinit=free_ptr(vconf->ttinit);
+    if ( vconf->use_ts ) {
+      Face_Done(vconf->ttinit->instance, vconf->ttinit->face);
+    }
+  } else {
+    vconf->ttinit = malloc(sizeof(*vconf->ttinit));
+    vconf->ttinit->properties = malloc(sizeof(*vconf->ttinit->properties));
+    v_error(vconf, LOG_DEBUG, "Allocated memory for TT-engine");
   }
-
-  vconf->ttinit = malloc(sizeof(*vconf->ttinit));
-  vconf->ttinit->properties = malloc(sizeof(*vconf->ttinit->properties));
  
   if ( !vconf->ttinit->properties || !vconf->ttinit ) {
     v_error(vconf, LOG_ERR, "No memory for timestamp, disabled!");
     vconf->use_ts=FALSE;
   }
-  
-  if (vconf->use_ts)
+  if (vconf->use_ts && reinit==0)
     if (TT_Init_FreeType(&vconf->ttinit->engine)) {
       v_error(vconf, LOG_WARNING, "Could not initialize Font-Engine, timestamp disabled");
       vconf->use_ts=FALSE;
-  }
+    }
+  if (vconf->use_ts)
+    OpenFace(vconf);
 #endif
 
   return vconf;
 }
 
-struct vconfig *v_reinit(struct vconfig *vconf) {
-  return (vconf=v_init(vconf, 1, 0, '\0'));
-}

@@ -1,3 +1,15 @@
+2002-02-11  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	More split-up of source to make it more
+			readable. Re-organization of mmap (now
+			close to device open to prevent memory
+			fragmentation. If the device is not
+			otherwise needed, I strongly advise to 
+			use OpenOnce yes (now default).
+			Changed handling of Timestamp, Font-eninge
+			is loaded/initialized once only at startup
+			and if config is re-read.
+
 2002-02-10  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c: 	Added DaemonSeconds as alternative to Daemon
