@@ -1,3 +1,11 @@
+2001-07-12  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Fixed missing free() for the temp-buffer. This led to
+			the box running out of memory and hence kill vgrabbj
+			(only daemon mode).
+			Fixed interchanged factors in conv_rgb32_rgb24 leading
+			to a seg-fault.
+
 2001-07-09  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.h: 	Changed default debug/log-level to 4.
