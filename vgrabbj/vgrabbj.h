@@ -19,6 +19,8 @@
  * USA  
  */  
 
+/* Includes */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -50,10 +52,13 @@
 #include <ccvt.h>
 #include <signal.h>
 #include <mcheck.h>
+#include <sys/mman.h>
 
 #ifdef HAVE_LIBTTF
 #include <freetype/freetype.h>
 #endif
+
+/* Defines, defaults */
 
 #define DEFAULT_QUALITY 75
 #define DEFAULT_WIDTH 352
@@ -62,7 +67,7 @@
 #define DEFAULT_VIDEO_DEV "/dev/video"
 #define DEFAULT_OUTPUT "/dev/stdout"
 #define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png
-#define DEFAULT_BRIGHTNESS TRUE
+#define DEFAULT_BRIGHTNESS FALSE
 #define MAX_ERRORMSG_LENGTH 1024
 #define LOGLEVEL 4
 
@@ -77,6 +82,59 @@
 #endif
 
 #define TS_MAX 128
+
+/* Structure definitions */
+  
+struct vconfig {
+  unsigned long int loop;
+  int debug;
+  int err_count;
+  unsigned int quality;
+  int outformat;
+  int dev;
+  char *in;
+  char *out;
+  boolean windowsize;
+  boolean switch_bgr;
+  boolean use_ts;
+  boolean brightness;
+  boolean init_done;
+  int inputnorm;
+  int channel;
+  int forcepal;
+#ifdef HAVE_LIBTTF
+  char *font;
+  char *timestamp;
+  int font_size;
+  int align;
+  int border;
+  int blend;
+#endif
+  struct video_window win;
+  struct video_picture vpic;
+  struct video_capability vcap;
+};
+
+#ifdef HAVE_LIBTTF
+struct ttneed {
+  TT_Engine engine;
+  TT_Face face;
+  TT_Face_Properties *properties;
+  TT_Instance instance;
+  boolean use;
+};
+#endif
+
+struct palette_list {
+  int num;
+  char *name;
+};
+
+/* Forward definitions */
+
+void usage (char *pname);
+void show_capabilities(char *in, char *pname);
+void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
 
 /* External functions */
 
