@@ -27,22 +27,22 @@ int terminate=0;
 
 static struct palette_list plist[] = {
   { 0, NULL },
-  { VIDEO_PALETTE_GREY,   "GREY" },
-  { VIDEO_PALETTE_HI240,  "HI240" },
-  { VIDEO_PALETTE_RGB565, "RGB565" },
-  { VIDEO_PALETTE_RGB24,  "RGB24" },
-  { VIDEO_PALETTE_RGB32,  "RGB32" },
-  { VIDEO_PALETTE_RGB555, "RGB555" },
-  { VIDEO_PALETTE_YUV422, "YUV422" },
-  { VIDEO_PALETTE_YUYV,   "YUYV" },
-  { VIDEO_PALETTE_UYVY,   "UYVY" },
-  { VIDEO_PALETTE_YUV420, "YUV420" },
-  { VIDEO_PALETTE_YUV411, "YUV411" },
-  { VIDEO_PALETTE_RAW,    "RAW" },
-  { VIDEO_PALETTE_YUV422P,"YUV422P" },
-  { VIDEO_PALETTE_YUV411P,"YUV411P" },
-  { VIDEO_PALETTE_YUV420P,"YUV420P" },
-  { VIDEO_PALETTE_YUV410P,"YUV410P" },
+  { VIDEO_PALETTE_GREY,   "GREY", 0, 1 },
+  { VIDEO_PALETTE_HI240,  "HI240", 0, 1 },
+  { VIDEO_PALETTE_RGB565, "RGB565", 0, 1 },
+  { VIDEO_PALETTE_RGB24,  "RGB24", 3, 1 },
+  { VIDEO_PALETTE_RGB32,  "RGB32", 4, 1 },
+  { VIDEO_PALETTE_RGB555, "RGB555", 0, 1 },
+  { VIDEO_PALETTE_YUV422, "YUV422", 2, 1 },
+  { VIDEO_PALETTE_YUYV,   "YUYV", 2, 1 },
+  { VIDEO_PALETTE_UYVY,   "UYVY", 0, 1 },
+  { VIDEO_PALETTE_YUV420, "YUV420", 3, 2 },
+  { VIDEO_PALETTE_YUV411, "YUV411", 0, 1 },
+  { VIDEO_PALETTE_RAW,    "RAW", 0, 1 },
+  { VIDEO_PALETTE_YUV422P,"YUV422P", 0, 1 },
+  { VIDEO_PALETTE_YUV411P,"YUV411P", 0, 1 },
+  { VIDEO_PALETTE_YUV420P,"YUV420P", 3, 2 },
+  { VIDEO_PALETTE_YUV410P,"YUV410P", 0, 1 },
   { -1, NULL }
 };
 
@@ -258,11 +258,7 @@ void show_capabilities(char *in, char *pname)
   exit(0);
 }
 
-struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
-  int n;
-  FILE *x;
-  int dev;
-
+struct vconfig *init_defaults(struct vconfig *vconf) {
   // Set defaults
   vconf->quality    = DEFAULT_QUALITY;
   vconf->in         = DEFAULT_VIDEO_DEV;
@@ -288,33 +284,42 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
   vconf->align      = DEFAULT_ALIGN;
   vconf->blend      = DEFAULT_BLEND;
 #endif
-  
-  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:F:"))!=EOF) 
+  return vconf;
+}  
+
+
+struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
+  int n;
+  FILE *x;
+  int dev;
+
+  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:F:"))!=EOF) 
     {
       switch (n) 
 	{
+	case 'c':
+	  parse_config(vconf, optarg);
+	  break;
 	case 'l':
-	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
+	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < MIN_LOOP ) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
 	  vconf->loop=vconf->loop*1000000;
 	  break;
 	case 'L':
-	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
+	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < MIN_LOOP ) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
 	  break;
 	case 'f':
-	  if ( !(x=fopen(vconf->out=optarg, "w+") ) ) 
+	  if ( !(x=fopen((vconf->out=optarg), "w+") ) )
 	    v_error(vconf, LOG_CRIT, "Can't access output file %s",vconf->out); // exit
 	  fclose(x);
-	  if (vconf->debug)
-	    v_error(vconf, LOG_DEBUG, "Outputfile is %s", vconf->out);
+	  v_error(vconf, LOG_DEBUG, "Outputfile is %s", vconf->out);
 	  break;
 	case 'q':
-	  if ( sscanf (optarg, "%d", &vconf->quality) != 1 || (vconf->quality<0)
-	       || (vconf->quality>100) ) 
+	  if ( sscanf (optarg, "%d", &vconf->quality) != 1 || (vconf->quality<MIN_QUALITY)
+	       || (vconf->quality>MAX_QUALITY) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong picture quality \"%d\"", vconf->quality); // exit
-	  if (vconf->debug)
-	    v_error(vconf, LOG_DEBUG, "Image quality is %d", vconf->quality);
+	  v_error(vconf, LOG_DEBUG, "Image quality is %d", vconf->quality);
 	  break;
 	case 'o':
 	  if ( !strcasecmp(optarg,"jpeg") || !strcasecmp(optarg,"jpg") )
@@ -355,16 +360,16 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  break;
 #ifdef HAVE_LIBTTF
 	case 't':
-	  if ( !( x = fopen(vconf->font = optarg, "r") ) )
+	  if ( !( x = fopen((vconf->font = optarg), "r") ) )
 	    v_error(vconf, LOG_CRIT, "Font-file %s not found", vconf->font); // exit
 	  vconf->use_ts=TRUE;
 	  vconf->font=optarg;
 	  fclose(x);
 	  break;
 	case 'T':
-	  if ( sscanf(optarg, "%d", &vconf->font_size) != 1 || vconf->font_size < 1
-	       || vconf->font_size > 100 ) 
-	    v_error(vconf, LOG_CRIT, "Wrong fontsize (min. 1, max 100)"); // exit
+	  if ( sscanf(optarg, "%d", &vconf->font_size) != 1 || vconf->font_size < MIN_FONTSIZE
+	       || vconf->font_size > MAX_FONTSIZE ) 
+	    v_error(vconf, LOG_CRIT, "Wrong fontsize (min. %d, max %d)", MIN_FONTSIZE, MAX_FONTSIZE); // exit
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'p':
@@ -378,20 +383,20 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'a':
-	  if ( sscanf (optarg, "%d", &vconf->align) != 1 || vconf->align < 0
-	       || vconf->align>5 ) 
+	  if ( sscanf (optarg, "%d", &vconf->align) != 1 || vconf->align < MIN_ALIGN
+	       || vconf->align>MAX_ALIGN ) 
 	    v_error(vconf, LOG_CRIT, "Wrong timestamp alignment"); // exit
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'm':
-	  if ( sscanf (optarg, "%d", &vconf->blend) != 1 || vconf->blend > 100
-	       || vconf->blend < 1 ) 
+	  if ( sscanf (optarg, "%d", &vconf->blend) != 1 || vconf->blend > MAX_BLEND
+	       || vconf->blend < MIN_BLEND ) 
 	    v_error(vconf, LOG_CRIT, "Wrong blend value"); // exit
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'B':
-	  if ( sscanf (optarg, "%d", &vconf->border) != 1 || vconf->border > 255
-	       || vconf->border < 1 ) 
+	  if ( sscanf (optarg, "%d", &vconf->border) != 1 || vconf->border > MAX_BORDER
+	       || vconf->border < MIN_BORDER ) 
 	    v_error(vconf, LOG_CRIT, "Wrong border value"); // exit
 	  vconf->use_ts=TRUE;
 	  break;
@@ -408,8 +413,8 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  show_capabilities(vconf->in, argv[0]);
 	  break;
 	case 'D':
-	  if ( sscanf (optarg, "%d", &vconf->debug) != 1 || vconf->debug >7
-	       || vconf->debug < 0 )
+	  if ( sscanf (optarg, "%d", &vconf->debug) != 1 || vconf->debug > MAX_DEBUG
+	       || vconf->debug < MIN_DEBUG )
 	    v_error(vconf, LOG_CRIT, "Wrong debuglevel value");
 	  break;
 	case 'w':
@@ -430,6 +435,9 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  break;
 	}
     }
+  v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
+
+  vconf->init_done=TRUE;
   return vconf;
 }
 
@@ -538,7 +546,7 @@ int try_palette(struct vconfig *vconf, int palette, int dev)
     v_error(vconf, LOG_WARNING, "Unable to set palette"); // exit
     return 0;
   }
-  if (ioctl(dev, VIDIOCSPICT, &vconf->vpic) < 0) {
+  if (ioctl(dev, VIDIOCGPICT, &vconf->vpic) < 0) {
     v_error(vconf, LOG_WARNING, "Unable to get palette info"); // exit
     return 0;
   }
@@ -558,9 +566,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
     v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
 
   v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
-
-  if (vconf->debug)
-    v_error(vconf, LOG_INFO, "Checking settings of device %s", vconf->in);
+  v_error(vconf, LOG_INFO, "Checking settings of device %s", vconf->in);
   
   while (ioctl(dev, VIDIOCGCAP, &vconf->vcap) < 0)
     v_error(vconf, LOG_ERR, "Problem getting video capabilities"); // exit
@@ -621,8 +627,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
   while ( close(dev) )
     v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
   
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
 
   return vconf;
 }
@@ -650,6 +655,13 @@ unsigned char *conv_rgb32_rgb24(unsigned char *o_buffer, unsigned char *buffer,
   return o_buffer;
 }
 
+
+/* Returns the actual byte-size of the image */
+
+int img_size(struct vconfig *vconf, int palette) {
+  return (plist[palette].mul * vconf->win.width * vconf->win.height) / plist[palette].div;
+}
+
 /* Read the image from device, adjust brightness, if wanted, for RGB24 */
 
 unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size) {
@@ -660,17 +672,15 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
   //  struct video_channel vchan;
   char *map;
 
-  if (vconf->debug)
-    v_error(vconf, LOG_DEBUG, "Palette to be used: %s (%d), size: %d",
-	    plist[vconf->vpic.palette].name, vconf->vpic.palette, size);
+  v_error(vconf, LOG_DEBUG, "Palette to be used: %s (%d), size: %d",
+	  plist[vconf->vpic.palette].name, vconf->vpic.palette, img_size(vconf, vconf->vpic.palette));
 
   // Opening input device
 
   while ((dev=open(vconf->in, O_RDONLY)) < 0)
     v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
 
-  if (vconf->debug)
-    v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
+  v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
 
   // Re-initialize the palette, in case someone changed it meanwhile
 
@@ -691,8 +701,7 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
 
     err_count=0;
     if (vconf->brightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
-      if (vconf->debug) 
-	v_error(vconf, LOG_INFO, "Doing brightness adjustment");
+      v_error(vconf, LOG_INFO, "Doing brightness adjustment");
       do {
 	while (read(dev, buffer, size) < size)
 	  v_error(vconf, LOG_ERR, "Error reading from %s", vconf->in);
@@ -709,8 +718,7 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
 	  }
 	}
       } while (f);
-      if (vconf->debug)
-	v_error(vconf, LOG_INFO, "Brightness adjusted");
+      v_error(vconf, LOG_INFO, "Brightness adjusted");
     } else {
       v_error(vconf, LOG_DEBUG, "Using normal read for image grabbing");
       read(dev, buffer, size);
@@ -739,16 +747,14 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
     munmap(map, vbuf.size);
   }
   
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Image successfully read");
+  v_error(vconf, LOG_DEBUG, "Image successfully read");
 
   // Closing Input Device
   
   while ( close(dev) )
     v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
   
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
 
   return buffer;
 }
@@ -756,22 +762,19 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
 int daemonize(struct vconfig *vconf, char *progname) 
 {
   openlog(progname, LOG_DEBUG, LOG_DAEMON);
-  if (vconf->debug)
-    v_error(vconf, LOG_DEBUG, "Forking for daemon mode");
+  v_error(vconf, LOG_DEBUG, "Forking for daemon mode");
     
   switch( fork() ) 
     {
     case 0: // Child 
-      if (vconf->debug) 
-	v_error(vconf, LOG_DEBUG, "I'm the child process and are going to read images...");
+      v_error(vconf, LOG_DEBUG, "I'm the child process and are going to read images...");
       closelog();
       break;
     case -1: /* Error  */
       v_error(vconf, LOG_CRIT, "Can't fork, exiting..."); // exit
       break;
     default: /* Parent  */
-      if (vconf->debug) 
-	v_error(vconf, LOG_DEBUG, "I'm the parent and exiting now"
+      v_error(vconf, LOG_DEBUG, "I'm the parent and exiting now"
 		"(child takes care of the rest).");
    closelog();
    free(vconf);
@@ -781,6 +784,102 @@ int daemonize(struct vconfig *vconf, char *progname)
   v_error(vconf, LOG_WARNING, "%s started, reading from %s", progname, vconf->in);
   
   return(1);
+}
+
+
+unsigned char *conv_image(struct vconfig *vconf, unsigned char *o_buffer, unsigned char *buffer) {
+
+  unsigned char *t_buffer;
+  switch (vconf->vpic.palette) {
+  case VIDEO_PALETTE_RGB24:
+    o_buffer=memcpy(o_buffer, buffer, 
+		    vconf->win.width * vconf->win.height * 3);
+    v_error(vconf, LOG_DEBUG, "No conversion, we have RGB24");
+    break;
+   
+  case VIDEO_PALETTE_RGB32:
+    v_error(vconf, LOG_INFO, "Got RGB32, converting...");
+   
+    o_buffer=conv_rgb32_rgb24(o_buffer, buffer, vconf->win.width, vconf->win.height);
+    break;
+   
+  case VIDEO_PALETTE_YUV420P:
+    v_error(vconf, LOG_INFO, "Got YUV420p, converting...");
+   
+    ccvt_420p_bgr24(vconf->win.width, vconf->win.height, buffer,
+		    buffer + (vconf->win.width * vconf->win.height),
+		    buffer + (vconf->win.width * vconf->win.height)+
+		    (vconf->win.width * vconf->win.height / 4),
+		    o_buffer);
+    break;
+   
+  case VIDEO_PALETTE_YUV420:
+    v_error(vconf, LOG_INFO, "Got YUV420, converting...");
+
+    t_buffer=malloc(img_size(vconf, vconf->vpic.palette));
+   
+    //      ccvt_420i_420p(vconf->win.width, vconf->win.height, buffer, t_buffer,
+    //	     t_buffer + (vconf->win.width * vconf->win.height),
+    //	     t_buffer + (vconf->win.width * vconf->win.height)+
+    //	     (vconf->win.width * vconf->win.height / 4));
+    //      ccvt_420p_bgr24(vconf->win.width, vconf->win.height, t_buffer,
+    //	      t_buffer + (vconf->win.width * vconf->win.height),
+    //	      t_buffer + (vconf->win.width * vconf->win.height)+
+    //	      (vconf->win.width * vconf->win.height / 4),
+    //	      o_buffer);
+    //	      free(t_buffer);
+    // As of now the direct conversion does not work properly.
+    // Therefore, I use a very slow but working solution...
+   
+    ccvt_420i_rgb24(vconf->win.width, vconf->win.height, buffer, o_buffer);
+      
+    break;
+  case VIDEO_PALETTE_YUYV:
+  case VIDEO_PALETTE_YUV422:
+    v_error(vconf, LOG_INFO, "Got YUYV, converting...");
+      
+    ccvt_yuyv_bgr24(vconf->win.width, vconf->win.height, buffer, o_buffer);
+    break;
+  default:
+    v_error(vconf, LOG_CRIT, "Should not happen - Unknown input image format");
+    break;
+  }
+
+  if (vconf->vpic.palette!=VIDEO_PALETTE_RGB24)
+    v_error(vconf, LOG_DEBUG, "converted to RGB24");
+     
+  if (vconf->switch_bgr) {
+    o_buffer=switch_color(vconf, o_buffer);
+    v_error(vconf, LOG_DEBUG, "Switching vom BGR to RGB - or vice versa");
+  }
+  return o_buffer;
+}
+
+
+void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
+  FILE *x;
+  while (! (x = fopen(vconf->out, "w+") ) )
+    v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
+  v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
+  
+  switch (vconf->outformat) 
+    {
+    case 1:
+      while (write_jpeg(vconf, o_buffer, x))
+	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+      break;
+    case 2:
+      while (write_png(vconf, o_buffer, x)) 
+	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+      break;
+    default:		// should never happen  
+      v_error(vconf, LOG_CRIT, "Unknown error! Report all circumstances to author");
+      break;
+    }
+  fclose(x);
+  
+  v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+  return;
 }
 
 /* Now for the LIBTTF functions for the timestamp */
@@ -793,8 +892,7 @@ struct ttneed *OpenFace(struct ttneed *ttinit, struct vconfig *vconf)
 {
   int i, j;
 
-  if (vconf->debug)
-    v_error(vconf, LOG_INFO, "Initializing Font-Engine");
+  v_error(vconf, LOG_INFO, "Initializing Font-Engine");
 
   if (vconf->debug) {
     TT_FreeType_Version( &i, &j);
@@ -806,8 +904,7 @@ struct ttneed *OpenFace(struct ttneed *ttinit, struct vconfig *vconf)
     v_error(vconf, LOG_WARNING, "Font not found: %s, timestamp disabled", vconf->font);
     return(0);
   } 
-  if (vconf->debug)
-    v_error(vconf, LOG_DEBUG, "Font-Engine initialized");
+  v_error(vconf, LOG_DEBUG, "Font-Engine initialized");
 
   return(ttinit);
 }
@@ -831,8 +928,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
       return(buffer);
   }
   
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
+  v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
 
   time (&t);
   tm = localtime (&t);
@@ -840,38 +936,32 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
   strftime (ts_buff, TS_MAX, vconf->timestamp, tm);
   ts_len = strlen (ts_buff);
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Stamp: %s, length: %d", ts_buff, ts_len);
+  v_error(vconf, LOG_DEBUG, "Stamp: %s, length: %d", ts_buff, ts_len);
 
   glyphs = Glyphs_Load(ttinit->face, ttinit->properties, ttinit->instance,
 		       ts_buff, ts_len);
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Glyphs loaded");
+  v_error(vconf, LOG_DEBUG, "Glyphs loaded");
 
   Raster_Init(ttinit->face, ttinit->properties, ttinit->instance, ts_buff,
 	      ts_len, vconf->border, glyphs, &bit);
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Returned from Raster_Init");
+  v_error(vconf, LOG_DEBUG, "Returned from Raster_Init");
 
   Raster_Small_Init (&sbit, &ttinit->instance);
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Returned from Raster_Small_Init");
+  v_error(vconf, LOG_DEBUG, "Returned from Raster_Small_Init");
 
   Render_String(glyphs, ts_buff, ts_len, &bit, &sbit, vconf->border);
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Returned from Render_String");
+  v_error(vconf, LOG_DEBUG, "Returned from Render_String");
 
   if (bit.bitmap) 
     {
       int x, y, psize, i, x_off, y_off;
       unsigned char *p;
 
-      if (vconf->debug) 
-	v_error(vconf, LOG_DEBUG, "Now performing calculation of position...");
+      v_error(vconf, LOG_DEBUG, "Now performing calculation of position...");
 
       if (bit.rows>vconf->win.height) 
 	bit.rows=vconf->win.height;
@@ -905,8 +995,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
 	  break;
 	}
 
-      if (vconf->debug) 
-	v_error(vconf, LOG_DEBUG, "Done. Now we change the image with the string.");
+      v_error(vconf, LOG_DEBUG, "Done. Now we change the image with the string.");
 
       for (y = 0; y < bit.rows; y++) {
 	  p = buffer + (y + y_off) * (vconf->win.width * psize) + x_off;
@@ -948,8 +1037,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
 	}
     }
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Image manipulated, now closing...");
+  v_error(vconf, LOG_DEBUG, "Image manipulated, now closing...");
 
   Raster_Done (&sbit);
   Raster_Done (&bit);
@@ -957,8 +1045,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
   glyphs = NULL;
   Face_Done(ttinit->instance, ttinit->face);
 
-  if (vconf->debug) 
-    v_error(vconf, LOG_INFO, "Font-Engine unloaded, stamp inserted into image");
+  v_error(vconf, LOG_INFO, "Font-Engine unloaded, stamp inserted into image");
 
   return buffer;
 }
@@ -970,9 +1057,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
 int main(int argc, char *argv[]) 
 {
   struct vconfig *vconf;
-  unsigned char *buffer, *o_buffer, *t_buffer;
-  int size;
-  FILE *x;
+  unsigned char *buffer, *o_buffer;
 
 #ifdef HAVE_LIBTTF
   struct ttneed *ttinit;
@@ -985,18 +1070,29 @@ int main(int argc, char *argv[])
 #endif
 
   vconf=malloc(sizeof(*vconf));
-  vconf=decode_options(vconf, argc, argv);
-
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
-
-  vconf->init_done=TRUE;
+  vconf=init_defaults(vconf);
+  vconf=parse_config(vconf, DEFAULT_CONFIG);
+  vconf=parse_commandline(vconf, argc, argv);
 
   if (vconf->loop) 
     daemonize(vconf, basename(argv[0]));
   else
     v_error(vconf, LOG_WARNING, "Reading image from %s", vconf->in);
 
+  vconf=check_device(vconf);
+
+  /* initialize appropriate memory */
+  
+  v_error(vconf, LOG_DEBUG, "Initializing memory");
+  
+  buffer=malloc(img_size(vconf, vconf->vpic.palette));  // depending on palette
+  o_buffer=malloc(img_size(vconf, VIDEO_PALETTE_RGB24)); // RGB24 (3 byte/pixel)
+  if (!buffer || !o_buffer) 
+    v_error(vconf, LOG_CRIT, "Out of memory! Exiting...");
+  
+  v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (out)",
+	  img_size(vconf, vconf->vpic.palette), img_size(vconf, VIDEO_PALETTE_RGB24));
+  
 #ifdef HAVE_LIBTTF
   ttinit = malloc(sizeof(*ttinit));
   ttinit->properties = malloc(sizeof(*ttinit->properties));
@@ -1011,146 +1107,18 @@ int main(int argc, char *argv[])
   }
 #endif
 
-  vconf=check_device(vconf);
-
-  /* initialize appropriate memory */
-  
-  if (vconf->debug)
-    v_error(vconf, LOG_DEBUG, "Initializing memory");
-  
-  switch (vconf->vpic.palette) {
-  case VIDEO_PALETTE_RGB24:
-    size = vconf->win.width * vconf->win.height * 3;
-    break;
-  case VIDEO_PALETTE_RGB32:
-    size = vconf->win.width * vconf->win.height * 4;
-    break;
-  case VIDEO_PALETTE_YUYV:
-  case VIDEO_PALETTE_YUV422: // equal to YUYV
-    size = vconf->win.width * vconf->win.height * 2;
-    break;
-  case VIDEO_PALETTE_YUV420:
-    size = vconf->win.width * vconf->win.height * 3 / 2;
-    break;
-  case VIDEO_PALETTE_YUV420P:
-    size = vconf->win.width * vconf->win.height * 3 / 2;
-    break;
-  default:
-    size=0;
-    v_error(vconf, LOG_CRIT, "No supported palette available!"); //exit	
-    break;
-  }
-  
-  buffer=malloc(size);                                       // depending on palette
-  o_buffer=malloc(vconf->win.width * vconf->win.height * 3); // RGB24 (3 byte/pixel)
-  if (!buffer || !o_buffer) 
-    v_error(vconf, LOG_CRIT, "Out of memory! Exiting...");
-  
-  if (vconf->debug)
-    v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (tmp), %d (out)",
-	    size, vconf->win.width * vconf->win.height * 4,
-	    vconf->win.width * vconf->win.height * 3);
-  
   // now start the loop (if daemon), read image and convert it, if necessary 
   do {
     
-    buffer = read_image(vconf, buffer, size);
+    o_buffer = conv_image(vconf, o_buffer, 
+			  read_image(vconf, buffer, img_size(vconf, vconf->vpic.palette)));
     
-    switch (vconf->vpic.palette) {
-    case VIDEO_PALETTE_RGB24:
-      o_buffer=memcpy(o_buffer, buffer, 
-		      vconf->win.width * vconf->win.height * 3);
-      if (vconf->debug)
-	v_error(vconf, LOG_DEBUG, "No conversion, we have RGB24");
-      break;
-      
-    case VIDEO_PALETTE_RGB32:
-      if (vconf->debug)
-	v_error(vconf, LOG_INFO, "Got RGB32, converting...");
-      
-      o_buffer=conv_rgb32_rgb24(o_buffer, buffer, vconf->win.width, vconf->win.height);
-      break;
-      
-    case VIDEO_PALETTE_YUV420P:
-      if (vconf->debug)
-	v_error(vconf, LOG_INFO, "Got YUV420p, converting...");
-      
-      ccvt_420p_bgr24(vconf->win.width, vconf->win.height, buffer,
-		      buffer + (vconf->win.width * vconf->win.height),
-		      buffer + (vconf->win.width * vconf->win.height)+
-		      (vconf->win.width * vconf->win.height / 4),
-		      o_buffer);
-      break;
-      
-    case VIDEO_PALETTE_YUV420:
-      if (vconf->debug)
-	v_error(vconf, LOG_INFO, "Got YUV420, converting...");
-
-      t_buffer=malloc(size);
-      ccvt_420i_420p(vconf->win.width, vconf->win.height, buffer, t_buffer,
-		     t_buffer + (vconf->win.width * vconf->win.height),
-		     t_buffer + (vconf->win.width * vconf->win.height)+
-		     (vconf->win.width * vconf->win.height / 4));
-      ccvt_420p_bgr24(vconf->win.width, vconf->win.height, t_buffer,
-		      t_buffer + (vconf->win.width * vconf->win.height),
-		      t_buffer + (vconf->win.width * vconf->win.height)+
-		      (vconf->win.width * vconf->win.height / 4),
-		      o_buffer);
-		      free(t_buffer);
-		      // As of now the direct conversion does not work properly.
-		      // Therefore, I use a very slow but working solution...
-//      ccvt_420i_rgb24(vconf->win.width, vconf->win.height, buffer, o_buffer);
-		    
-      break;
-    case VIDEO_PALETTE_YUYV:
-    case VIDEO_PALETTE_YUV422:
-      if (vconf->debug)
-	v_error(vconf, LOG_INFO, "Got YUYV, converting...");
-      
-      ccvt_yuyv_bgr24(vconf->win.width, vconf->win.height, buffer, o_buffer);
-      break;
-    default:
-      v_error(vconf, LOG_CRIT, "Should not happen - Unknown input image format");
-      break;
-    }
-    
-    if (vconf->debug && vconf->vpic.palette!=VIDEO_PALETTE_RGB24)
-      v_error(vconf, LOG_DEBUG, "converted to RGB24");
-
-    if (vconf->switch_bgr) {
-      o_buffer=switch_color(vconf, o_buffer);
-      if (vconf->debug)
-	v_error(vconf, LOG_DEBUG, "Switching vom BGR to RGB - or vice versa");
-    }
-
 #ifdef HAVE_LIBTTF
     if (vconf->use_ts) 
       o_buffer=inserttext(ttinit, o_buffer, vconf);
 #endif
     
-    while (! (x = fopen(vconf->out, "w+") ) )
-      v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
-    if (vconf->debug)
-      v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
-    
-    switch (vconf->outformat) 
-      {
-      case 1:
-	while (write_jpeg(vconf, o_buffer, x))
-	  v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-	break;
-      case 2:
-	while (write_png(vconf, o_buffer, x)) 
-	  v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-	break;
-      default:		// should never happen  
-	v_error(vconf, LOG_CRIT, "Unknown error! Report all circumstances to author");
-	break;
-      }
-    fclose(x);
-    
-    if (vconf->debug) 
-      v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+    write_image(vconf, o_buffer);
     
     vconf->err_count=0;
     usleep(vconf->loop);
@@ -1165,13 +1133,11 @@ int main(int argc, char *argv[])
     
   } while (vconf->loop);
   
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
+  v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
   
   free (buffer);
   free (o_buffer);
-  if (vconf->debug) 
-    v_error(vconf, LOG_DEBUG, "Image-buffers freed");
+  v_error(vconf, LOG_DEBUG, "Image-buffers freed");
   
 #ifdef HAVE_LIBTTF
   if (vconf->use_ts)
