@@ -1,3 +1,12 @@
+2002-02-10  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Added DaemonSeconds as alternative to Daemon
+			in conf - value given is taken as seconds
+			instead of milliseconds (see conf).
+
+	* vgrabbj.c: 	Added some exit routine to mmap'ed capture
+			to avoid endless loops (2).
+
 2002-02-09  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c:	Added a parameter to discard frames before
