@@ -15,41 +15,23 @@ configure:954: checking whether the C compiler (gcc  ) works
 configure:970: gcc -o conftest    conftest.c  1>&5
 configure:996: checking whether the C compiler (gcc  ) is a cross-compiler
 configure:1001: checking whether we are using GNU C
-configure:1010: gcc -E conftest.c
 configure:1029: checking whether gcc accepts -g
 configure:1072: checking for a BSD compatible install
 configure:1125: checking whether ln -s works
 configure:1147: checking for main in -ljpeg
-configure:1162: gcc -o conftest -g -O2   conftest.c -ljpeg   1>&5
 configure:1190: checking for main in -lm
-configure:1205: gcc -o conftest -g -O2   conftest.c -lm  -ljpeg  1>&5
 configure:1233: checking for main in -lpng
-configure:1248: gcc -o conftest -g -O2   conftest.c -lpng  -lm -ljpeg  1>&5
 configure:1276: checking for main in -lttf
-configure:1291: gcc -o conftest -g -O2   conftest.c -lttf  -lpng -lm -ljpeg  1>&5
 configure:1319: checking for main in -lz
-configure:1334: gcc -o conftest -g -O2   conftest.c -lz  -lttf -lpng -lm -ljpeg  1>&5
 configure:1363: checking how to run the C preprocessor
-configure:1384: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1443: checking for ANSI C header files
-configure:1456: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1523: gcc -o conftest -g -O2   conftest.c -lz -lttf -lpng -lm -ljpeg  1>&5
 configure:1550: checking for fcntl.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1550: checking for sys/ioctl.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1550: checking for syslog.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1550: checking for unistd.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1550: checking for linux/videodev.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1550: checking for png.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1550: checking for jpeglib.h
-configure:1560: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1588: checking whether struct tm is in sys/time.h or time.h
-configure:1601: gcc -c -g -O2  conftest.c 1>&5
 configure:1624: checking whether gcc needs -traditional
 configure:1670: checking for strftime
-configure:1698: gcc -o conftest -g -O2   conftest.c -lz -lttf -lpng -lm -ljpeg  1>&5
