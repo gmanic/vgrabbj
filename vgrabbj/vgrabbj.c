@@ -60,28 +60,37 @@ void cleanup(struct vconfig *vconf,
 #ifdef LIBTTF
 	     struct ttneed *ttinit, 
 #endif
-	     char *buffer, char *o_buffer) {
+	     char *buffer, char *o_buffer, boolean clean) {
 
   if (vconf->openonce) {
-    close(vconf->dev);
+    while ( close(vconf->dev) )
+      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
+    
+    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
   }
 
 #ifdef LIBTTF
   if ( vconf->use_ts ) {
-    Face_Done(ttinit->instance, ttinit->face);
     TT_Done_FreeType(ttinit->engine);
   }
   free(ttinit->properties);
   free(ttinit);
+  v_error(vconf, LOG_DEBUG, "TrueType engine ended");
 #endif
+  free (buffer);
+  free (o_buffer);
+  v_error(vconf, LOG_DEBUG, "Image-buffers freed");
+  
   if ( vconf->tmpout ) {
     free(vconf->tmpout);
-    free(vconf->cpyline);
   }
   free(vconf);
-  syslog(LOG_CRIT, "exiting.");
-  closelog();
-  _exit(1);
+  if ( !clean) {
+    syslog(LOG_CRIT, "exiting.");
+    closelog();
+    _exit(1);
+  }
+  v_error(vconf, LOG_DEBUG, "No daemon, exiting...");
 }
 
 void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
@@ -796,34 +805,15 @@ int main(int argc, char *argv[])
 #ifdef LIBTTF
 	      ttinit,
 #endif
-	      buffer, o_buffer);
+	      buffer, o_buffer, FALSE);
     
   } while (vconf->loop);
   
-  if (vconf->openonce) {
-    while ( close(vconf->dev) )
-      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
-    
-    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
-  }
-     
-  v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
-  
-  free (buffer);
-  free (o_buffer);
-  v_error(vconf, LOG_DEBUG, "Image-buffers freed");
-  
+  cleanup(vconf,
 #ifdef LIBTTF
-  if (vconf->use_ts)
-    TT_Done_FreeType(ttinit->engine);
-  free(ttinit->properties);
-  free(ttinit);
+	  ttinit,
 #endif
-  if ( vconf->tmpout ) {
-    free(vconf->tmpout);
-    free(vconf->cpyline);
-  }
-  free(vconf);
+	  buffer, o_buffer, TRUE);
   exit(0);
 }
 

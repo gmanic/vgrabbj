@@ -73,6 +73,8 @@ void usage (char *pname)
 	  "                   if any other timestamp option is given, it is enabled\n"
 #endif
 	  " -D <0|2|3|4|6|7>  Set log/debug-level (%d=silent, %d=debug, default: %d)\n"
+	  " -n                Do write directly to the output file (if not %s)\n"
+	  "                   instead of using a tmp-file and copying it to the output file\n"
 	  " -V                Display version information and exit\n"
 	  " -F <value>        Force usage of specified palette (see videodev.h for values)\n"
 	  "                   (Fallback to supported palette, if this one is not supported\n"
@@ -89,7 +91,7 @@ void usage (char *pname)
 	  DEFAULT_ALIGN, MIN_BLEND, MAX_BLEND, DEFAULT_BLEND, MIN_BLEND, MAX_BLEND,
 	  MIN_BORDER, MAX_BORDER, DEFAULT_BORDER, 
 #endif
-	  MIN_DEBUG, MAX_DEBUG, LOGLEVEL, basename(pname));
+	  MIN_DEBUG, MAX_DEBUG, LOGLEVEL, DEFAULT_OUTPUT, basename(pname));
   exit (1);
 }
 
@@ -112,6 +114,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->dev        = 0;
   vconf->forcepal   = 0;
   vconf->openonce   = FALSE;
+  vconf->usetmpout  = TRUE;
   vconf->tmpout     = NULL;
   vconf->cpyline    = NULL;
 #ifdef LIBTTF
@@ -130,14 +133,40 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
 }  
 
 
+void check_files(struct vconfig *vconf) {
+/* This function is for checking to make sure that all the file
+ * information in vconf is right.  It's called after all configs are
+ * done. Input from Michael Janssen.
+ */
+  int dev;
+  FILE *x;
+  if ( (dev=open(vconf->in, O_RDONLY)) < 0) {
+    v_error(vconf, LOG_CRIT, "Can't open %s as VideoDevice!", vconf->in);
+  } else {
+    close(dev);
+  }
+  
+  if ( !(x=fopen(vconf->out, "w+"))) {
+    v_error(vconf, LOG_CRIT, "Can't open %s as OutputFile", vconf->out);
+  } else {
+    fclose(x);
+  }
+  
+  if (!(x=fopen(vconf->font, "r"))) {
+    v_error(vconf, LOG_CRIT, "Can't open %s as FontFile!", vconf->font);
+  } else { 
+    fclose(x);
+  }
+}
+
+
 struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
   int n;
-  FILE *x;
-  int dev;
+  int dev=0;
   int is_width=0;
   int is_height=0;
 
-  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:F:CW:H:"))!=EOF) 
+  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:n"))!=EOF) 
     {
       switch (n) 
 	{
@@ -157,7 +186,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < MIN_LOOP ) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
 	  break;
-	case 'W':
+	case 'w':
 	  if ( sscanf (optarg, "%d", &is_width) != 1 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong individual image width"); // exit
 	  break;
@@ -166,9 +195,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	    v_error(vconf, LOG_CRIT, "Wrong individual image height"); // exit
 	  break;
 	case 'f':
-	  if ( !(x=fopen((vconf->out=optarg), "w+") ) )
-	    v_error(vconf, LOG_CRIT, "Can't access output file %s",vconf->out); // exit
-	  fclose(x);
+	  vconf->out=optarg;
 	  v_error(vconf, LOG_DEBUG, "Outputfile is %s", vconf->out);
 	  break;
 	case 'q':
@@ -222,19 +249,13 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	    v_error(vconf, LOG_CRIT, "Wrong imagesize specified"); // exit
 	  break;
 	case 'd':
-	  if ( ( dev=open( vconf->in = optarg, O_RDONLY) ) < 0 ) 
-	    v_error(vconf, LOG_CRIT, "Device %s not accessible", vconf->in); // exit
-	  dev=close(dev);
-	  if (dev)
-	    v_error(vconf, LOG_CRIT, "Device %s error occured", vconf->in); // exit
+	  vconf->in = optarg;
+	  v_error(vconf, LOG_DEBUG, "Input device set to %s", vconf->in);
 	  break;
 #ifdef LIBTTF
 	case 't':
-	  if ( !( x = fopen((vconf->font = optarg), "r") ) )
-	    v_error(vconf, LOG_CRIT, "Font-file %s not found", vconf->font); // exit
+	  vconf->font = optarg;
 	  vconf->use_ts=TRUE;
-	  vconf->font=optarg;
-	  fclose(x);
 	  break;
 	case 'T':
 	  if ( sscanf(optarg, "%d", &vconf->font_size) != 1 || vconf->font_size < MIN_FONTSIZE
@@ -243,9 +264,6 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'p':
-	  if ( !( x = fopen(vconf->font, "r") ) ) 
-	    v_error(vconf, LOG_CRIT, "Fontfile %s not found", vconf->font); // exit
-	  fclose(x);
 	  vconf->timestamp = optarg;
 	  vconf->use_ts = TRUE;
 	  break;
@@ -287,7 +305,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	       || vconf->debug < MIN_DEBUG )
 	    v_error(vconf, LOG_CRIT, "Wrong debuglevel value");
 	  break;
-	case 'w':
+	case 'g':
 	  vconf->windowsize=FALSE;
 	  break;
 	case 'S':
@@ -299,6 +317,9 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  break;
 	case 'F':
 	  sscanf(optarg, "%d", &vconf->forcepal);
+	  break;
+	case 'n':
+	  vconf->usetmpout=FALSE;
 	  break;
 	default:
 	  usage (argv[0]);
@@ -312,18 +333,19 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
     v_error(vconf, LOG_WARNING, "Imagesize set to unchecked individual size!");
   }
   
-  if ( (strcasecmp(vconf->out, DEFAULT_OUTPUT)) ) {
-    vconf->tmpout = malloc(strlen(vconf->out)+5);
+  if ( (strcasecmp(vconf->out, DEFAULT_OUTPUT)) && vconf->usetmpout ) {
+    vconf->tmpout = malloc(strlen(vconf->out)+6);
     sprintf(vconf->tmpout, "%s.tmp", vconf->out);
-    vconf->cpyline = malloc(strlen(vconf->out)*2+20);
-    sprintf(vconf->cpyline, "/bin/cp -f %s %s", vconf->tmpout, vconf->out);
   }
   
+  check_files(vconf);
+
   v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
 
   vconf->init_done=TRUE;
   return vconf;
 }
+
 
 int get_int(char *value) {
   int tmp;
@@ -331,6 +353,7 @@ int get_int(char *value) {
     return -1;
   return tmp;
 }
+
 
 char *get_str(char *value) {
   char *tmp;
@@ -341,6 +364,7 @@ char *get_str(char *value) {
   return tmp;
 }
 
+
 int get_bool(char *value) {
   if ( !(strcasecmp(value, "oN")) || !(strcasecmp(value, "Yes")))
     return 1;
@@ -348,6 +372,7 @@ int get_bool(char *value) {
     return 0;
   return -1;
 }
+
 
 int get_format(char *value) {
   int tmp;
@@ -361,6 +386,7 @@ int get_format(char *value) {
     tmp=-1;
   return tmp;
 }
+
 
 int get_position(char *value) {
   int tmp;
@@ -380,6 +406,7 @@ int get_position(char *value) {
     tmp=-1;
   return tmp;
 }
+
 
 int decode_size(char *value) {
   int tmp;
@@ -408,9 +435,11 @@ int decode_size(char *value) {
   return tmp;
 }
 
+
 int get_width(char *value) {
   return (16 * decode_size(value));
 }
+
 
 int get_height(char *value) {
   if ( decode_size(value) == 11 )
@@ -422,12 +451,13 @@ int get_height(char *value) {
   return (12 * decode_size(value));
 }
 
+
 struct vconfig *parse_config(struct vconfig *vconf, char *path){
 
-  int           n=0, tmp, dev, is_width=0, is_height=0;
+  int           n=0, tmp, is_width=0, is_height=0;
   char          line[MAX_LINE];
   char          *option=NULL, *value=NULL, *p=NULL;
-  FILE          *fd, *x;
+  FILE          *fd;
 
   /* Check for config file */
 
@@ -463,24 +493,12 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "VideoDevice") ) {
-	if ( (dev=open( (vconf->in=get_str((value=strtok(NULL, " \t\n")))), O_RDONLY)) < 0 ) {
-	  close(dev);
-	  v_error(vconf, LOG_CRIT, "Can't open %s as %s (line %d, %s)", 
-		  value, option, n, path);
-	}
-	else {
-	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
-	  close(dev);
-	}
+	vconf->in=get_str((value=strtok(NULL, " \t\n")));
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "OutputFile") ) {
-	if ( !(x=fopen((vconf->out=get_str((value=strtok(NULL, " \t\n")))), "w+")) )
-	  v_error(vconf, LOG_CRIT, "Can't open %s as %s (line %d, %s)",
-		  value, option, n, path);
-	else {
-	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
-	  fclose(x);
-	}
+	vconf->out=get_str((value=strtok(NULL, " \t\n")));
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "ImageSize") ) {
 	if ( (vconf->win.width=get_width((value=strtok(NULL, " \t\n")))) == 0 )
@@ -592,14 +610,21 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
+      else if ( !strcasecmp(option, "UseTmpOut") ) {
+	if ((tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else if (tmp==1)
+	  vconf->usetmpout=TRUE;
+	else
+	  vconf->usetmpout=FALSE;
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+
 #ifdef LIBTTF
       else if ( !strcasecmp(option, "FontFile") ) {
-	if (!fopen((vconf->font=get_str((value=strtok(NULL, " \t\n")))), "r") )
-	  v_error(vconf, LOG_CRIT, "Can't not open %s as %s (line %d, %s)",
-		  value, option, n, path);
-	else {
-	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
-	}
+	vconf->font=get_str((value=strtok(NULL, " \t\n")));
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "TimeStamp") ) {
 	if ( !(vconf->timestamp=get_str((value=strtok(NULL, "\"\t\n")))) )
@@ -715,6 +740,5 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
     vconf->win.height = is_height;
     v_error(vconf, LOG_WARNING, "Imagesize set to unchecked individual size!\n");
   }
-
   return(vconf);
 }

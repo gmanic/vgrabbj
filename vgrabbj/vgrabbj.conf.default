@@ -111,6 +111,13 @@ Daemon		0
 ;	you box is under constant load from vgrabbj and the file might not be
 ;	readable by any other app because it's constantly rewritten!
 ;	If not set, daemon mode is not enabled (default)
+UseTmpOut	On
+;	Images taken are written to a temporary file (named /tmp/t<outputfile>)
+;	in case <outputfile> is not /dev/stdout. After this is done, the file
+;	is copied via system call to the final destination. This tends to 
+;	better the situation if the outputfile is read directly by a webserver.
+;	If you want to write the image data directly to the destination file,
+;	set this switch to Off.
 ;
 ;	Timestamping of the image
 UseTimeStamp	Off
@@ -120,7 +127,8 @@ UseTimeStamp	Off
 ;	string in the image. On the commandline, ANY option related to the
 ;	timestamp feature set on the commandline enables it! So you can safely
 ;	set all other timestamp values
-FontFile	/usr/share/fonts/truetype/Arialn.ttf
+;;;;;;; CHANGE THIS SETTING AND UNCOMMENT IT TO USE TIMESTAMPING
+;  FontFile	/usr/share/fonts/truetype/Arialn.ttf
 ;	Font to be used for timestamping the image
 ;	default: /usr/share/fonts/truetype/Arialn.ttf
 TimeStamp	"%A, %e. %B %Y - %T"
@@ -169,4 +177,4 @@ KeepAlive 	Off
 TryHarder	2
 ;	If the remote box is not as helpful as expected, possible:
 ;	not implemented, yet
-
+;
