@@ -22,7 +22,6 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(vgrabbj.c)
 
 # For automake
-#AC_DEFINE_UNQUOTED(SYSCONF_DIR,"$sysconfdir","/* Directory to install vgrabbj.conf in */")
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(vgrabbj,0.8.0)
 AC_ARG_PROGRAM
@@ -81,9 +80,9 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_STRFTIME
 
 if test \"x${prefix}\" = \"xNONE\"; then
-  AC_DEFINE_UNQUOTED(SYSCONF_DIR,${ac_default_prefix}/etc/vgrabbj.conf)
+  AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${ac_default_prefix}/etc/vgrabbj.conf")
 else
-  AC_DEFINE_UNQUOTED(SYSCONF_DIR,${prefix}/etc/vgrabbj.conf)
+  AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${prefix}/etc/vgrabbj.conf")
 fi
 
 AC_OUTPUT(Makefile)

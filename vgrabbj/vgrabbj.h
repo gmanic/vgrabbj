@@ -75,7 +75,7 @@
 #define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png
 #define DEFAULT_BRIGHTNESS FALSE
 #define MAX_ERRORMSG_LENGTH 1024
-#define DEFAULT_CONFIG (strcat(SYSCONF_DIR, "/vgrabbj.conf"))
+#define DEFAULT_CONFIG SYSCONF_DIR
 #define LOGLEVEL 4
 #define MIN_DEBUG 0
 #define MAX_DEBUG 7
