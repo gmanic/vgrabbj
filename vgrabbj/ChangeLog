@@ -1,3 +1,11 @@
+2001-11-12  Jens Gecius  <jens@gecius.de>
+
+			Release of 0.8.0 with ftp-code, config-file,
+			enhanced imagesize (even individual settings),
+			bugfixes.
+			Be aware: no extensive tests (it runs here -
+			without ftp)!
+
 2001-11-11  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c:    Fixed a bug in png write, leading to corrupt
