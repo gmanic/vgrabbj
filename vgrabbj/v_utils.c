@@ -178,8 +178,8 @@ int daemonize(struct vconfig *vconf, char *progname)
 /* These are more or less self-explanatory */
 
 int get_int(char *value) {
-  int tmp;
-  if ( sscanf(value, "%d", &tmp) != 1 )
+  long tmp;
+  if ( sscanf(value, "%ld", &tmp) != 1 )
     return -1;
   return tmp;
 }
