@@ -1,3 +1,20 @@
+2001-11-11  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c:    Fixed a bug in png write, leading to corrupt
+			data in vconf and possible segfaults
+			Added xga, sxga, uxga as valid options for
+			image size on command line
+			Added ftp-code from Robert Wessels
+			Added individual imagesize (-W and -H on 
+			commandline); be careful! These values are not
+			checked for valid values! You may damage your
+			hardware with wrong values (and a poor driver)
+
+	* v_config.c:   Added xga, sxga, uxga as valid options for
+			image size in config file
+			Added ftp-code from Robert Wessels
+			Added individual imagesize settings (see above)
+
 2001-07-23  Jens Gecius  <jens@gecius.de>
 
 			Release of 0.7.4 without any asm code (should
