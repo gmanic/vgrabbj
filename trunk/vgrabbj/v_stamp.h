@@ -2,7 +2,7 @@
  * 
  * Definition of options
  *
- * Copyright (C) 2002 Jens Gecius, Larchmont, USA
+ * Copyright (C) 2002 Jens Gecius, Hannover, Germany
  * eMail: devel@gecius.de
  * 
  * This program is free software; you can redistribute it and/or modify
