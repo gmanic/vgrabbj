@@ -337,7 +337,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	    v_error(vconf, LOG_CRIT, "Wrong individual image width"); // exit
 	  break;
 	case 'H':
-	  if ( sscanf (optarg, "%d", &is_width) != 1 ) 
+	  if ( sscanf (optarg, "%d", &is_height) != 1 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong individual image height"); // exit
 	  break;
 	case 'f':
@@ -382,8 +382,8 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	    vconf->win.width  = 640;
 	    vconf->win.height = 480;
 	  } else if ( !strcasecmp(optarg,"svga") ) {
-	    vconf->win.width  = 600;
-	    vconf->win.height = 800;
+	    vconf->win.width  = 800;
+	    vconf->win.height = 600;
 	  } else if ( !strcasecmp(optarg,"xga") ) {
 	    vconf->win.width  = 1024;
 	    vconf->win.height = 768;
