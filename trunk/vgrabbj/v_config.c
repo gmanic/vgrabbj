@@ -232,6 +232,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = &(unsigned int)vconf->ftp.tryharder;
   l_opt[idx++].var  = (char *)vconf->ftp.remoteDir;
 #endif
+  idx              += 4;
   vconf->archive    = NULL;
   l_opt[idx++].var  = (char *)vconf->archive;
   vconf->arch       = malloc(sizeof(struct s_arch));
