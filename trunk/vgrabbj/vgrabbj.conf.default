@@ -36,9 +36,9 @@ DebugLevel	4
 ;	0 saying nothing; defaults to 4
 ImageQuality 	75
 ;	Quality setting for jpeg image; default 75
-SetImageSize	Off
+SetImageSize	On
 ;	To turn off imagesize setting of vgrabbj, needed for some webcams
-; 	default Off
+; 	default On
 ImageSize	cif
 ;	Imagesize can be sqcif|qsif|qcif|sif|cif|vga|svga|xga|sxga|uxga;
 ;	default cif, being:
