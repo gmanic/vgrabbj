@@ -1,13 +1,29 @@
+
+dnl Copyright (C) 2000, 2001 Jens Gecius, Larchmont, USA
+dnl eMail: devel@gecius.de
+ 
+dnl This program is free software; you can redistribute it and/or modify
+dnl it under the terms of the GNU General Public License as published by
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at you option) any later version.
+ 
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+dnl GNU General Public License for more details.
+
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
+dnl USA  
+
+
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(vgrabbj.c)
 
 # For automake
-PACKAGE=vgrabbj
-VERSION=0.6.4
-AM_INIT_AUTOMAKE(vgrabbj,0.6.4)
-
-prefix=/usr/local/
-
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(vgrabbj,0.7.1)
 AC_ARG_PROGRAM
 
 dnl Checks for programs.
@@ -16,17 +32,27 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+dnl Use -Wall if we have gcc.
+changequote(,)dnl
+if test "x$GCC" = "xyes"; then
+   case " $CFLAGS " in
+   *[\ \ ]-Wall[\ \ ]*) ;;
+   *) CFLAGS="$CFLAGS -Wall" ;;
+   esac
+fi
+changequote([,])dnl
+
 dnl Checks for libraries.
 dnl Replace `main' with a function in -ljpeg:
-AC_CHECK_LIB(jpeg, main)
+AC_CHECK_LIB(jpeg, jpeg_set_defaults)
 dnl Replace `main' with a function in -lm:
 AC_CHECK_LIB(m, main)
 dnl Replace `main' with a function in -lpng:
-AC_CHECK_LIB(png, main)
+AC_CHECK_LIB(png, png_create_info_struct)
 dnl Replace `main' with a function in -lttf:
-AC_CHECK_LIB(ttf, main)
+AC_CHECK_LIB(ttf, TT_Open_Face)
 dnl Replace `main' with a function in -lz:
-AC_CHECK_LIB(z, main)
+AC_CHECK_LIB(z, crc32)
 
 dnl Checks for header files.
 AC_HEADER_STDC
