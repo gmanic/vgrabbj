@@ -94,7 +94,7 @@ void usage (char *pname)
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
 	  "\n"
-	  "The video stream has to one of RGB24, RGB32, YUV420, YUV420P or YUYV.\n",
+	  "The video stream has to be one of RGB24, RGB32, YUV420, YUV420P or YUYV.\n",
 	  basename(pname), VERSION, basename(pname), MIN_QUALITY, MAX_QUALITY, 
 	  DEFAULT_QUALITY, DEFAULT_WIDTH, DEFAULT_HEIGHT,
 	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV, 
@@ -149,6 +149,7 @@ struct v_options *init_conf_list(struct v_options *conf)
 
 
 struct vconfig *init_defaults(struct vconfig *vconf) {
+  int idx = 0;
   /* Set defaults */
   vconf->debug      = LOGLEVEL;
   vconf->quality    = DEFAULT_QUALITY;
@@ -176,23 +177,24 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
   vconf->o_buffer   = NULL;
-  l_opt[0].var = &(int)vconf->debug;
-  l_opt[1].var = &(long int)vconf->loop;
-  l_opt[2].var = &(long int)vconf->loop;
-  l_opt[3].var = &vconf->brightness;
-  l_opt[4].var = &(int)vconf->quality;
-  l_opt[6].var = &vconf->win.width;
-  l_opt[7].var = &vconf->win.height;
-  l_opt[8].var = &(int)vconf->outformat;
-  l_opt[9].var = (char *)vconf->out;
-  l_opt[10].var = (char *)vconf->in;
-  l_opt[11].var = &vconf->openonce;
-  l_opt[12].var = &vconf->switch_bgr;
-  l_opt[13].var = &vconf->windowsize;
-  l_opt[14].var = &(int)vconf->discard;
-  l_opt[15].var = &(int)vconf->forcepal;
-  l_opt[16].var = &vconf->usetmpout;
-  l_opt[17].var = &vconf->use_ts;
+  l_opt[idx++].var  = &(int)vconf->debug;
+  l_opt[idx++].var  = &(long int)vconf->loop;
+  l_opt[idx++].var  = &(long int)vconf->loop;
+  l_opt[idx++].var  = &vconf->brightness;
+  l_opt[idx++].var  = &(int)vconf->quality;
+  idx              += 1; /* Image Size */
+  l_opt[idx++].var  = &vconf->win.width;
+  l_opt[idx++].var  = &vconf->win.height;
+  l_opt[idx++].var  = &(int)vconf->outformat;
+  l_opt[idx++].var  = (char *)vconf->out;
+  l_opt[idx++].var  = (char *)vconf->in;
+  l_opt[idx++].var  = &vconf->openonce;
+  l_opt[idx++].var  = &vconf->switch_bgr;
+  l_opt[idx++].var  = &vconf->windowsize;
+  l_opt[idx++].var  = &(int)vconf->discard;
+  l_opt[idx++].var  = &(int)vconf->forcepal;
+  l_opt[idx++].var  = &vconf->usetmpout;
+  l_opt[idx++].var  = &vconf->use_ts;
 #ifdef LIBTTF
   vconf->ttinit     = NULL;
   vconf->font       = strcpy(malloc(strlen(DEFAULT_FONT)+1),DEFAULT_FONT);
@@ -201,12 +203,12 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->border     = DEFAULT_BORDER;
   vconf->align      = DEFAULT_ALIGN;
   vconf->blend      = DEFAULT_BLEND;
-  l_opt[18].var = (char *)vconf->font;
-  l_opt[19].var = (char *)vconf->timestamp;
-  l_opt[20].var = &(int)vconf->font_size;
-  l_opt[21].var = &(int)vconf->align;
-  l_opt[22].var = &(int)vconf->blend;
-  l_opt[23].var = &(int)vconf->border;
+  l_opt[idx++].var  = (char *)vconf->font;
+  l_opt[idx++].var  = (char *)vconf->timestamp;
+  l_opt[idx++].var  = &(int)vconf->font_size;
+  l_opt[idx++].var  = &(int)vconf->align;
+  l_opt[idx++].var  = &(int)vconf->blend;
+  l_opt[idx++].var  = &(int)vconf->border;
 #endif
 #ifdef LIBFTP
   vconf->ftp.enable          = FALSE;
@@ -218,26 +220,29 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->ftp.username        = NULL;
   vconf->ftp.password        = NULL;
   vconf->ftp.tryharder       = 0;
-  l_opt[24].var = &vconf->ftp.enable;
-  l_opt[25].var = (char *)vconf->ftp.remoteHost;
-  l_opt[26].var = (char *)vconf->ftp.remoteImageName;
-  l_opt[27].var = (char *)vconf->ftp.username;
-  l_opt[28].var = (char *)vconf->ftp.password;
-  l_opt[29].var = &vconf->ftp.keepalive;
-  l_opt[30].var = &(unsigned int)vconf->ftp.tryharder;
-  l_opt[31].var = (char *)vconf->ftp.remoteDir;
+  l_opt[idx++].var  = &vconf->ftp.enable;
+  l_opt[idx++].var  = (char *)vconf->ftp.remoteHost;
+  l_opt[idx++].var  = (char *)vconf->ftp.remoteImageName;
+  l_opt[idx++].var  = (char *)vconf->ftp.username;
+  l_opt[idx++].var  = (char *)vconf->ftp.password;
+  l_opt[idx++].var  = &vconf->ftp.keepalive;
+  l_opt[idx++].var  = &(unsigned int)vconf->ftp.tryharder;
+  l_opt[idx++].var  = (char *)vconf->ftp.remoteDir;
 #endif
-  vconf->archive     = NULL;
-  l_opt[36].var = (char *)vconf->archive;
-  vconf->arch = malloc(sizeof(struct s_arch));
-  vconf->arch->filename=NULL;
-  vconf->arch->next=NULL;
+  vconf->archive    = NULL;
+  l_opt[idx++].var  = (char *)vconf->archive;
+  vconf->arch       = malloc(sizeof(struct s_arch));
+  vconf->arch->filename = NULL;
+  vconf->arch->next = NULL;
   vconf->archiveeach = 0;
   vconf->archivemax = 0;
-  l_opt[37].var = &vconf->archiveeach;
-  l_opt[38].var = &vconf->archivemax;
-  l_opt[39].var = &vconf->swaprl;
-  l_opt[40].var = &vconf->nousemmap;
+  l_opt[idx++].var  = &vconf->archiveeach;
+  l_opt[idx++].var  = &vconf->archivemax;
+  l_opt[idx++].var  = &vconf->swaprl;
+  l_opt[idx++].var  = &vconf->nousemmap;
+  if ( idx != sizeof(l_opt)/sizeof(l_opt[0])-1 ) {
+    v_error(vconf, LOG_CRIT, "Bug in l_opt - contact developer with full debug details.");
+  }
   return vconf;
 }  
 

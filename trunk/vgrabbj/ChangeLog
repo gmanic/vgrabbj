@@ -1,3 +1,13 @@
+2003-07-28  Jens Gecius  <jens@gecius.de>
+	* v_conf.c:	Fixed typo in help screen
+			(thanks to Tobias Wolter who filed
+			this bug to DBTS)
+			Fixed bug causing segfault if not
+			all optional libraries are present
+			(thanks to Pascal Brisset for the
+			patch! Sorry it took so long to
+			apply it)
+
 2002-10-15  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.h: 	Added option nousemmap needed for
