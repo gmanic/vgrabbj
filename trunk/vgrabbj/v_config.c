@@ -26,18 +26,25 @@
 extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
 
 static int get_int(char *value) {
-
-  return 1;
+  int tmp;
+  if ( sscanf(value, "%d", &tmp) != 1 )
+    return -1;
+  return tmp;
 }
 
 static char *get_str(char *value) {
-
-  return "t";
+  char tmp[1024];
+  if ( sscanf(value, "%s", tmp) != 1 )
+    return NULL;
+  return value;
 }
 
 static int get_bool(char *value) {
-
-  return TRUE;
+  if ( !(strcasecmp(value, "On")) )
+    return 1;
+  else if ( !(strcasecmp(value, "Off")) )
+    return 0;
+  return -1;
 }
 
 static int get_format(char *value) {
@@ -79,15 +86,17 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 
   while (fgets(line, sizeof(line), fd)) {
     n++;
-    /* hide comments */
+    /* hide comments 
     if ((p=strchr(line, '#')))
       *p='\0';
     if ((p=strchr(line, ';')))
       *p='\0';
+    p=line;
+     Check options */
 
-    /* Check options */
-
-    if ( ( (option=strtok(line,"= \t\n")) != NULL) && ((value=strtok(NULL, "= \t\n")) != NULL) ) {
+    if ( (option=strtok(line," \t\n")) && (value=strtok(NULL, " \t\n")) ) {
+      if ( (p=strchr(option, ';')) )
+	continue;
       v_error(vconf, LOG_DEBUG, "Option: %s, Value: %s", option, value);
       if ( !strcasecmp(option, "ImageQuality")) {
 	if ( (MIN_QUALITY > (vconf->quality=get_int(value))) || (vconf->quality > MAX_QUALITY) ) 
@@ -102,7 +111,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 		  value, option, n, path);
 	else {
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
-	  fclose(x);
+	  close(dev);
 	}
       }
       else if ( !strcasecmp(option, "OutputFile") ) {
@@ -152,7 +161,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	else
 	  vconf->switch_bgr=FALSE;
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
-     }
+      }
       else if ( !strcasecmp(option, "SetWindowSize") ) {
 	if ((tmp=get_bool(value)) == -1)
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
@@ -251,9 +260,9 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
 #endif
-      else
-	v_error(vconf, LOG_CRIT, "Unknown Option %s (line %d, %s)", option, n, path);
     }
+    else
+      v_error(vconf, LOG_CRIT, "Unknown Option %s (value %s, line %d, %s)", option, value, n, path);
   }
   if (x)
     fclose(x);
