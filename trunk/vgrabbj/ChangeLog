@@ -1,8 +1,14 @@
+2001-07-23  Jens Gecius  <jens@gecius.de>
+
+			Release of 0.7.4 without any asm code (should
+			keep everybody happy for porting), use of mmap,
+			etc. See below for details.
+
 2001-07-22  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c:    Minor Changes, added YUV422 to known routines,
-			because with my Philips cam these two look
-			identical.
+			because with my Philips cam this one looks
+			identical to YUV422.
 			Reminder: brightness adjust by vgrabbj is OFF
 			by default now and -b switches it, BUT you 
 			have to have RGB24 selected as input palette!
