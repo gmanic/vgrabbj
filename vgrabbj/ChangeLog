@@ -1,3 +1,14 @@
+2001-12-05  Jens Gecius  <jens@gecius.de>
+
+	* v_writer.c: 	Changed back to system() for the call of
+			/bin/cp, but I'm not satisfied with the
+			situation due to the problems associated with
+			system() (see man-page). Have to find a better
+			solution.
+			Added a new value for vconf to have the cmd-
+			line for the copy action handy when needed
+			(performance).
+
 2001-12-04  Jens Gecius  <jens@gecius.de>
 
 	* v_writer.c: 	In case output is set to something different

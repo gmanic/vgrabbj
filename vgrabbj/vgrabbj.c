@@ -78,6 +78,7 @@ void cleanup(struct vconfig *vconf,
 #endif
   if ( vconf->tmpout ) {
     free(vconf->tmpout);
+    free(vconf->cpyline);
   }
   free(vconf);
   syslog(LOG_CRIT, "exiting.");
@@ -293,6 +294,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->forcepal   = 0;
   vconf->openonce   = FALSE;
   vconf->tmpout     = NULL;
+  vconf->cpyline    = NULL;
 #if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   vconf->font       = DEFAULT_FONT;
   vconf->timestamp  = DEFAULT_TIMESTAMP;
@@ -492,10 +494,10 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
   }
   
   if ( (strcasecmp(vconf->out, DEFAULT_OUTPUT)) ) {
-    // init/malloc for tempfile string
     vconf->tmpout = malloc(strlen(vconf->out)+5);
-    vconf->tmpout = strcpy(vconf->tmpout, vconf->out);
-    vconf->tmpout = strcat(vconf->tmpout, ".tmp");
+    sprintf(vconf->tmpout, "%s.tmp", vconf->out);
+    vconf->cpyline = malloc(strlen(vconf->out)*2+20);
+    sprintf(vconf->cpyline, "/bin/cp -f %s %s", vconf->tmpout, vconf->out);
   }
   
   v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
@@ -1123,6 +1125,7 @@ int main(int argc, char *argv[])
 #endif
   if ( vconf->tmpout ) {
     free(vconf->tmpout);
+    free(vconf->cpyline);
   }
   free(vconf);
   exit(0);
