@@ -524,7 +524,7 @@ fi
 
 # For automake
 PACKAGE=vgrabbj
-VERSION=0.6.3
+VERSION=0.6.4
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -695,7 +695,7 @@ fi
 
 PACKAGE=vgrabbj
 
-VERSION=0.6.3
+VERSION=0.6.4
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }

@@ -1,3 +1,12 @@
+2001-06-16	0.6.4
+		* Fixed a bug regarding picture setting. This caused vgrabbj to
+		  pretend it'll work even though the device was not set to the
+		  correct RGB24 mode. Result was a 'hanging' vgrabbj process.
+		  This should help on several devices reported not to work.
+		  Even if vgrabbj is unable to set the device to RGB24 it should
+		  at least report this. There will be no switch to avoid this
+		  setting because RGB24 is necessary for proper operation.		  
+	
 2001-03-27	0.6.3
 		* Added parameter -w to disable vgrabbj's setting of the V4L
 		  image size. This is needed for certain cams which do not

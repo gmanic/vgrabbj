@@ -3,8 +3,8 @@ AC_INIT(vgrabbj.c)
 
 # For automake
 PACKAGE=vgrabbj
-VERSION=0.6.3
-AM_INIT_AUTOMAKE(vgrabbj,0.6.3)
+VERSION=0.6.4
+AM_INIT_AUTOMAKE(vgrabbj,0.6.4)
 
 prefix=/usr/local/
 
