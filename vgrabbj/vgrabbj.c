@@ -575,8 +575,9 @@ struct vconfig *check_device(struct vconfig *vconf) {
   vconf->win.x=twin.x;
   vconf->win.y=twin.y;
   vconf->win.chromakey=twin.chromakey;
-  while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) && vconf->windowsize)
-    v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
+  if (vconf->windowsize)
+    while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
+      v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
   while (ioctl(vconf->dev, VIDIOCGWIN, &vconf->win) <0)
     v_error(vconf, LOG_ERR, "Problem getting window size"); // exit
   while (ioctl(vconf->dev, VIDIOCGPICT, &vconf->vpic) < 0)
