@@ -111,6 +111,8 @@
 #define MIN_BOOL 0
 #define MAX_BOOL 1
 #define MIN_LOOP 0
+#define MIN_ARCHIVE 0
+#define MAX_ARCHIVE 65535
 
 #define DEFAULT_VIDEO_DEV "/dev/video"
 #define DEFAULT_OUTPUT "/dev/stdout"
@@ -164,6 +166,9 @@ struct vconfig {
   int outformat;
   int dev;
   int discard;
+  int archiveeach;
+  int archivemax;
+  int archivecount;
   char *in;
   char *out;
   char *tmpout;
@@ -171,6 +176,7 @@ struct vconfig {
   char *buffer;
   char *o_buffer;
   char *archive;
+  char *archnames[MAX_ARCHIVE];
   boolean usemmap;
   boolean usetmpout;
   boolean windowsize;
@@ -288,6 +294,7 @@ extern void            v_update_ptr(struct vconfig *vconf);
 extern char           *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n);
 extern FILE           *open_outfile(char *filename);
 extern char           *timestring(char *format);
+extern struct vconfig *parse_config(struct vconfig *vconf);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

@@ -75,6 +75,7 @@ static struct v_options l_opt[] = {
   /* New options are to be added in front of this line, which serves as a    */
   /* marker for the config-parser (no long- and no short-option)             */
   {"Archive",         "A", req,  NULL, opt_charptr, 0,            0,            255},
-  {"ArchiveEach",     "E", req,  NULL, opt_int,     1,        65536,            0  },
+  {"ArchiveEach",     "E", req,  NULL, opt_int,     MIN_ARCHIVE,  MAX_ARCHIVE,  0  },
+  {"ArchiveMax",      "M", req,  NULL, opt_int,     MIN_ARCHIVE,  MAX_ARCHIVE,  0  },
   {NULL, NULL, none, NULL, 0, 0, 0, 0}
 };
