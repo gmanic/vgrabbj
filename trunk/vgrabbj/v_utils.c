@@ -122,7 +122,7 @@ unsigned char *swap_left_right(char *buffer, int width, int height)
   char a, b, c;
   int i, j;
   for (j=0;j < height;j++) {
-    for (i=0;i < width>>2;i++) {
+    for (i=0;i < (width>>2);i++) {
       a = buffer[(j*width*3)+(i*3)];
       b = buffer[(j*width*3)+(i*3)+1];
       c = buffer[(j*width*3)+(i*3)+2];
