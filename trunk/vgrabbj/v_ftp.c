@@ -20,6 +20,7 @@
  */
 
 
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
 #include "vgrabbj.h"
 #include "ftplib.h"
 
@@ -48,7 +49,7 @@ void ftp_upload(struct vconfig *vconf){
       break;
     case STATE_CONNECT:
       if(conn)
-      	FtpQuit(conn);
+      	FtpClose(conn);
       if(FtpConnect( vconf->ftp.remoteHost, &conn)){
       	FtpOptions(FTPLIB_CONNMODE, FTPLIB_PORT, conn);
         vconf->ftp.state = STATE_LOGIN;
@@ -103,7 +104,8 @@ void ftp_upload(struct vconfig *vconf){
       if(vconf->loop && vconf->ftp.keepalive){
       	vconf->ftp.state = STATE_PUT;
       } else {
-     	FtpQuit(conn);
+	if (conn)
+	  FtpClose(conn);
       	vconf->ftp.state = STATE_CONNECT;
       }
       v_error(vconf, LOG_INFO, "ftp state 6: upload compleet");
@@ -111,7 +113,7 @@ void ftp_upload(struct vconfig *vconf){
     default:
       /* this should never happen */
       	if(conn)
-      	  FtpQuit(conn);
+      	  FtpClose(conn);
       	vconf->ftp.state = STATE_CONNECT;
       break;
   }
@@ -119,7 +121,7 @@ void ftp_upload(struct vconfig *vconf){
 }
 
 
-
+#endif
 
 
 

@@ -25,7 +25,13 @@
 
 extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
 
-/* Write image as jpeg to FILE  */
+/* Function to write output data to a temporary file and then copy 
+ * it to the final location via system-call to avoid problems with 
+ * "same-time" access to the output file                           
+*/
+
+/* Write image as jpeg to FILE
+*/
 
 int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x) 
 {
@@ -126,10 +132,16 @@ int write_ppm(struct vconfig *vconf, char *image, FILE *x)
 
 void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
   FILE *x;
-  while (! (x = fopen(vconf->out, "w+") ) )
-    v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
-  v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
-  
+
+  if ( vconf->tmpout ) {
+    while (! (x = fopen(vconf->tmpout, "w+") ) )
+      v_error(vconf, LOG_ERR, "Could not open temporary outputfile %s", vconf->tmpout);
+    v_error(vconf, LOG_DEBUG, "Opened temporary output-file %s", vconf->tmpout);
+  } else {
+    while (! (x = fopen(vconf->out, "w+") ) )
+      v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
+    v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
+  }
   switch (vconf->outformat) 
     {
     case 1:
@@ -148,8 +160,14 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
       v_error(vconf, LOG_CRIT, "Unknown outformat %d (should not happen!!)", vconf->outformat);
       break;
     }
-  fclose(x);  
-  v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+  fclose(x);
+  if ( vconf->tmpout ) {
+    v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
+    execl("/bin/cp","-f",vconf->tmpout,vconf->out,NULL);
+    v_error(vconf, LOG_DEBUG, "Temporary output %s copied to final destination %s", vconf->tmpout, vconf->out);
+  } else {
+    v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+  }
 #if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
   if(vconf->ftp.enable == TRUE)
     ftp_upload(vconf);

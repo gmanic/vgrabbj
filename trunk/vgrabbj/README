@@ -51,6 +51,9 @@ Well, this is should be a no-brainer.
 This will find out if you have all required libs etc. In case you don't
 have the freetype lib, it'll just disable the timestamp functionallity.
 
+Options are ftp and timestamp. They are enabled by default. If you wish
+to disable them, add --disable-<option> to the above commandline.
+
 Of course, there are more options to configure, read the INSTALL file.
 
 %make

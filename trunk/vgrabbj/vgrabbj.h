@@ -115,6 +115,7 @@ struct vconfig {
   int dev;
   char *in;
   char *out;
+  char *tmpout;
   boolean windowsize;
   boolean switch_bgr;
   boolean use_ts;
