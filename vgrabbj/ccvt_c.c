@@ -151,8 +151,8 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 {
 	int line, col, linewidth;
 	int y, yy;
-	int u, v;
-	int vr, ug, vg, ub;
+	int u=0, v=0;
+	int vr=0, ug=0, vg=0, ub=0;
 	int r, g, b;
 	unsigned char *py, *pu, *pv;
 
@@ -161,17 +161,21 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 	pu = srcu;
 	pv = srcv;
 
-	y = *py;
+	y = *py++;
 	yy = y << 8;
-	u = *pu - 128;
-	ug =   88 * u;
-	ub =  454 * u;
-	v = *pv - 128;
-	vg =  183 * v;
-	vr =  359 * v;
-
 	for (line = 0; line < height; line++) {
 		for (col = 0; col < width; col++) {
+			if ((col & 1) == 0)
+			{
+			  u = *pu - 128;
+			  ug =   88 * u;
+			  ub =  454 * u;
+			  v = *pv - 128;
+			  vg =  183 * v;
+			  vr =  359 * v;
+			  pu++; // increase u/v every second y
+			  pv++;
+			}
 			r = LIMIT(yy +      vr);
 			g = LIMIT(yy - ug - vg);
 			b = LIMIT(yy + ub     );
@@ -205,18 +209,8 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 			
 			y = *py++;
 			yy = y << 8;
-			if ( (col & 1) == 1) {
-			  pu++; // increase u/v every second y
-			  pv++;
-			}
-			u = *pu - 128;
-			ug =   88 * u;
-			ub =  454 * u;
-			v = *pv - 128;
-			vg =  183 * v;
-			vr =  359 * v;
 		} // ..for col 
-		if ( line & 1 ) { // even line: rewind u/v
+		if ( (line & 1) == 0 ) { // even line: rewind u/v
 		  pu -= linewidth;
 		  pv -= linewidth;
 		}
