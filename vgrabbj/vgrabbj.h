@@ -123,6 +123,7 @@ struct vconfig {
     char *password;
     unsigned int loggedin;
     unsigned int tryharder;
+  }Ftp;
 };
 
 #ifdef HAVE_LIBTTF
