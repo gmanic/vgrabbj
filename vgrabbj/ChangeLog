@@ -1,5 +1,16 @@
 2002-03-26  Jens Gecius  <jens@gecius.de>
 
+	* vgrabbj.c:	Added Archive option to create an
+			archive of images.
+			Warning: no upper limit for archive
+			implemented, yet. This option might
+			fill your harddrive!!
+			Currently works only if archive is
+			on the same filesystem as the temp-
+			output (same restriction for output
+			and tmpout - they have to be on the
+			same filesystem)
+	
 	* v_config.c: 	Fixed severe bugs in ftp-code:
 			1. remoteDir was not read from conf
 			2. if remoteDir not set screwy things

@@ -85,7 +85,7 @@
 #endif
 
 #ifndef DEBUGGING
-#define DEBUGGING 0
+#define DEBUGGING 1
 #endif
 
 /* Defines, defaults */
@@ -170,6 +170,7 @@ struct vconfig {
   char *conf_file;
   char *buffer;
   char *o_buffer;
+  char *archive;
   boolean usemmap;
   boolean usetmpout;
   boolean windowsize;
