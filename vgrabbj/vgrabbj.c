@@ -11,7 +11,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public Licence for more details.
+ * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <getopt.h>
 #include <syslog.h>
 #include <linux/types.h>
@@ -825,8 +826,8 @@ int main(int argc, char *argv[])
 		      }
 		    else 
 		      {
-			vpic.depth=24;
-			vpic.palette=VIDEO_PALETTE_RGB24;
+;			vpic.depth=24;
+;			vpic.palette=VIDEO_PALETTE_RGB24;
 	    
 			if (ioctl(dev, VIDIOCGPICT, &vpic) < 0) 
 			  {
@@ -846,114 +847,140 @@ int main(int argc, char *argv[])
 			  }
 			else 
 			  {
-			    if (debug) fprintf(stderr,"Allocating memory for image.\n");
-			    buffer = malloc(win.width * win.height * bpp);
-			    if (!buffer) 
+			    // HERE we got to actually set the parameters at the device to RGB24
+			    // and depth 24, otherwise the device would still be set to whatever it
+			    // was before the above call of properties and never obeyed the need of
+			    // vgrabbj.
+
+			    vpic.depth=24;
+			    vpic.palette=VIDEO_PALETTE_RGB24;
+			    if (ioctl(dev,VIDIOCSPICT, &vpic) < 0)
 			      {
-				if (loop)
-				  syslog(LOG_ALERT, "Out of Memory! Exiting...\n");
-				else
-				  perror("Out of Memory!");
-				close(dev);
-				if (font && timestamp && enable_timestamp) 
-				  Face_Done (instance, face);
-				exit(9);
+				if (loop) 
+				  {
+				    syslog(LOG_WARNING, "Problem setting picture properties (does not support RGB24) %m\n");
+				    usleep(250000);
+				  }
+				else 
+				  {
+				    perror("Problem setting picture properties (does not support RGB24)");
+				    close(dev);
+				    if (font && timestamp && enable_timestamp)
+				      Face_Done (instance, face);
+				    exit(1);
+				  }
 			      }
-			    err_count2=0;
-			    if (debug) 
-			      fprintf(stderr,"See, if I shall adjust the brightness.\n");
-			    if (brightness) 
+			    else
 			      {
+				if (debug) fprintf(stderr,"Allocating memory for image.\n");
+				buffer = malloc(win.width * win.height * bpp);
+				if (!buffer) 
+				  {
+				    if (loop)
+				      syslog(LOG_ALERT, "Out of Memory! Exiting...\n");
+				    else
+				      perror("Out of Memory!");
+				    close(dev);
+				    if (font && timestamp && enable_timestamp) 
+				      Face_Done (instance, face);
+				    exit(9);
+				  }
+				err_count2=0;
+				if (debug) 
+				  fprintf(stderr,"See, if I shall adjust the brightness.\n");
+				if (brightness) 
+				  {
+				    do 
+				      {
+					int newbright;
+					read(dev, buffer, win.width * win.height * bpp);
+					f = get_brightness_adj(buffer, win.width * win.height, &newbright);
+					if (f) 
+					  {
+					    vpic.brightness += (newbright << 8);
+					    if(ioctl(dev, VIDIOCSPICT, &vpic)==-1) 
+					      {
+						if (loop)
+						  syslog(LOG_DEBUG, "Problem setting brightness %m\n");
+						else
+						  perror("Problem setting brightness");
+						break;
+					      }
+					    err_count2++;
+					    if (err_count2>100) 
+					      {
+						if (loop)
+						  syslog(LOG_WARNING,"Brightness not optimal\n");
+						else
+						  perror("Brightness not optimal");
+						break;
+					      }
+					  }
+				      } while (f);
+				    if (debug) 
+				      fprintf(stderr,"Finally, we have an image...\n");
+				  }
+				else 
+				  {
+				    read(dev, buffer, win.width * win.height * bpp);
+				    if (debug) 
+				      fprintf(stderr,"Image read without brightness-adjustment.\n");
+				  }
+				close(dev);
+				if (debug) 
+				  fprintf(stderr,"Video-Device closed.\n");
+				if (font && timestamp && enable_timestamp) 
+				  {
+				    inserttext(buffer, font, engine, face, &properties, 
+					       instance, font_size, timestamp, align, 
+					       win.width, win.height, border, blend);
+				  }
 				do 
 				  {
-				    int newbright;
-				    read(dev, buffer, win.width * win.height * bpp);
-				    f = get_brightness_adj(buffer, win.width * win.height, &newbright);
-				    if (f) 
+				    if (debug) 
+				      fprintf(stderr,"Opening output-device.\n");
+				    x = fopen(out, "w+");
+				    if (!x) 
 				      {
-					vpic.brightness += (newbright << 8);
-					if(ioctl(dev, VIDIOCSPICT, &vpic)==-1) 
+					if (loop) 
 					  {
-					    if (loop)
-					      syslog(LOG_DEBUG, "Problem setting brightness %m\n");
-					    else
-					      perror("Problem setting brightness");
-					    break;
+					    syslog(LOG_WARNING, "Could not open outputfile: %s\n", out);
+					    usleep(250000);
 					  }
-					err_count2++;
-					if (err_count2>100) 
+					else 
 					  {
-					    if (loop)
-					      syslog(LOG_WARNING,"Brightness not optimal\n");
-					    else
-					      perror("Brightness not optimal");
-					    break;
+					    perror("Could not open Outputfile");
+					    close(dev);
+					    if (font && timestamp && enable_timestamp)
+					      Face_Done (instance, face);
+					    exit(1);
 					  }
 				      }
-				  } while (f);
-				if (debug) 
-				  fprintf(stderr,"Finally, we have an image...\n");
-			      }
-			    else 
-			      {
-				read(dev, buffer, win.width * win.height * bpp);
-				if (debug) 
-				  fprintf(stderr,"Image read without brightness-adjustment.\n");
-			      }
-			    close(dev);
-			    if (debug) 
-			      fprintf(stderr,"Video-Device closed.\n");
-			    if (font && timestamp && enable_timestamp) 
-			      {
-				inserttext(buffer, font, engine, face, &properties, 
-					   instance, font_size, timestamp, align, 
-					   win.width, win.height, border, blend);
-			      }
-			    do 
-			      {
-				if (debug) 
-				  fprintf(stderr,"Opening output-device.\n");
-				x = fopen(out, "w+");
-				if (!x) 
+				  } while (!x);
+				switch (outformat) 
 				  {
-				    if (loop) 
+				  case 1:
+				    while (write_jpeg(buffer, x, quality, win.width, win.height)) 
 				      {
-					syslog(LOG_WARNING, "Could not open outputfile: %s\n", out);
-					usleep(250000);
+					syslog(LOG_WARNING, "Could not write to outputfile: %s\n", out);
+					usleep(25000);
 				      }
-				    else 
-				      {
-					perror("Could not open Outputfile");
-					close(dev);
-					if (font && timestamp && enable_timestamp)
-					  Face_Done (instance, face);
-					exit(1);
-				      }
+				    break;
+				  case 2:
+				    write_png(buffer, x, win.width, win.height);
+				    break;
+				  default:		/* should never happen  */
+				    usage(argv[0]);
+				    break;
 				  }
-			      } while (!x);
-			    switch (outformat) 
-			      {
-			      case 1:
-				while (write_jpeg(buffer, x, quality, win.width, win.height)) 
-				  {
-				    syslog(LOG_WARNING, "Could not write to outputfile: %s\n", out);
-				    usleep(25000);
-				  }
-				break;
-			      case 2:
-				write_png(buffer, x, win.width, win.height);
-				break;
-			      default:		/* should never happen  */
-				usage(argv[0]);
-				break;
+				fclose(x);
+				if (debug) 
+				  fprintf(stderr,"Output-device closed.\n");
+				free (buffer);
+				if (debug) 
+				  fprintf(stderr,"Image-buffer freed. Now sleeping if daemon.\n");
+				usleep(loop);
 			      }
-			    fclose(x);
-			    if (debug) 
-			      fprintf(stderr,"Output-device closed.\n");
-			    free (buffer);
-			    if (debug) 
-			      fprintf(stderr,"Image-buffer freed. Now sleeping if daemon.\n");
-			    usleep(loop);
 			  }
 		      }
 		  }
