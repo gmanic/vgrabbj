@@ -119,6 +119,7 @@ void debug_vconf(struct vconfig *vconf) {
 }  
 #endif
 
+/*
 struct v_options *init_conf_list(struct v_options *conf)
 {
   struct v_options *list;
@@ -147,6 +148,8 @@ struct v_options *init_conf_list(struct v_options *conf)
   return (list_start);
 }
 
+    Some development, not release-ready...
+*/
 
 struct vconfig *init_defaults(struct vconfig *vconf) {
   int idx = 0;
