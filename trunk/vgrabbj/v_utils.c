@@ -21,8 +21,7 @@
  * USA  
  */  
 
-#include "vgrabbj.h"
-#include "v_plist.h"
+#include "v_utils.h"
 
 /* Initializes the mapping of driver memory to vgrabbj */
 
@@ -44,8 +43,16 @@ void init_mmap(struct vconfig *vconf) {
 /* Free's allocated mmap (if it exists) */
 
 void free_mmap(struct vconfig *vconf) {
-  if (vconf->map)
-    munmap(vconf->map, vconf->vbuf.size);
+  if (vconf->map) {
+    if (!munmap(vconf->map, vconf->vbuf.size)) {
+      v_error(vconf, LOG_DEBUG, "mmap'ed area 'freed'");
+      vconf->map=NULL;
+    }
+    else
+      v_error(vconf, LOG_ERR, "Error %d occured while unmapping map", errno);
+  }
+  else
+    v_error(vconf, LOG_WARNING, "There was no map allocated to be freed...");
 }
 
 
@@ -61,10 +68,14 @@ void open_device(struct vconfig *vconf) {
 /* Closing Input Device */
 
 void close_device(struct vconfig *vconf) {
-    while ( close(vconf->dev) )
-      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
-    
-    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  if(vconf->dev) {
+    if ( (vconf->dev=close(vconf->dev)) )
+      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in);
+    else
+      v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  }
+  else
+    v_error(vconf, LOG_WARNING, "Device %s was already closed...", vconf->in);
 }
 
 
@@ -150,13 +161,14 @@ void *free_ptr(void *buf) {
 int daemonize(struct vconfig *vconf, char *progname) 
 {
   openlog(progname, LOG_DEBUG, LOG_DAEMON);
-  v_error(vconf, LOG_DEBUG, "Forking for daemon mode");
+  v_error(vconf, LOG_WARNING, "Forking for daemon mode");
     
   switch( fork() ) 
     {
     case 0: // Child 
       v_error(vconf, LOG_DEBUG, "I'm the child process and are going to read images...");
       closelog();
+      vconf->init_done=TRUE;
       break;
     case -1: /* Error  */
       v_error(vconf, LOG_CRIT, "Can't fork, exiting..."); // exit
@@ -165,7 +177,7 @@ int daemonize(struct vconfig *vconf, char *progname)
       v_error(vconf, LOG_DEBUG, "I'm the parent and exiting now"
 		"(child takes care of the rest).");
    closelog();
-   free(vconf);
+   cleanup(vconf);
    exit(0);
     }
   openlog(progname, LOG_PID, LOG_DAEMON);
@@ -177,20 +189,54 @@ int daemonize(struct vconfig *vconf, char *progname)
 
 /* These are more or less self-explanatory */
 
-int get_int(char *value) {
-  long tmp;
-  if ( sscanf(value, "%ld", &tmp) != 1 )
-    return -1;
+
+char *strip_white(char *value) {
+  long int tmp=0;
+  /* eliminate whitespaces in value */
+  while ((value[0]==' ') || (value[0]=='\t') || (value[0]=='"')) value++;
+  tmp=strlen(value);
+  while ((value[--tmp]==' ') || (value[tmp]=='\t') || (value[tmp]=='"')) value[tmp]='\0';
+  return value;
+}
+
+
+long int check_minmax(struct vconfig *vconf, char *value, long int tmp, int n, struct v_options l_opt) {
+  if (l_opt.max_value || tmp < 0)
+    if ( (l_opt.min_value > tmp) || (tmp > l_opt.max_value) )
+      v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s, min %d, max %d)",
+	      value, l_opt.name, n, n?vconf->conf_file:"command-line", l_opt.min_value,
+	      l_opt.max_value);
+  v_error(vconf, LOG_DEBUG, "Set option %s to value %d (value: %s)", l_opt.name, tmp, value);
   return tmp;
 }
 
 
+char *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n) {
+  value=strip_white(value);
+  if ( (l_opt.max_length) && (strlen((value)) > l_opt.max_length) )
+    v_error(vconf, LOG_CRIT, "Value \"%s\" too long (max. %d, line %d, %s)", value,
+	    l_opt.max_length, n, n?vconf->conf_file:"command-line");
+  v_error(vconf, LOG_DEBUG, "Set option %s to value \"%s\"", l_opt.name,
+	  (char *)l_opt.var);
+  return value;
+}
+
+
 char *get_str(char *value, char *var) {
+  int t;
   if (var) free(var);
-  if ( strlen(value)<1 )
-    return NULL;
-  var=strcpy(malloc(strlen(value)+1),value);
+  if ( (t=strlen(value))<1 )
+      return NULL;
+  var=strcpy(malloc(t+1),value);
   return var;
+}
+
+
+long int get_int(char *value) {
+  long tmp;
+  if ( sscanf(value, "%ld", &tmp) != 1 )
+    return -1;
+  return tmp;
 }
 
 
@@ -204,64 +250,32 @@ int get_bool(char *value) {
 
 
 int get_format(char *value) {
-  int tmp;
-  if ( !(strcasecmp(value, "JPEG")) || !(strcasecmp(value,"JPG")) )
-    tmp=1;
-  else if ( !(strcasecmp(value, "PNG")) )
-    tmp=2;
-  else if ( !(strcasecmp(value, "PPM")) )
-    tmp=3;
-  else
-    tmp=-1;
-  return tmp;
+  int i;
+  for (i=0; output_list[i].name; i++) {
+  if ( !(strcasecmp(value, output_list[i].name)) )
+    return output_list[i].type;
+  }
+  return -1;
 }
 
 
 int get_position(char *value) {
-  int tmp;
-  if ( (!(strcasecmp(value, "UL"))) || (!(strcasecmp(value, "UpperLeft"))) )
-    tmp=0;
-  else if ( (!(strcasecmp(value, "UR"))) || (!(strcasecmp(value, "UpperRight"))) )
-    tmp=1;
-  else if ( (!(strcasecmp(value, "LL"))) || (!(strcasecmp(value, "LowerLeft"))) )
-    tmp=2;
-  else if ( (!(strcasecmp(value, "LR"))) || (!(strcasecmp(value, "LowerRight"))) )
-    tmp=3;
-  else if ( (!(strcasecmp(value, "UC"))) || (!(strcasecmp(value, "UpperCenter"))) )
-    tmp=4;
-  else if ( (!(strcasecmp(value, "LC"))) || (!(strcasecmp(value, "LowerCenter"))) )
-    tmp=5;
-  else
-    tmp=-1;
-  return tmp;
+  int i;
+  for (i=0; position_list[i].name; i++) {
+    if ( !(strcasecmp(value, position_list[i].name)) )
+      return position_list[i].type;
+  }
+  return -1;
 }
 
 
 int decode_size(char *value) {
-  int tmp;
-  if ( !(strcasecmp(value, "sqcif")) )
-    tmp=8;
-  else if ( !(strcasecmp(value, "qsif")) )
-    tmp=10;
-  else if ( !(strcasecmp(value, "qcif")) )
-    tmp=11;
-  else if ( !(strcasecmp(value, "sif")) )
-    tmp=20;
-  else if ( !(strcasecmp(value, "cif")) )
-    tmp=22;
-  else if ( !(strcasecmp(value, "vga")) )
-    tmp=40;
-  else if ( !(strcasecmp(value, "svga")) )
-    tmp=50;
-  else if ( !(strcasecmp(value, "xga")) )
-    tmp=64;
-  else if ( !(strcasecmp(value, "sxga")) )
-    tmp=80;
-  else if ( !(strcasecmp(value, "uxga")) )
-    tmp=100;
- else
-    tmp=0;
-  return tmp;
+  int i;
+  for (i=0; size_list[i].name; i++) {
+    if ( !(strcasecmp(value, size_list[i].name)) )
+      return size_list[i].type;
+  }
+  return 0;
 }
 
 
@@ -284,5 +298,5 @@ int get_height(char *value) {
 /* If a SIGHUP was caught, do only re-initialisation */
 
 struct vconfig *v_reinit(struct vconfig *vconf) {
-  return (vconf=v_init(vconf, 1, 0, '\0'));
+  return (vconf=v_init(vconf, 0, '\0'));
 }

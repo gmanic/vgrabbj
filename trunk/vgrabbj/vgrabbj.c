@@ -24,30 +24,30 @@
 
 int signal_terminate=0;
 
-void cleanup(struct vconfig *vconf, boolean clean) {
+void cleanup(struct vconfig *vconf) {
+  int tmp=vconf->loop;
 
+  v_update_ptr(vconf);
   if (vconf->openonce) {
-    munmap(vconf->map, vconf->vbuf.size);
-    while ( close(vconf->dev) )
-      v_error(vconf, LOG_CRIT, "Error while closing %s", vconf->in); // exit
-    
-    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
-  }
-
+    free_mmap(vconf);
+    close_device(vconf);
+    }
 #ifdef LIBTTF
-  if ( vconf->use_ts ) {
+  if ( vconf->use_ts && vconf->ttinit ) {
     Face_Done(vconf->ttinit->instance, vconf->ttinit->face);
     TT_Done_FreeType(vconf->ttinit->engine);
   }
-  vconf->ttinit->properties=free_ptr(vconf->ttinit->properties);
-  vconf->ttinit=free_ptr(vconf->ttinit);
+  if ( vconf->ttinit ) {
+    vconf->ttinit->properties=free_ptr(vconf->ttinit->properties);
+    vconf->ttinit=free_ptr(vconf->ttinit);
+  }
   vconf->timestamp=free_ptr(vconf->timestamp);
   vconf->font=free_ptr(vconf->font);
   v_error(vconf, LOG_DEBUG, "TrueType engine ended, vars freed");
 #endif
-
   vconf->buffer=free_ptr(vconf->buffer);
   vconf->o_buffer=free_ptr(vconf->o_buffer);
+  v_error(vconf, LOG_DEBUG, "Buffers freed");
   vconf->tmpout=free_ptr(vconf->tmpout);
   vconf->in=free_ptr(vconf->in);
   vconf->out=free_ptr(vconf->out);
@@ -56,12 +56,10 @@ void cleanup(struct vconfig *vconf, boolean clean) {
 
   vconf=free_ptr(vconf);
 			 
-  if ( !clean ) {
-    syslog(LOG_CRIT, "exiting.");
-    closelog();
+  if ( tmp ) {
+     closelog();
     _exit(1);
   }
-  fprintf(stderr, "No daemon, exiting...\n");
 }
 
 /* Event handler for SIGHUP */
@@ -99,15 +97,10 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
   if ( msg <= vconf->debug ) {
    
     va_start(arg_ptr, fmt);
-    
     vsprintf(buf, fmt, arg_ptr);
-    
     strcat(buf, "\n");
-
     va_end(arg_ptr);
-  
     if (vconf->loop && vconf->init_done) {
-      
       syslog(msg, buf);
       if (msg == 3) {
 	sleep(1);
@@ -122,11 +115,13 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
   /* Decision about exiting is independent of log or not to log */
 
   if ( (vconf->loop && msg < 3) || (msg==3 && vconf->err_count++ > 3600) ) {
-    syslog(LOG_ERR, "Fatal Error, exiting...\n"); // exit
+    syslog(LOG_ERR, "Fatal Error (daemon), exiting...\n"); // exit
+    cleanup(vconf);
     closelog();
     _exit(1);
   } else if ( !vconf->loop && msg < 4 ) {
-    fprintf(stderr, "Fatal Error, exiting...\n"); // exit
+    fprintf(stderr, "Fatal Error (non-daemon), exiting...\n"); // exit
+    cleanup(vconf);
     exit(1);
   }
 }
@@ -200,11 +195,11 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
   v_error(vconf, LOG_DEBUG, "Palette to be used: %s (%d), size: %d",
 	  plist[vconf->vpic.palette].name, vconf->vpic.palette, img_size(vconf, vconf->vpic.palette));
 
-  // Opening input device
+  /* Opening input device */
   if ( !vconf->openonce ) {
     open_device(vconf);
 
-  // Re-initialize the palette, in case someone changed it meanwhile
+    /* and Re-initialize the palette, in case someone changed it meanwhile */
 
     while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0 )
       v_error(vconf, LOG_ERR, "Device %s couldn't be reset to known palette %s",
@@ -214,7 +209,7 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 	v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
   }
   
-  // Read image via read()
+  /* Read image via read() */
 
   if (!vconf->usemmap) {
     if (vconf->brightness)
@@ -249,6 +244,7 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
     } while (discard--);
 
     /* We're reading the image via a mmap'd area of the driver */
+
   } else { 
     v_error(vconf, LOG_DEBUG, "Using mmap for image grabbing");
     if (!vconf->openonce)
@@ -291,7 +287,6 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 
 unsigned char *conv_image(struct vconfig *vconf) {
 
-  //  unsigned char *t_buffer;
   switch (vconf->vpic.palette) {
   case VIDEO_PALETTE_RGB24:
     vconf->o_buffer=memcpy(vconf->o_buffer, vconf->buffer, 
@@ -349,7 +344,7 @@ int main(int argc, char *argv[])
   mtrace();
 #endif
 
-  vconf=v_init(vconf, 0, argc, argv);
+  vconf=v_init(vconf, argc, argv);
 
   if (vconf->loop) 
     daemonize(vconf, basename(argv[0]));
@@ -379,7 +374,7 @@ int main(int argc, char *argv[])
     case SIGTERM:
       // We got sigkill, cleanup (for daemon mode) and exit
       signal_terminate=0;
-      cleanup(vconf, FALSE);
+      cleanup(vconf);
       break;
     case SIGHUP:
       // We got sighup, re-read the config-file (do NOT parse commandline)
@@ -392,7 +387,7 @@ int main(int argc, char *argv[])
     }
   } while (vconf->loop);
   
-  cleanup(vconf, TRUE);
+  cleanup(vconf);
   exit(0);
 }
 

@@ -25,41 +25,6 @@
 #include <config.h>
 #endif
 
-#if defined(HAVE_LIBTTF)
-#if defined(HAVE_FREETYPE_FREETYPE_H)
-#define LIBTTF 1
-#define TTF_H_LOC <freetype/freetype.h>
-#else
-#if defined(HAVE_FREETYPE1_FREETYPE_H)
-#define LIBTTF 1
-#define TTF_H_LOC <freetype1/freetype.h>
-#else
-#undef LIBTTF
-#endif
-#endif
-#else
-#undef LIBTTF
-#endif
-
-#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
-#define LIBFTP 1
-
-#define STATE_UNINITIALIZED 0
-#define STATE_CONNECT 1
-#define STATE_LOGIN 2
-#define STATE_CHDIR 3
-#define STATE_PUT 4
-#define STATE_RENAME 5
-#define STATE_FINISH 6
-
-#else
-#undef LIBFTP
-#endif
-
-#ifndef DEBUGGING
-#define DEBUGGING 0
-#endif
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -85,35 +50,77 @@
 #include <mcheck.h>
 #include <sys/mman.h>
 
+#if defined(HAVE_LIBTTF)
+#if defined(HAVE_FREETYPE_FREETYPE_H)
+#define LIBTTF 1
+#define TTF_H_LOC <freetype/freetype.h>
+#else
+#if defined(HAVE_FREETYPE1_FREETYPE_H)
+#define LIBTTF 1
+#define TTF_H_LOC <freetype1/freetype.h>
+#else
+#undef LIBTTF
+#endif
+#endif
+#else
+#undef LIBTTF
+#endif
+
 #ifdef LIBTTF
 #include TTF_H_LOC
 #endif
 
-#ifdef LIBFTP
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+#define LIBFTP 1
+#define STATE_UNINITIALIZED 0
+#define STATE_CONNECT 1
+#define STATE_LOGIN 2
+#define STATE_CHDIR 3
+#define STATE_PUT 4
+#define STATE_RENAME 5
+#define STATE_FINISH 6
 #include <ftplib.h>
+#else
+#undef LIBFTP
+#endif
+
+#ifndef DEBUGGING
+#define DEBUGGING 0
 #endif
 
 /* Defines, defaults */
+
+//#define boolean int
+//#define TRUE 1
+//#define FALSE 0
+
+#define __u32 int
 
 #define DEFAULT_QUALITY 75
 #define MIN_QUALITY 0
 #define MAX_QUALITY 100
 #define DEFAULT_WIDTH 352
 #define DEFAULT_HEIGHT 288
+#define MIN_SIZE 0
+#define MAX_SIZE 65535
 #define RGB_DEFAULT 24
 #define MIN_PALETTE 1
 #define MAX_PALETTE 17
 #define MIN_DISCARD 0
 #define MAX_DISCARD 255
+#define MIN_BOOL 0
+#define MAX_BOOL 1
 #define MIN_LOOP 0
 
 #define DEFAULT_VIDEO_DEV "/dev/video"
 #define DEFAULT_OUTPUT "/dev/stdout"
 #define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png, 3=ppm
+#define MIN_FORMAT 1
+#define MAX_FORMAT 3
 #define DEFAULT_BRIGHTNESS FALSE
 #define MAX_ERRORMSG_LENGTH 1024
 #define DEFAULT_CONFIG SYSCONF_DIR
-#define LOGLEVEL 7
+#define LOGLEVEL 4
 #define MIN_DEBUG 0
 #define MAX_DEBUG 7
 
@@ -222,13 +229,29 @@ struct v_options {
   int max_length;
 };
 
-enum { opt_void, opt_int, opt_longint, opt_char, opt_bool, opt_format, opt_size, opt_charptr };
+struct v_out_type {
+  int type;
+  const char *name;
+};
+
+struct v_pos_type {
+  int type;
+  const char *name;
+};
+
+struct v_size_type {
+  int type;
+  const char *name;
+};
+
+enum { opt_void, opt_int, opt_longint, opt_char, opt_bool, opt_format, opt_size, opt_charptr,
+       opt_position, opt_int_s, opt_conf, opt_setting, opt_help, opt_version };
 enum { none, req, opt };
 
 /* External functions */
 
 extern char           *basename (const char *);
-extern struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]);
+extern struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]);
 extern struct vconfig *v_reinit(struct vconfig *vconf);
 extern void            show_capabilities(char *in, char *pname);
 extern void            ftp_upload(struct vconfig *vconf);
@@ -243,7 +266,7 @@ extern int             get_position(char *value);
 extern int             get_format(char *value);
 extern int             get_bool(char *value);
 extern char           *get_str(char *value, char *var);
-extern int             get_int(char *value);
+extern long int        get_int(char *value);
 extern int             daemonize(struct vconfig *vconf, char *progname);
 extern void            sighup();
 extern void            sigterm();
@@ -254,9 +277,14 @@ extern void            init_mmap(struct vconfig *vconf);
 extern void            free_mmap(struct vconfig *vconf);
 extern void            open_device(struct vconfig *vconf);
 extern void            close_device(struct vconfig *vconf);
-
+extern void            cleanup(struct vconfig *vconf);
 extern int             signal_terminate;
-extern struct v_options long_options[];
+extern struct v_options l_opt[];
+extern char           *strip_white(char *value);
+extern long int        check_minmax(struct vconfig *vconf, char *value, long int tmp, int n,
+				    struct v_options l_opt);
+extern void            v_update_ptr(struct vconfig *vconf);
+extern char            *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

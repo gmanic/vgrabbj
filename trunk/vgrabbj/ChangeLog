@@ -1,3 +1,32 @@
+2002-02-18  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Finished rewrite of conf-parser. 
+			(Almost) identical routines are now 
+			used for command-line and conf-file.
+			Further information is given in case
+			of wrong options.
+			Cleanup of code (partially), blow-up
+			on some other areas (especially the
+			conf-var has to be cleaned up now...)
+			Well, ongoing progress, short of
+			release 0.8.8 (testing).
+			OpenOnce defaults ot On now (to avoid
+			memory fragmentation and usb-messages
+			in syslog). Use Off only if you need
+			to access the device inbetween vgrabbj
+			taking frames.
+
+2002-02-16  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Further rewrite of conf-parser (not
+			finished - sigh)
+			Definitions of options and certain
+			detailed definitones moved to structs
+			(former: in code)
+			Timestamp string does not need to be in
+			paranthesis (conf-file) any more (but
+			can - it will be filtered!)
+
 2002-02-12  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c: 	Changed handling of open-device in case

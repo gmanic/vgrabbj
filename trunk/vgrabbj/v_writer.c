@@ -21,7 +21,7 @@
 
 /* Functions to write the output to something */
 
-#include "vgrabbj.h"
+#include "v_writer.h"
 
 /* Function to write output data to a temporary file and then copy 
  * it to the final location via system-call to avoid problems with 
