@@ -3,11 +3,16 @@
 	* vgrabbj.c:    Minor Changes, added YUV422 to known routines,
 			because with my Philips cam these two look
 			identical.
+			Reminder: brightness adjust by vgrabbj is OFF
+			by default now and -b switches it, BUT you 
+			have to have RGB24 selected as input palette!
 			Because I switched back from the asm-code to
 			pure c-code (portability of the conversion
 			functions), and the conversion from YUV420 is
-			not exactly what it should look	like, no
-			release, yet.
+			not exactly what it should look	like, I use a
+			different approach: do two conversion, which
+			work - at least here at my box. Let me know if
+			something goes wrong, I'll try to fix it then.
 
 	* ccvt_c.c: 	Added YUYV (=YUV422?) and YUV420p to the
 			conversion routines (I'm getting there, soon
