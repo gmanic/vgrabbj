@@ -76,7 +76,7 @@
 
 #define DEFAULT_VIDEO_DEV "/dev/video"
 #define DEFAULT_OUTPUT "/dev/stdout"
-#define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png
+#define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png, 3=ppm
 #define DEFAULT_BRIGHTNESS FALSE
 #define MAX_ERRORMSG_LENGTH 1024
 #define DEFAULT_CONFIG SYSCONF_DIR

@@ -1,3 +1,33 @@
+; * Copyright (C) 2000, 2001 Jens Gecius, Larchmont, USA
+; * eMail: devel@gecius.de
+; * 
+; * This program is free software; you can redistribute it and/or modify
+; * it under the terms of the GNU General Public License as published by
+; * the Free Software Foundation; either version 2 of the License, or
+; * (at you option) any later version.
+; * 
+; * This program is distributed in the hope that it will be useful,
+; * but WITHOUT ANY WARRANTY; without even the implied warranty of
+; * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+; * GNU General Public License for more details.
+; * 
+; * You should have received a copy of the GNU General Public License
+; * along with this program; if not, write to the Free Software
+; * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
+; * USA  
+;
+; This is an example config file for the vgrabbj video grabber
+;
+; All values in here represent the defaults of vgrabbj if called without
+; any config-file, so modifying these values is equal with adding an
+; option on the command line.
+; Except one: ftp. The ftp-code does not work on the command line, because
+; this would expose the password for the ftp-server to the command ps.
+; The password would be readable for every user on that machine and we don't
+; want that.
+;
+; So, go ahead, check the values and place something meaningful in here.
+;
 Brightness 	Off
 ;	Brightness adjustment to be performed by vgrabbj, default Off
 ;	if set to off, image from cam is taken without adjustment
