@@ -65,7 +65,8 @@ if test "$enable_timestamp" != "no"; then
   AC_CHECK_LIB(ttf, TT_Open_Face,,
 	AC_MSG_WARN([*** libttf library not found! Disabled timestamp feature ***]))
   AC_CHECK_HEADERS(freetype/freetype.h,, 
-	AC_MSG_WARN([*** freetype.h not found! Disabled timestamp feature ***]))
+	AC_CHECK_HEADERS(freetype1/freetype.h,,
+	    AC_MSG_WARN([*** freetype.h not found! Disabled timestamp feature ***])))
 else
   echo "*** Timestamp disabled"
 fi
