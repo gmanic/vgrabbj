@@ -54,8 +54,12 @@
 #include <mcheck.h>
 #include <sys/mman.h>
 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 #include <freetype/freetype.h>
+#endif
+
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
+#include <ftplib.h>
 #endif
 
 /* Defines, defaults */
@@ -80,7 +84,7 @@
 #define MIN_DEBUG 0
 #define MAX_DEBUG 7
 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 #define DEFAULT_FONT "/usr/share/fonts/truetype/Arialn.ttf"
 #define DEFAULT_TIMESTAMP "%a, %e. %B %Y - %T"
 #define DEFAULT_FONTSIZE 12
@@ -119,7 +123,7 @@ struct vconfig {
   int inputnorm;
   int channel;
   int forcepal;
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   char *font;
   char *timestamp;
   int font_size;
@@ -131,6 +135,7 @@ struct vconfig {
   struct video_window win;
   struct video_picture vpic;
   struct video_capability vcap;
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
   struct FTP {
     boolean enable;
     boolean keepalive;
@@ -142,9 +147,10 @@ struct vconfig {
     unsigned int state;
     unsigned int tryharder;
   }ftp;
+#endif
 };
 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 struct ttneed {
   TT_Engine engine;
   TT_Face face;
@@ -166,8 +172,14 @@ struct palette_list {
 extern char *basename (const char *);
 
 extern struct vconfig *parse_config(struct vconfig *vconf, char *path); 
+
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
 extern void ftp_upload(struct vconfig *vconf);
-#ifdef HAVE_LIBTTF
+#endif
+
+extern void write_image(struct vconfig *vconf, unsigned char *o_buffer);
+
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
 extern int       Face_Open   (char *file, TT_Engine engine, TT_Face *face,
 			      TT_Face_Properties *prop, TT_Instance *inst,

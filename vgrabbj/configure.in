@@ -23,7 +23,7 @@ AC_INIT(vgrabbj.c)
 
 # For automake
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(vgrabbj,0.8.0)
+AM_INIT_AUTOMAKE(vgrabbj,0.8.1)
 AC_ARG_PROGRAM
 
 dnl Checks for programs.
@@ -62,6 +62,15 @@ dnl Replace `main' with a function in -lttf:
 AC_CHECK_LIB(ttf, TT_Open_Face,,
 	AC_MSG_ERROR([*** libttf library not found! Please install the appropriate library - Disabled timestamp feature ***]))
 AC_CHECK_HEADERS(freetype/freetype.h,, AC_MSG_ERROR([*** freetype.h not found! Please install the appropriate header file ***]))
+
+dnl Replace `main' with a function in -lz:
+AC_CHECK_LIB(z, crc32,,
+	AC_MSG_ERROR([*** libz library not found! Please install the appropriate library ***]))
+
+dnl Replace `main' with a function in -lftp:
+AC_CHECK_LIB(ftp, FtpInit,,
+	AC_MSG_ERROR([*** ftp library not found! Please install the appropriate library - Disabled ftp feature ***]))
+AC_CHECK_HEADERS(ftplib.h,, AC_MSG_ERROR([*** ftplib.h not found! Please install the appropriate header file ***]))
 
 dnl Replace `main' with a function in -lz:
 AC_CHECK_LIB(z, crc32,,

@@ -1,6 +1,9 @@
 2000-11-12	* NTSC/PAL/SECAM and channel selector for various
 		  tv-cards
 		* man-page (sigh)
+		* let vgrabbj re-read config-file on SIGHUP?
+		* archive of output images
+		* output stream (e.g. mpeg), also archivable
 
 2000-05-22	* First To Do List. (obviously done)
 		* ability to select colormode (currently only rgb)

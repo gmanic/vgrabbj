@@ -55,7 +55,7 @@ SwitchColor	Off
 ;	15	VIDEO_PALETTE_YUV420P
 ;	16	VIDEO_PALETTE_YUV410P				not supported
 OutputFormat	jpg
-;	Options are jpg or png
+;	Options are jpg, png, or ppm; default: jpg
 OutputFile	/dev/stdout
 ;	Where to write the grabbed image. This file must be read/writeable by
 ;	the user running vgrabbj; default: /dev/stdout
@@ -134,8 +134,8 @@ Username	foo
 Password	bar
 ;	Password to log into the remote box (WARNING: cleartext transmission!
 ;	NO protection against sniffers!!!!)
-KeepAlive On
-;	When set to On this option keeps the ftp connection alive
+KeepAlive 	Off
+;	When set to On this option keeps the ftp connection alive; default: Off
 TryHarder	2
 ;	If the remote box is not as helpful as expected, possible:
 ;	not implemented, yet
