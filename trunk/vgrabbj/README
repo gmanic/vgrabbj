@@ -76,8 +76,9 @@ During startup every commandline-option is checked. If any one of them
 fails (e.g. font-file not available), vgrabbj exits immediately, not
 taking any picture! 
 
-vgrabbj defaults to certain values, you can find them in the file
-vgrabbj.h.
+vgrabbj defaults to certain values, you can find them in the usage
+screen which you get by the command vgrabbj -h. Or you gather them by
+taking a look in the file vgrabbj.h.
 
 Especially the output defaults to <stdout>! If you call vgrabbj without
 piping the output to a file or using the commandline-option, it WILL 
@@ -100,15 +101,16 @@ image size.
 vgrabbj takes a lot palettes, but certainly not everyone. The following
 palettes are supported:
 
-RGB24, RGB32, YUYV, YUV420, and YUY420P.
+RGB24, RGB32, YUYV (which equals YUV422), YUV420, and YUY420P.
 
 Remember, if you use the timestamp-string on the command line, ALWAYS
 quote it with "! Otherwise, the options may get messed up. If you don't
 know anything about how to put together a timestamp-string, take a look
 at man strftime. All options are described in detail.
 
-In daemon mode, it is NOT useful to use -D 7 (log little step), because
-it would really fill you syslog *fast*! Use the default or even less.
+In daemon mode, it is NOT useful to use -D 7 (log _every_ little step),
+because it would really fill you syslog *fast*! Use the default or even
+less.
 
 In case something goes wrong in daemon mode (e.g. video-device not
 accessible), vgrabbj will retry for a while (approx. 1h). This is to
