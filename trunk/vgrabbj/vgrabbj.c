@@ -574,7 +574,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
   // If this prog does not work with your device, please blame someone else for
   // an insufficient V4L implementation.
   // Sorry for the inconvenience!
-  
+  /*  
   switch(vconf->vpic.palette) {
   case VIDEO_PALETTE_RGB24:
   case VIDEO_PALETTE_YUV420P:
@@ -610,7 +610,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
 
   if (vconf->vpic.palette == VIDEO_PALETTE_YUV420)
     return vconf;
-
+  */
   v_error(vconf, LOG_WARNING, "Unable to set YUV420, trying YUV420P");
   vconf->vpic.palette=VIDEO_PALETTE_YUV420P;
 
@@ -654,7 +654,7 @@ unsigned char *conv_rgb32_rgb24(unsigned char *o_buffer, unsigned char *buffer,
 				int width, int height) {
   long int y;
   for (y = 0; y < (width * height); y++) 
-    memcpy(o_buffer+(y*4), buffer+(y*3), 3);
+    memcpy(o_buffer+(y*3), buffer+(y*4), 3);
   return o_buffer;
 }
 
@@ -1092,6 +1092,7 @@ int main(int argc, char *argv[])
 	v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
       
       free (buffer);
+      free (t_buffer);
       free (o_buffer);
       
       if (vconf->debug) 
