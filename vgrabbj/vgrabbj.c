@@ -35,6 +35,7 @@ static char *palett[17] = {
 struct vconfig {
   unsigned long int loop;
   int debug;
+  int err_count;
   unsigned int quality;
   int outformat;
   int dev;
@@ -128,8 +129,10 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
     if (vconf->loop && vconf->init_done) {
       
       syslog(msg, buf);
-      if (msg == 3)
+      if (msg == 3) {
+	vconf->err_count++;
 	sleep(1);
+      }
     } else {
       fprintf(stderr, buf);
       fflush(stderr);
@@ -139,7 +142,7 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
 
   /* Decision about exiting is independent of log or not to log */
 
-  if ( vconf->loop && msg < 3 ) {
+  if ( (vconf->loop && msg < 3) || (vconf->err_count > 3600) ) {
     syslog(LOG_ERR, "Fatal Error, exiting...\n"); // exit
     _exit(1);
   } else if ( !vconf->loop && msg < 4 ) {
@@ -167,6 +170,7 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
   vconf->use_ts     = FALSE;
   vconf->init_done  = FALSE;
   vconf->debug      = DEBUG;
+  vconf->err_count  = 0;
   vconf->dev        = 0;
 #ifdef HAVE_LIBTTF
   vconf->font       = DEFAULT_FONT;
@@ -177,17 +181,17 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
   vconf->blend      = DEFAULT_BLEND;
 #endif
   
-  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:DB:m:wSV"))!=EOF) 
+  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSV"))!=EOF) 
     {
       switch (n) 
 	{
 	case 'l':
-	  if ( sscanf (optarg, "%li", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
+	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
 	  vconf->loop=vconf->loop*1000000;
 	  break;
 	case 'L':
-	  if ( sscanf (optarg, "%li", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
+	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
 	  break;
 	case 'f':
@@ -198,11 +202,11 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	    v_error(vconf, LOG_DEBUG, "Outputfile is %s", vconf->out);
 	  break;
 	case 'q':
-	  if ( sscanf (optarg, "%u", &vconf->quality) != 1 || (vconf->quality<0)
+	  if ( sscanf (optarg, "%d", &vconf->quality) != 1 || (vconf->quality<0)
 	       || (vconf->quality>100) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong picture quality \"%d\"", vconf->quality); // exit
 	  if (vconf->debug)
-	    v_error(vconf, LOG_DEBUG, "Image quality is %i", vconf->quality);
+	    v_error(vconf, LOG_DEBUG, "Image quality is %d", vconf->quality);
 	  break;
 	case 'o':
 	  if ( !strcasecmp(optarg,"jpeg") || !strcasecmp(optarg,"jpg") )
@@ -250,7 +254,7 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  vconf->font=optarg;
 	  break;
 	case 'T':
-	  if ( sscanf(optarg, "%i", &vconf->font_size) != 1 || vconf->font_size < 1
+	  if ( sscanf(optarg, "%d", &vconf->font_size) != 1 || vconf->font_size < 1
 	       || vconf->font_size > 100 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong fontsize (min. 1, max 100)"); // exit
 	  vconf->use_ts=TRUE;
@@ -266,19 +270,19 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'a':
-	  if ( sscanf (optarg, "%i", &vconf->align) != 1 || vconf->align < 0
+	  if ( sscanf (optarg, "%d", &vconf->align) != 1 || vconf->align < 0
 	       || vconf->align>5 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong timestamp alignment"); // exit
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'm':
-	  if ( sscanf (optarg, "%i", &vconf->blend) != 1 || vconf->blend > 100
+	  if ( sscanf (optarg, "%d", &vconf->blend) != 1 || vconf->blend > 100
 	       || vconf->blend < 1 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong blend value"); // exit
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'B':
-	  if ( sscanf (optarg, "%i", &vconf->border) != 1 || vconf->border > 255
+	  if ( sscanf (optarg, "%d", &vconf->border) != 1 || vconf->border > 255
 	       || vconf->border < 1 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong border value"); // exit
 	  vconf->use_ts=TRUE;
@@ -296,7 +300,9 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  show_capabilities(vconf->in, argv[0]);
 	  break;
 	case 'D':
-	  vconf->debug=!vconf->debug;
+	  if ( sscanf (optarg, "%d", &vconf->debug) != 1 || vconf->debug >7
+	       || vconf->debug < 0 )
+	    v_error(vconf, LOG_CRIT, "Wrong debuglevel value");
 	  break;
 	case 'w':
 	  vconf->windowsize=FALSE;
@@ -1090,7 +1096,7 @@ int main(int argc, char *argv[])
       
       if (vconf->debug) 
 	v_error(vconf, LOG_DEBUG, "Image-buffers freed, now sleeping if daemon");
-      
+      vconf->err_count=0;
       usleep(vconf->loop);
     } while (vconf->loop);
   
