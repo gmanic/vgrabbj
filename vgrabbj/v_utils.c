@@ -212,21 +212,21 @@ long int check_minmax(struct vconfig *vconf, char *value, long int tmp, int n, s
 
 
 char *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n) {
-  value=strip_white(value);
+  //  value=strip_white(value);
   if ( (l_opt.max_length) && (strlen((value)) > l_opt.max_length) )
     v_error(vconf, LOG_CRIT, "Value \"%s\" too long (max. %d, line %d, %s)", value,
 	    l_opt.max_length, n, n?vconf->conf_file:"command-line");
-  v_error(vconf, LOG_DEBUG, "Set option %s to value \"%s\"", l_opt.name,
-	  (char *)l_opt.var);
+  v_error(vconf, LOG_DEBUG, "Set option %s to value \"%s\"", l_opt.name, value);
   return value;
 }
 
 
 char *get_str(char *value, char *var) {
   int t;
-  if (var) free(var);
+  if (var) free (var);
   if ( (t=strlen(value))<1 )
       return NULL;
+  value=strip_white(value);
   var=strcpy(malloc(t+1),value);
   return var;
 }

@@ -1,3 +1,10 @@
+2002-03-26  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed severe bugs in ftp-code:
+			1. remoteDir was not read from conf
+			2. if remoteDir not set screwy things
+			might have happened...
+
 2002-02-24  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c: 	Fixed missing explanation of parameter

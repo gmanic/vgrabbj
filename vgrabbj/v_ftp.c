@@ -60,12 +60,18 @@ void ftp_upload(struct vconfig *vconf){
       ftp_upload(vconf);
       break;
     case STATE_CHDIR:
-      if(FtpChdir(vconf->ftp.remoteDir, conn)){
-        vconf->ftp.state = STATE_PUT;
-        v_error(vconf, LOG_INFO, "ftp state 3: chdir successfull");	        
-      } else {
-        v_error(vconf, LOG_WARNING, "ftp state 3: chdir failed with reason: %s", FtpLastResponse(conn));
-      	return;      
+      if (vconf->ftp.remoteDir) {
+	if(FtpChdir(vconf->ftp.remoteDir, conn)){
+	  vconf->ftp.state = STATE_PUT;
+	  v_error(vconf, LOG_INFO, "ftp state 3: chdir successfull");	        
+	} else {
+	  v_error(vconf, LOG_WARNING, "ftp state 3: chdir failed with reason: %s", FtpLastResponse(conn));
+	  return;      
+	}
+      }
+      else {
+	vconf->ftp.state = STATE_PUT;
+	v_error(vconf, LOG_INFO, "fpt state 3: no chdir");
       }
       ftp_upload(vconf);
       break;

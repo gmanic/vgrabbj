@@ -284,7 +284,7 @@ extern char           *strip_white(char *value);
 extern long int        check_minmax(struct vconfig *vconf, char *value, long int tmp, int n,
 				    struct v_options l_opt);
 extern void            v_update_ptr(struct vconfig *vconf);
-extern char            *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n);
+extern char           *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

@@ -95,7 +95,7 @@ int write_png(struct vconfig *vconf, char *image, FILE *x)
     return(1);
   }
   if (setjmp(png_jmpbuf(png_ptr))) {
-    /* If we get here, we had a problem reading the file */
+  /* If we get here, we had a problem reading the file */
     png_destroy_write_struct(&png_ptr, &info_ptr);
     return (1);
   }
