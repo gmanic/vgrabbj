@@ -1,8 +1,8 @@
 #!/bin/sh
 rm -f config.cache
-aclocal
-autoconf
-autoheader
-automake -a
+aclocal-1.7
+autoconf2.13
+autoheader2.13
+automake-1.7 -a
 exit
 

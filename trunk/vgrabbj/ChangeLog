@@ -1,3 +1,13 @@
+2004-08-09  Jens Gecius  <jens@gecius.de>
+
+	* configure.in	Fixed minor issues:
+			* check for libz before libpng
+			  (as libpng depends on libz)
+			* changed to correct usage for
+			  .conf installation directory
+			  (sysconfdir)
+			non-release fixes
+
 2004-03-20  Jens Gecius  <jens@gecius.de>
 
 	* ccvt_c.c:	Fixed bug to convert image from
