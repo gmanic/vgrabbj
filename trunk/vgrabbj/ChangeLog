@@ -1,4 +1,29 @@
-2001-07-18  Jens Gecius  <jens@gecius.de> (no release)
+2001-07-21  Jens Gecius  <jens@gecius.de> (no release - CVS only)
+
+	* vgrabbj.c: 	* Added:
+			Added mmap image grabbing as default, if mmap
+			fails, vgrabbj falls back to read().
+			Added parameter -F to force a specific palette.
+			But be aware, if it is not one of vgrabbj's
+			supported palettes (RGB32, RGB24, YUYV, YUV420,
+			YUV420P) it will fallback to one of those (if
+			supported by the device). Good to check devices
+			capabilities.
+			* Bugs fixed:
+			Fixed a bug for RGB32-RGB24 conversion (it used
+			to strip 1/4th of the image).
+			* Misc:
+			Brightness CHANGED! Default is now FALSE and
+			-b switches the default.
+			Code cleanup, better checking for v4l device.
+			Buffers are now kept for the time vgrabbj runs.
+			Rearranged code to avoid forward function defs.
+			Put fork'ing into function (away from main()).
+			
+	* vgrabbj.h: 	More code cleanup, put definitions in vgrabbj.h
+			where they belong
+
+2001-07-18  Jens Gecius  <jens@gecius.de> (no release - CVS only)
 
 	* vgrabbj.c: 	Fixed handling of parameter -w, which was kind of
 			ignored. Now it is properly handled and vgrabbj
