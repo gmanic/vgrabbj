@@ -140,6 +140,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->usemmap    = TRUE;
   vconf->openonce   = TRUE;
   vconf->usetmpout  = TRUE;
+  vconf->swaprl     = FALSE;
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
   vconf->o_buffer   = NULL;
@@ -203,6 +204,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->archivemax = 0;
   l_opt[37].var = &vconf->archiveeach;
   l_opt[38].var = &vconf->archivemax;
+  l_opt[39].var = &vconf->swaprl;
   return vconf;
 }  
 
@@ -403,7 +405,8 @@ void decode_options(struct vconfig *vconf, char *option, char *value, int o, int
 	*(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i])*1000000;
 	break;
       case opt_bool:
-	*(boolean *)l_opt[i].var=check_minmax(vconf, value, n?get_bool(value):!l_opt[i].var, n, l_opt[i])
+	*(boolean *)l_opt[i].var=check_minmax(vconf, value, n?get_bool(value):!*(boolean *)l_opt[i].var,
+					      n, l_opt[i])
 	  ? TRUE : FALSE;
 	break;
       case opt_charptr:

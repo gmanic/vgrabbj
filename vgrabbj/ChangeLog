@@ -1,3 +1,11 @@
+2002-10-14  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed nasty bug causing boolean
+			commandline options not being parsed
+			correctly.
+			Added switch SwapRL (-R) to mirror
+			the resulting image left-right.
+
 2002-04-12  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c: 	Fixed bug for commandline switches
