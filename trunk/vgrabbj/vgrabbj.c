@@ -184,7 +184,6 @@ void usage (char *pname)
 	  " -V                Display version information and exit\n"
 	  " -F <value>        Force usage of specified palette (see videodev.h for values)\n"
 	  "                   (Fallback to supported palette, if this one is not supported\n"
-	  " -C                Show copyright information in image (lower left corner)\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
