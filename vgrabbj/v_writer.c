@@ -175,10 +175,11 @@ void write_image(struct vconfig *vconf) {
 	v_error(vconf, LOG_DEBUG, "Temporary output %s moved to final destination %s", vconf->tmpout, vconf->out);
       if (unlink(vconf->tmpout))
 	v_error(vconf, LOG_ERR, "Couldn't delete %s: %s", vconf->tmpout, strerror(errno));
-    } else
+    } else {
       v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+    }
 
-    if ((vconf->archive) && (!--vconf->archivecount)) {
+    if ((--vconf->archivecount==0) && (vconf->archive)) {
       /* vconf->archive is a strftime format string, make the final path
        * to archive_path */
       char *ts;

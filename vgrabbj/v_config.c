@@ -91,6 +91,7 @@ void usage (char *pname)
 	  " -R                Swap left/right like a mirror.\n"
 	  " -U                Swap top/bottom like a mirror.\n"
 	  " -G                Do not use mmap'ed memory - needed only for certain cams\n"
+	  " -N                Do not fork in daemon mode, good for testing/debbuging\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -322,10 +323,12 @@ struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int c
   archive=realloc(archive, sizeof(struct s_arch));
   archive->filename=NULL;
   archive->next=NULL;
+  v_error(vconf, LOG_DEBUG, "setup of archive structure (%s)",vconf->arch);
   if ( count-->1 )
     archive->next=init_archive(vconf, archive->next, count);
   else
     archive->next=vconf->arch;
+
   return archive;
 }
 
@@ -433,20 +436,25 @@ struct vconfig *check_device(struct vconfig *vconf) {
 
 
 void v_update_ptr(struct vconfig *vconf) {
-  vconf->in=(char *)l_opt[10].var;
-  vconf->out=(char *)l_opt[9].var;
+  int i=9;
+  vconf->out=(char *)l_opt[i++].var;
+  vconf->in=(char *)l_opt[i].var;
 #ifdef LIBTTF
-  vconf->timestamp=(char *)l_opt[19].var;
-  vconf->font=(char *)l_opt[18].var;
+  i=i+9;
+  vconf->timestamp=(char *)l_opt[i--].var;
+  vconf->font=(char *)l_opt[i].var;
 #endif
 #ifdef LIBFTP
-  vconf->ftp.remoteHost=(char *)l_opt[25].var;
-  vconf->ftp.remoteImageName=(char *)l_opt[26].var;
-  vconf->ftp.username=(char *)l_opt[27].var;
-  vconf->ftp.password=(char *)l_opt[28].var;
-  vconf->ftp.remoteDir=(char *)l_opt[31].var;
+  i=i+7;
+  vconf->ftp.remoteHost=(char *)l_opt[i++].var;
+  vconf->ftp.remoteImageName=(char *)l_opt[i++].var;
+  vconf->ftp.username=(char *)l_opt[i++].var;
+  vconf->ftp.password=(char *)l_opt[i++].var;
+  i++;i++;
+  vconf->ftp.remoteDir=(char *)l_opt[i].var;
 #endif
-  vconf->archive=(char *)l_opt[36].var;
+  i=i+11;
+  vconf->archive=(char *)l_opt[i].var;
   v_error(vconf, LOG_DEBUG, "Updated pointers to new allocated memory.");
 }
 
