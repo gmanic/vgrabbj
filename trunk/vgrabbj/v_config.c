@@ -55,6 +55,8 @@ int get_format(char *value) {
     tmp=1;
   else if ( !(strcasecmp(value, "PNG")) )
     tmp=2;
+  else if ( !(strcasecmp(value, "PPM")) )
+    tmp=3;
   else
     tmp=-1;
   return tmp;
@@ -290,7 +292,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
       else if ( !strcasecmp(option, "FontFile") ) {
 	if (!fopen((vconf->font=get_str((value=strtok(NULL, " \t\n")))), "r") )
 	  v_error(vconf, LOG_CRIT, "Can't not open %s as %s (line %d, %s)",
@@ -343,6 +345,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
 #endif
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
 /* ftp */      
       else if ( !strcasecmp(option, "EnableFtp") ) {
 	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
@@ -400,6 +403,7 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }      
 /* end ftp */
+#endif
     }
     else
       v_error(vconf, LOG_CRIT, "Unknown Option %s (value %s, line %d, %s)", option, value, n, path);
@@ -414,11 +418,3 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 
   return(vconf);
 }
-
-
-
-
-
-
-
-

@@ -59,7 +59,7 @@ void sigterm() {
 /* Cleanup in case of TERM signal */
 
 void cleanup(struct vconfig *vconf, 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 	     struct ttneed *ttinit, 
 #endif
 	     char *buffer, char *o_buffer) {
@@ -68,7 +68,7 @@ void cleanup(struct vconfig *vconf,
     close(vconf->dev);
   }
 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   if ( vconf->use_ts ) {
     Face_Done(ttinit->instance, ttinit->face);
     TT_Done_FreeType(ttinit->engine);
@@ -166,7 +166,7 @@ void usage (char *pname)
 	  "                   Be careful! These settings supersede any other setting of\n"
 	  "                   the imagesize and may damage your hardware!!\n"
 	  "                   The values are NOT checked to be valid!!!!\n"
-	  " -o <jpg|png>      Output format (default: jpg)\n"
+	  " -o <jpg|png|ppm>  Output format (default: jpg)\n"
 	  " -f <filename>     Write to <filename> (default: %s)\n"
 	  " -d <device>       Read from <device> as input (default: %s)\n"
 	  " -C                Open device permanently instead of opening for each image\n"
@@ -174,7 +174,7 @@ void usage (char *pname)
 	  "                   (e.g. IBM USB-Cam, QuickCam)\n"
 	  " -s <device>       See capabilities of <device>\n"
 	  " -S                Switch BGR colormap to RGB colormap (try if colors are odd)\n"
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 	  " -t <font-file>    Full path to the font file\n"
 	  "                   (default: %s)\n"
 	  " -T <font-size>    Font-size (min. %d, max. %d, default: %d)\n"
@@ -203,7 +203,7 @@ void usage (char *pname)
 	  basename(pname), VERSION, basename(pname), MIN_QUALITY, MAX_QUALITY, 
 	  DEFAULT_QUALITY, DEFAULT_WIDTH, DEFAULT_HEIGHT,
 	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV, 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 	  DEFAULT_FONT, MIN_FONTSIZE, MAX_FONTSIZE, DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP,
 	  DEFAULT_ALIGN, MIN_BLEND, MAX_BLEND, DEFAULT_BLEND, MIN_BLEND, MAX_BLEND,
 	  MIN_BORDER, MAX_BORDER, DEFAULT_BORDER, 
@@ -289,7 +289,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->dev        = 0;
   vconf->forcepal   = 0;
   vconf->openonce   = FALSE;
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   vconf->font       = DEFAULT_FONT;
   vconf->timestamp  = DEFAULT_TIMESTAMP;
   vconf->font_size  = DEFAULT_FONTSIZE;
@@ -297,8 +297,10 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->align      = DEFAULT_ALIGN;
   vconf->blend      = DEFAULT_BLEND;
 #endif
+#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
   vconf->ftp.enable = FALSE;
   vconf->ftp.state  = 0;
+#endif
   return vconf;
 }  
 
@@ -351,10 +353,12 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  v_error(vconf, LOG_DEBUG, "Image quality is %d", vconf->quality);
 	  break;
 	case 'o':
-	  if ( !strcasecmp(optarg,"jpeg") || !strcasecmp(optarg,"jpg") )
+	  if ( (!strcasecmp(optarg,"jpeg")) || (!strcasecmp(optarg,"jpg")) )
 	    vconf->outformat=1;
 	  else if ( !strcasecmp(optarg,"png") )
 	    vconf->outformat=2;
+	  else if ( !strcasecmp(optarg,"ppm") )
+	    vconf->outformat=3;
 	  else 
 	    v_error(vconf, LOG_CRIT, "Wrong output format specified"); // exit
 	  break;
@@ -399,7 +403,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  if (dev)
 	    v_error(vconf, LOG_CRIT, "Device %s error occured", vconf->in); // exit
 	  break;
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 	case 't':
 	  if ( !( x = fopen((vconf->font = optarg), "r") ) )
 	    v_error(vconf, LOG_CRIT, "Font-file %s not found", vconf->font); // exit
@@ -499,92 +503,6 @@ int get_brightness_adj(struct vconfig *vconf, unsigned char *image, int *brightn
     tot += image[i];
   *brightness = (128 - tot/(size*3))/3;
   return !((tot/(size*3)) >= 126 && (tot/(size*3)) <= 130);
-}
-
-/* Write image as jpeg to FILE  */
-
-int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x) 
-{
-  char *line;
-  int n, y=0, i, line_width;
-  
-  struct jpeg_compress_struct cjpeg;
-  struct jpeg_error_mgr jerr;
-  JSAMPROW row_ptr[1];
-  
-  line=malloc(vconf->win.width * 3);
-  if (!line) 
-    v_error(vconf, LOG_CRIT, "OUT OF MEMORY, Exiting..."); // exit
-  cjpeg.err = jpeg_std_error(&jerr);
-  jpeg_create_compress (&cjpeg);
-  cjpeg.image_width = vconf->win.width;
-  cjpeg.image_height= vconf->win.height;
-  cjpeg.input_components = 3;
-  cjpeg.in_color_space = JCS_RGB;
-  
-  jpeg_set_defaults (&cjpeg);
-  jpeg_set_quality (&cjpeg, vconf->quality, TRUE);
-  cjpeg.dct_method = JDCT_FASTEST;
-  
-  jpeg_stdio_dest (&cjpeg, x);
-  jpeg_start_compress (&cjpeg, TRUE);
-  row_ptr[0]=line;
-  line_width=vconf->win.width * 3;
-  n=0;
-  
-  for (y = 0; y < vconf->win.height; y++) 
-    {
-      for (i = 0; i< line_width; i+=3) 
-	{
-	  line[i]   = buffer[n+2];
-	  line[i+1] = buffer[n+1];
-	  line[i+2] = buffer[n];
-	  n+=3;
-	}
-      jpeg_write_scanlines (&cjpeg, row_ptr, 1);
-    }
-  jpeg_finish_compress (&cjpeg);
-  jpeg_destroy_compress (&cjpeg);
-  free(line);
-  return(0);
-}
-
-/* Write image as png to FILE  */
-
-int write_png(struct vconfig *vconf, char *image, FILE *x) 
-{
-  register int y;
-  png_bytep rowpointers[vconf->win.height];
-  png_infop info_ptr;
-  png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
-						 NULL, NULL, NULL);
-
-  if (!png_ptr)
-    return(1);
-  info_ptr = png_create_info_struct (png_ptr);
-  if (!info_ptr) {
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-    return(1);
-  }
-  if (setjmp(png_jmpbuf(png_ptr))) {
-    /* If we get here, we had a problem reading the file */
-    png_destroy_write_struct(&png_ptr, &info_ptr);
-    return (1);
-  }
-
-  png_init_io (png_ptr, x);
-  png_set_IHDR (png_ptr, info_ptr, vconf->win.width, vconf->win.height,
-		8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-  png_write_info (png_ptr, info_ptr);
-  for (y = 0; y < vconf->win.height; y++) 
-    {
-      rowpointers[y] = image + y*vconf->win.width*3;
-    }
-  png_write_image(png_ptr, rowpointers);
-  png_write_end (png_ptr, info_ptr);
-  png_destroy_write_struct (&png_ptr, &info_ptr);
-  return(0);
 }
 
 /* Check if palette is supported by v4l device */
@@ -912,37 +830,9 @@ unsigned char *conv_image(struct vconfig *vconf, unsigned char *o_buffer, unsign
   return o_buffer;
 }
 
-
-void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
-  FILE *x;
-  while (! (x = fopen(vconf->out, "w+") ) )
-    v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
-  v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
-  
-  switch (vconf->outformat) 
-    {
-    case 1:
-      while (write_jpeg(vconf, o_buffer, x))
-	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-      break;
-    case 2:
-      while (write_png(vconf, o_buffer, x)) 
-	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
-      break;
-    default:		// should never happen  
-      v_error(vconf, LOG_CRIT, "Unknown outformat %d (should not happen!!)", vconf->outformat);
-      break;
-    }
-  fclose(x);  
-  v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
-  if(vconf->ftp.enable == TRUE)
-    ftp_upload(vconf);
-  return;
-}
-
 /* Now for the LIBTTF functions for the timestamp */
 		
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 
 /* Open Face via routine found in font.c  */
 
@@ -1117,7 +1007,7 @@ int main(int argc, char *argv[])
   struct vconfig *vconf;
   unsigned char *buffer, *o_buffer;
 
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   struct ttneed *ttinit;
 #endif
 
@@ -1154,7 +1044,7 @@ int main(int argc, char *argv[])
   v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (out)",
 	  img_size(vconf, vconf->vpic.palette), img_size(vconf, VIDEO_PALETTE_RGB24));
   
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   ttinit = malloc(sizeof(*ttinit));
   ttinit->properties = malloc(sizeof(*ttinit->properties));
  
@@ -1181,7 +1071,7 @@ int main(int argc, char *argv[])
     o_buffer = conv_image(vconf, o_buffer, 
 			  read_image(vconf, buffer, img_size(vconf, vconf->vpic.palette)));
     
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
     if (vconf->use_ts) 
       o_buffer=inserttext(ttinit, o_buffer, vconf);
 #endif
@@ -1194,7 +1084,7 @@ int main(int argc, char *argv[])
     // We got a SIGTERM, so we have to exit now (for daemon mode)
     if (terminate == 1)
       cleanup(vconf,
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
 	      ttinit,
 #endif
 	      buffer, o_buffer);
@@ -1214,7 +1104,7 @@ int main(int argc, char *argv[])
   free (o_buffer);
   v_error(vconf, LOG_DEBUG, "Image-buffers freed");
   
-#ifdef HAVE_LIBTTF
+#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   if (vconf->use_ts)
     TT_Done_FreeType(ttinit->engine);
   free(ttinit->properties);

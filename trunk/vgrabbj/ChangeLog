@@ -1,3 +1,21 @@
+2001-11-12  Jens Gecius  <jens@gecius.de> = after release
+
+	* v_writer.c	New to the package, this file contains all
+			functions related to the output of the image
+			data
+			Added an output option for ppm (plain linear
+			RGB). You may need to switch R/G (via -S)
+			because vgrabbj can not determine what mode
+			your videodevice uses.
+			(appropriate changes to all other files)
+	* all		Removed ftplib.* from package and constructed
+			dependency on the ftplib on your system. If
+			don't have it, ftp is disabled (like ttf, see
+			below)
+			More stringent check for available libraries
+			AND headers. If one of both is not available,
+			timestamp and/or ftp will be disabled.
+
 2001-11-12  Jens Gecius  <jens@gecius.de>
 
 			Release of 0.8.0 with ftp-code, config-file,
