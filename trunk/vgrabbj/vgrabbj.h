@@ -87,10 +87,10 @@
   
 struct vconfig {
   unsigned long int loop;
-  int debug;
-  int err_count;
+  unsigned int debug;
+  unsigned int err_count;
   unsigned int quality;
-  int outformat;
+  unsigned int outformat;
   int dev;
   char *in;
   char *out;
@@ -114,6 +114,15 @@ struct vconfig {
   struct video_window win;
   struct video_picture vpic;
   struct video_capability vcap;
+  struct FTP {
+    boolean Enable;
+    char *remoteHost;
+    char *remoteDir;
+    char *remoteImageName;
+    char *username;
+    char *password;
+    unsigned int loggedin;
+    unsigned int tryharder;
 };
 
 #ifdef HAVE_LIBTTF
@@ -129,6 +138,8 @@ struct ttneed {
 struct palette_list {
   int num;
   char *name;
+  int mul;
+  int div;
 };
 
 /* External functions */
