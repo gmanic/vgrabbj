@@ -130,12 +130,6 @@ struct palette_list {
   char *name;
 };
 
-/* Forward definitions */
-
-void usage (char *pname);
-void show_capabilities(char *in, char *pname);
-void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
-
 /* External functions */
 
 extern char *basename (const char *);
