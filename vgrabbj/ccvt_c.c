@@ -55,7 +55,7 @@ static void ccvt_420i(int width, int height, unsigned char *src, unsigned char *
 	vr =  359 * v;
 
 	/* The biggest problem is the interlaced data, and the fact that odd
-	   add even lines have V and U data, resp. 
+	   and even lines have V and U data, resp. 
 	 */
 	for (line = 0; line < height; line++) {
 		for (col = 0; col < width; col++) {
@@ -249,7 +249,8 @@ void ccvt_420p_bgr32(int width, int height, void *src, void *srcu, void *srcv, v
 
 
 /* This is a really simplistic approach. Speedups are welcomed. */
-/* Derived this from the above 4:2:0 planar for yuyv */
+/* Derived this from the above 4:2:0 planar for yuyv            */
+/* Format: YUYV YUYV YUYV YUYV...                               */
 static void ccvt_yuyv(int width, int height, unsigned char *src, unsigned char *dst, int push)
 {
 	int line, col, linewidth;
