@@ -760,8 +760,11 @@ char *inserttext(unsigned char *buffer, struct vconfig *vconf)
   ttinit->properties = malloc(sizeof(*ttinit->properties));
 
   ttinit = OpenFace(ttinit, vconf);
-  if ( !ttinit->use )
+  if ( !ttinit->use ) {
+    free(ttinit->properties);
+    free(ttinit);
     return(buffer);
+  }
 
   if (vconf->debug) 
     v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
@@ -892,6 +895,8 @@ char *inserttext(unsigned char *buffer, struct vconfig *vconf)
   if (vconf->debug) 
     v_error(vconf, LOG_INFO, "Font-Engine unloaded, stamp inserted into image");
 
+  free(ttinit->properties);
+  free(ttinit);
   return buffer;
 }
 
@@ -1103,6 +1108,7 @@ int main(int argc, char *argv[])
   
   if (vconf->debug) 
     v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
-  
+
+  free(vconf);
   exit(0);
 }
