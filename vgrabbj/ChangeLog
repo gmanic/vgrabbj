@@ -1,3 +1,15 @@
+2002-04-12  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed bug for commandline switches
+			on boolean values (segfault)
+			Fixed possible wrong treatment of
+			empty lines in conf
+
+2002-04-02  Jens Gecius  <jens@gecius.de>
+
+	* 		Final touch up, release 0.9.0
+			with archive functionallity.
+
 2002-03-29  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c:	rewrote/enhanced archive handling
