@@ -1,6 +1,6 @@
 /* Simple Video4Linux image grabber. Made for my Philips Vesta Pro
  * 
- * Copyright (C) 2000, 2001 geci, Larchmont, USA
+ * Copyright (C) 2000, 2001 Jens Gecius, Larchmont, USA
  * eMail: devel@gecius.de
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -19,56 +19,312 @@
  * USA  
  */  
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/param.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <getopt.h>
-#include <syslog.h>
-#include <linux/types.h>
-#include <linux/videodev.h>
-#include <jpeglib.h>
-#include <png.h>
-#include <freetype/freetype.h>
-#include "font.h"
+#include <vgrabbj.h>
 
-#define QUAL_DEFAULT 75
-#define WIDTH_DEFAULT 352
-#define HEIGHT_DEFAULT 288
-#define RGB_DEFAULT 24
-#define VIDEO_DEV "/dev/video"
-#define OUT_DEFAULT "/dev/stdout"
-#define OUTFORMAT_DEFAULT 1		// 1=jpeg, 2=png
-#define DEFAULT_FONT "/usr/share/fonts/truetype/Arialn.ttf"
-#define DEFAULT_TIMESTAMP "%a, %e. %B %Y - %T"
-#define DEFAULT_FONTSIZE 12
-#define DEFAULT_BORDER 2
-#define DEFAULT_BLEND 60
-#define DEFAULT_ALIGN 1
-#define TS_MAX 128
-#define DEBUG 0
+/* Globals, Typedefs  */
 
-/* Global Variables  */
+void usage (char *pname);
+void show_capabilities(char *in, char *pname);
 
-int debug = DEBUG;
+static char *palett[17] = {
+  "Null", "Grey", "HI240", "RGB565/16bit", "RGB24", "RBG32", "RGB555/15bit",
+  "YUV422", "YUYV", "UYVY", "YUV420", "YUV411", "RAW", "YUV422P", "YUV411P",
+  "YUV420P", "YUV410P"
+};
+
+struct vconfig {
+  unsigned long int loop;
+  int debug;
+  unsigned int quality;
+  int outformat;
+  int dev;
+  char *in;
+  char *out;
+  boolean windowsize;
+  boolean switch_bgr;
+  boolean use_ts;
+  boolean brightness;
+  boolean init_done;
+#ifdef HAVE_LIBTTF
+  char *font;
+  char *timestamp;
+  int font_size;
+  int align;
+  int border;
+  int blend;
+#endif
+  struct video_window win;
+  struct video_picture vpic;
+  struct video_capability vcap;
+};
+
+#ifdef HAVE_LIBTTF
+struct ttneed {
+  TT_Engine engine;
+  TT_Face face;
+  TT_Face_Properties *properties;
+  TT_Instance instance;
+  boolean use;
+};
+#endif
+
+/* Routinely used error output */
+
+void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
+{
+  va_list arg_ptr;
+  static char buf[MAX_ERRORMSG_LENGTH];
+
+  /* Loglevels:
+
+     0     silent (NONE)
+     2     severe errors which cause vgrabbj to exit in daemon mode (LOG_CRIT)
+     3     critical errors which cause vgrabbj to exit in non-daemon mode
+           and retry forever in daemon-mode (with a sleep(1) inbetween) (LOG_ERR)
+     4     warning conditions (LOG_WARNING)
+     6     normal information (LOG_INFO)
+     7     debug information (LOG_DEBUG)
+
+     Every log-message with a loglevel equal-smaller than DEBUG-Level (supplied
+     via command line, otherwise default=4) will be 
+         a) displayed on screen (stderr) if non-daemon
+         b) written to syslog if daemon
+
+     One exception:
+
+     In daemon mode, every message before successful fork into background
+     will be written to stderr (if any).
+
+  */
+
+  //  FILE *log;
+  //  time_t t;
+  //  struct tm *tm;
+  //  char ts_buff[TS_MAX+1];
+  //  log = fopen(logfile, "a");
+  //  time (&t);
+  //  tm = localtime (&t);
+  //  ts_buff[TS_MAX] = '\0';
+  //  strftime (ts_buff, TS_MAX, "%a %b %Y %H:%M:%S", tm);
+  
+  if ( msg <= vconf->debug ) {
+   
+    va_start(arg_ptr, fmt);
+    
+    vsprintf(buf, fmt, arg_ptr);
+    
+    strcat(buf, "\n");
+
+    /*fflush(stdout);*/
+    //  fputs(ts_buff, log);
+    //  fputs(" ", log);
+    //  fputs(msg, log);
+    //  fputs(": ", log);
+    //  fputs(buf, log);
+    //  fclose(log);
+  
+    va_end(arg_ptr);
+  
+    if (vconf->loop && vconf->init_done) {
+      
+      syslog(msg, buf);
+      if (msg == 3)
+	sleep(1);
+    } else {
+      fprintf(stderr, buf);
+      fflush(stderr);
+    }
+    
+  }
+
+  /* Decision about exiting is independent of log or not to log */
+
+  if ( vconf->loop && msg < 3 ) {
+    syslog(LOG_ERR, "Fatal Error, exiting...\n"); // exit
+    _exit(1);
+  } else if ( !vconf->loop && msg < 4 ) {
+    fprintf(stderr, "Fatal Error, exiting...\n"); // exit
+    exit(1);
+  }
+}
+
+struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
+  int n;
+  FILE *x;
+  int dev;
+
+  // Set defaults
+  vconf->quality    = DEFAULT_QUALITY;
+  vconf->in         = DEFAULT_VIDEO_DEV;
+  vconf->out        = DEFAULT_OUTPUT;
+  vconf->win.height = DEFAULT_HEIGHT;
+  vconf->win.width  = DEFAULT_WIDTH;
+  vconf->outformat  = DEFAULT_OUTFORMAT;
+  vconf->brightness = DEFAULT_BRIGHTNESS;
+  vconf->switch_bgr = FALSE;
+  vconf->windowsize = TRUE;
+  vconf->loop       = 0;
+  vconf->use_ts     = FALSE;
+  vconf->init_done  = FALSE;
+  vconf->debug      = DEBUG;
+  vconf->dev        = 0;
+#ifdef HAVE_LIBTTF
+  vconf->font       = DEFAULT_FONT;
+  vconf->timestamp  = DEFAULT_TIMESTAMP;
+  vconf->font_size  = DEFAULT_FONTSIZE;
+  vconf->border     = DEFAULT_BORDER;
+  vconf->align      = DEFAULT_ALIGN;
+  vconf->blend      = DEFAULT_BLEND;
+#endif
+  
+  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:DB:m:wSV"))!=EOF) 
+    {
+      switch (n) 
+	{
+	case 'l':
+	  if ( sscanf (optarg, "%li", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
+	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
+	  vconf->loop=vconf->loop*1000000;
+	  break;
+	case 'L':
+	  if ( sscanf (optarg, "%li", &vconf->loop) != 1 || ( vconf->loop < 1 ) ) 
+	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
+	  break;
+	case 'f':
+	  if ( !(x=fopen(vconf->out=optarg, "w+") ) ) 
+	    v_error(vconf, LOG_CRIT, "Can't access output file %s",vconf->out); // exit
+	  fclose(x);
+	  if (vconf->debug)
+	    v_error(vconf, LOG_DEBUG, "Outputfile is %s", vconf->out);
+	  break;
+	case 'q':
+	  if ( sscanf (optarg, "%u", &vconf->quality) != 1 || (vconf->quality<0)
+	       || (vconf->quality>100) ) 
+	    v_error(vconf, LOG_CRIT, "Wrong picture quality \"%d\"", vconf->quality); // exit
+	  if (vconf->debug)
+	    v_error(vconf, LOG_DEBUG, "Image quality is %i", vconf->quality);
+	  break;
+	case 'o':
+	  if ( !strcasecmp(optarg,"jpeg") || !strcasecmp(optarg,"jpg") )
+	    vconf->outformat=1;
+	  else if ( !strcasecmp(optarg,"png") )
+	    vconf->outformat=2;
+	  else 
+	    v_error(vconf, LOG_CRIT, "Wrong output format specified"); // exit
+	  break;
+	case 'i':
+	  if ( !strcasecmp(optarg,"sqcif") ) {
+	    vconf->win.width  = 128;
+	    vconf->win.height =  96;
+	  } else if ( !strcasecmp(optarg,"qsif") ) {
+	    vconf->win.width  = 160;
+	    vconf->win.height = 120;
+	  } else if ( !strcasecmp(optarg,"qcif") ) {
+	    vconf->win.width  = 176;
+	    vconf->win.height = 144;
+	  } else if ( !strcasecmp(optarg,"sif") ) {
+	    vconf->win.width  = 320;
+	    vconf->win.height = 240;
+	  } else if ( !strcasecmp(optarg,"cif") ) {
+	    vconf->win.width  = 352;
+	    vconf->win.height = 288;
+	  } else if ( !strcasecmp(optarg,"vga") ) {
+	    vconf->win.width  = 640;
+	    vconf->win.height = 480;
+	  } else
+	    v_error(vconf, LOG_CRIT, "Wrong imagesize specified"); // exit
+	  break;
+	case 'd':
+	  if ( ( dev=open( vconf->in = optarg, O_RDONLY) ) < 0 ) 
+	    v_error(vconf, LOG_CRIT, "Device %s not accessible", vconf->in); // exit
+	  dev=close(dev);
+	  if (dev)
+	    v_error(vconf, LOG_CRIT, "Device %s error occured", vconf->in); // exit
+	  break;
+#ifdef HAVE_LIBTTF
+	case 't':
+	  if ( !( x = fopen(vconf->font = optarg, "r") ) ) 
+	    v_error(vconf, LOG_CRIT, "Font-file %s not found", vconf->font); // exit
+	  fclose(x);
+	  vconf->use_ts=TRUE;
+	  vconf->font=optarg;
+	  break;
+	case 'T':
+	  if ( sscanf(optarg, "%i", &vconf->font_size) != 1 || vconf->font_size < 1
+	       || vconf->font_size > 100 ) 
+	    v_error(vconf, LOG_CRIT, "Wrong fontsize (min. 1, max 100)"); // exit
+	  vconf->use_ts=TRUE;
+	  break;
+	case 'p':
+	  if ( !( x = fopen(vconf->font, "r") ) ) 
+	    v_error(vconf, LOG_CRIT, "Fontfile %s not found", vconf->font); // exit
+	  fclose(x);
+	  vconf->timestamp = optarg;
+	  vconf->use_ts = TRUE;
+	  break;
+	case 'e':
+	  vconf->use_ts=TRUE;
+	  break;
+	case 'a':
+	  if ( sscanf (optarg, "%i", &vconf->align) != 1 || vconf->align < 0
+	       || vconf->align>5 ) 
+	    v_error(vconf, LOG_CRIT, "Wrong timestamp alignment"); // exit
+	  vconf->use_ts=TRUE;
+	  break;
+	case 'm':
+	  if ( sscanf (optarg, "%i", &vconf->blend) != 1 || vconf->blend > 100
+	       || vconf->blend < 1 ) 
+	    v_error(vconf, LOG_CRIT, "Wrong blend value"); // exit
+	  vconf->use_ts=TRUE;
+	  break;
+	case 'B':
+	  if ( sscanf (optarg, "%i", &vconf->border) != 1 || vconf->border > 255
+	       || vconf->border < 1 ) 
+	    v_error(vconf, LOG_CRIT, "Wrong border value"); // exit
+	  vconf->use_ts=TRUE;
+	  break;
+#endif
+	case 'b':
+	  vconf->brightness = FALSE;
+	  break;
+	case 's':
+	  if ( (dev = open(vconf->in = optarg, O_RDONLY) ) < 0 ) 
+	    v_error(vconf, LOG_CRIT, "Device %s not accessible", vconf->in); // exit
+	  dev=close(dev);
+	  if (dev)
+	    v_error(vconf, LOG_CRIT, "Device %s error occured", vconf->in); // exit
+	  show_capabilities(vconf->in, argv[0]);
+	  break;
+	case 'D':
+	  vconf->debug=!vconf->debug;
+	  break;
+	case 'w':
+	  vconf->windowsize=FALSE;
+	  break;
+	case 'S':
+	  vconf->switch_bgr=TRUE;
+	  break;
+	case 'V':
+	  fprintf(stderr, "%s %s\n", basename(argv[0]), VERSION);
+	  exit(0);
+	  break;
+	default:
+	  usage (argv[0]);
+	  break;
+	}
+    }
+  return vconf;
+}
 
 /* Adjustment of brightness of picture  */
 
-int get_brightness_adj(unsigned char *image, long size, int *brightness) 
+int get_brightness_adj(struct vconfig *vconf, unsigned char *image, int *brightness) 
 {
   long i, tot = 0;
-  for (i=0;i<size*3;i++)
+  long size = vconf->win.width * vconf->win.height;
+  for ( i = 0; i < size * 3; i++ )
     tot += image[i];
   *brightness = (128 - tot/(size*3))/3;
-  if (debug)
-    fprintf(stderr,"Brightness adjusted, runs: %d\n",i);
   return !((tot/(size*3)) >= 126 && (tot/(size*3)) <= 130);
 }
 
@@ -94,14 +350,14 @@ void usage (char *pname)
 	  " -w                Disable setting of image-size, necessary for certain cams\n"
 	  "                   (e.g. IBM USB-Cam, QuickCam)\n"
 	  " -s <device>       See capabilities of <device>\n"
-	  " -t <font-file>    Enable timestamp of image, needs full path to the font file\n"
+	  " -S                Switch BGR colormap to RGB colormap (try if colors are odd)\n"
+#ifdef HAVE_LIBTTF
+	  " -t <font-file>    Full path to the font file\n"
 	  "                   (default: %s)\n"
 	  " -T <font-size>    Font-size (min. 1, max. 100, default: %d)\n"
 	  " -p <format-str>   Definable timestamp format (see man strftime)\n"
 	  "                   (default: \"%s\")\n"
-	  "                   *MUST* be within \" and \" !\n"
-	  " -e                enable timestamp with defaults (default: disabled)\n"
-	  "                   if -t or -p is given, timestamp is already enabled\n"
+	  "                   *MUST* be with \" and \" !\n"
 	  " -a <0|1|2|3|4|5>  Alignment of timestamp: 0=upper left, 1=upper right,\n"
 	  "                   2=lower left, 3=lower right, 4=upper center, 5=lower center\n"
 	  "                   you still have to enable the timestamp (default: %d) \n"
@@ -109,17 +365,24 @@ void usage (char *pname)
 	  "                   1 = most original, 100 = no original image \"behind\" timestamp\n"
 	  " -B <pixel>        Border of timestamp to be blended around string in pixel\n"
 	  "                   (1-255, default: %d)\n"
-	  " -D                Toggle debug output (default: %s)\n"
+	  " -e                enable timestamp with defaults (default: disabled)\n"
+	  "                   if any other timestamp option is given, it is enabled\n"
+#endif
+	  " -D <0|2|3|4|6|7>  Set log/debug-level (0=silent, 7=debug, default: %d)\n"
+	  " -V                Display version information and exit\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
-	  "         Would write a single jpeg-image to image.jpg about every five seconds\n"
+	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
 	  "\n"
-	  "Currently, the video stream has to be rgb24. Sorry folks.\n",
+	  "The video stream has to one of RGB24, RGB32, YUV420, YUV420P or YUYV.\n",
 	  basename(pname), VERSION, basename(pname), 
-	  QUAL_DEFAULT, WIDTH_DEFAULT, HEIGHT_DEFAULT,
-	  OUT_DEFAULT, VIDEO_DEV, DEFAULT_FONT, 
-	  DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP, DEFAULT_ALIGN,
-	  DEFAULT_BLEND, DEFAULT_BORDER, DEBUG, basename(pname));
+	  DEFAULT_QUALITY, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV, 
+#ifdef HAVE_LIBTTF
+	  DEFAULT_FONT, DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP,
+	  DEFAULT_ALIGN, DEFAULT_BLEND, DEFAULT_BORDER, 
+#endif
+	  DEBUG, basename(pname));
   exit (1);
 }
 
@@ -131,33 +394,24 @@ void show_capabilities(char *in, char *pname)
   struct video_window win;
   struct video_picture pic;
   int dev;
-  struct jpeg_compress_struct cjpeg;
-  struct jpeg_error_mgr jerr;
-  
-  dev = open(in, O_RDONLY);
-  if (dev < 0) 
-    {
-      fprintf(stderr, "Can't open device %s\n", in);
-      exit(1);
-    }
-  if (ioctl(dev, VIDIOCGCAP, &cap) < 0) 
-    {
-      perror("Get capabilities");
-      close(dev);
-      exit(1);
-    }
-  if (ioctl(dev, VIDIOCGPICT, &pic) < 0) 
-    {
-      perror("Get picture properties");
-      close(dev);
-      exit(1);
-    }
-  if (ioctl(dev, VIDIOCGWIN, &win) < 0) 
-    {
-      perror("Get overlay values");
-      close(dev);
-      exit(1);
-    }
+
+  if ( (dev = open(in, O_RDONLY)) < 0 ) {
+    fprintf(stderr, "Can't open device %s", in);
+    exit(1);
+  }
+  if (ioctl(dev, VIDIOCGCAP, &cap) < 0) {
+    fprintf(stderr, "Can't get capabilities of device %s", in);
+    exit(1);
+  }
+  if (ioctl(dev, VIDIOCGPICT, &pic) < 0) {
+    fprintf(stderr, "Can't get picture properties of device %s", in);
+    exit(1);
+  }
+  if (ioctl(dev, VIDIOCGWIN, &win) < 0) {
+    fprintf(stderr, "Can't get overlay values of device %s", in);
+    exit(1);
+  }
+
   fprintf(stderr,"%s, Version %s\n"
 	  "Videodevice name: %s (%s)\n"
 	  "Capabilities\n"
@@ -175,22 +429,24 @@ void show_capabilities(char *in, char *pname)
 	  "Contrast  : %d\n"
 	  "Whiteness : %d\n"
 	  "Depth     : %d\n"
-	  "Palette   : %d\tValues can be looked up at videodev.h\n"
+	  "Palette   : %s (%d)\n"
 	  "Width     : %d\n"
 	  "Height    : %d\n"
 	  "Chromakey : %d\n",
 	  basename(pname), VERSION, in, cap.name, cap.type, cap.channels, cap.audios,
 	  cap.maxwidth, cap.maxheight, cap.minwidth, cap.minheight,
 	  pic.brightness, pic.hue, pic.colour, pic.contrast,
-	  pic.whiteness, pic.depth, pic.palette, win.width, win.height,
-	  win.chromakey);
-  close(dev);
+	  pic.whiteness, pic.depth, palett[pic.palette], pic.palette,
+	  win.width, win.height, win.chromakey);
+  dev=close(dev);
+  if (dev)
+    fprintf(stderr, "Error occured while closing %s\n", in);
   exit(0);
 }
 
 /* Write image as jpeg to FILE  */
 
-int write_jpeg(char *buffer, FILE *x, int quality, int width, int height) 
+int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x) 
 {
   char *line;
   int n, y=0, i, line_width;
@@ -199,31 +455,27 @@ int write_jpeg(char *buffer, FILE *x, int quality, int width, int height)
   struct jpeg_error_mgr jerr;
   JSAMPROW row_ptr[1];
   
-  line=malloc(width * 3);
+  line=malloc(vconf->win.width * 3);
   if (!line) 
-    {
-      perror("OUT OF MEMORY, Exiting...");
-      syslog(LOG_ALERT, "OUT OF MEMORY, Exiting...");
-      exit(1);
-    }
+    v_error(vconf, LOG_CRIT, "OUT OF MEMORY, Exiting..."); // exit
   cjpeg.err = jpeg_std_error(&jerr);
   jpeg_create_compress (&cjpeg);
-  cjpeg.image_width = width;
-  cjpeg.image_height= height;
+  cjpeg.image_width = vconf->win.width;
+  cjpeg.image_height= vconf->win.height;
   cjpeg.input_components = 3;
   cjpeg.in_color_space = JCS_RGB;
   
   jpeg_set_defaults (&cjpeg);
-  jpeg_set_quality (&cjpeg, quality, TRUE);
+  jpeg_set_quality (&cjpeg, vconf->quality, TRUE);
   cjpeg.dct_method = JDCT_FASTEST;
   
   jpeg_stdio_dest (&cjpeg, x);
   jpeg_start_compress (&cjpeg, TRUE);
   row_ptr[0]=line;
-  line_width=width * 3;
+  line_width=vconf->win.width * 3;
   n=0;
   
-  for (y = 0; y < height; y++) 
+  for (y = 0; y < vconf->win.height; y++) 
     {
       for (i = 0; i< line_width; i+=3) 
 	{
@@ -237,19 +489,19 @@ int write_jpeg(char *buffer, FILE *x, int quality, int width, int height)
   jpeg_finish_compress (&cjpeg);
   jpeg_destroy_compress (&cjpeg);
   free (line);
-  if (debug) fprintf(stderr,"Wrote jpg.\n");
   return(0);
 }
 
 /* Write image as png to FILE  */
 
-int write_png(char *image, FILE *x, int width, int height) 
+int write_png(struct vconfig *vconf, char *image, FILE *x) 
 {
   register int y;
   register char *p;
   png_infop info_ptr;
   png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
 						 NULL, NULL, NULL);
+
   if (!png_ptr)
     return(1);
   info_ptr = png_create_info_struct (png_ptr);
@@ -257,175 +509,363 @@ int write_png(char *image, FILE *x, int width, int height)
     return(1);
   
   png_init_io (png_ptr, x);
-  png_set_IHDR (png_ptr, info_ptr, width, height,
+  png_set_IHDR (png_ptr, info_ptr, vconf->win.width, vconf->win.height,
 		8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
 		PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
   png_set_bgr (png_ptr);
   png_write_info (png_ptr, info_ptr);
   p = image;
-  width *= 3;
-  for (y = 0; y < height; y++) 
+  vconf->win.width *= 3;
+  for (y = 0; y < vconf->win.height; y++) 
     {
       png_write_row (png_ptr, p);
-      p += width;
+      p += vconf->win.width;
     }
   png_write_end (png_ptr, info_ptr);
   png_destroy_write_struct (&png_ptr, &info_ptr);
-  if (debug) fprintf(stderr,"Wrote png.");
   return(0);
 }
 
-/* Open Face via routine found in font.h  */
+/* Check and set v4l device */
 
-int OpenFace (char *font, TT_Engine engine, TT_Face *face, 
-	      TT_Face_Properties *properties, 
-	      TT_Instance *instance, int font_size, int loop) 
-{
-  int rc,i,j;
-  rc=TT_FreeType_Version(&i, &j);
-  if (debug) fprintf(stderr,"FreeType, Version %d.%d.\n",i,j);
-  rc=TT_Init_FreeType (&engine);
-  if (rc) 
-    {
-      font = NULL;
-    }
-  rc=Face_Open (font, engine, face, properties, instance, font_size);
-  if (rc) 
-    {
-      if (loop) 
-	{
-	  syslog(LOG_WARNING, "Font not found: %s, timestamp disabled\n", font);
-	}
-      else 
-	{
-	  fprintf(stderr,"Font not found: %s, timestamp disabled\n",font);
-	}
-      TT_Done_FreeType (engine);
-      font = NULL;
-      if (debug) fprintf(stderr,"Font-file error.\n");
-      return(FALSE);
-    }
-  else 
-    {
-      if (debug) fprintf(stderr,"Font-Engine initialized.\n");
-      return(TRUE);
-    }
+struct vconfig *check_device(struct vconfig *vconf) {
+
+  struct video_window twin;
+
+  while ((vconf->dev=open(vconf->in, O_RDONLY)) < 0)
+    v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
+
+  if (vconf->debug)
+    v_error(vconf, LOG_INFO, "Checking settings of device %s", vconf->in);
+  
+  while (ioctl(vconf->dev, VIDIOCGCAP, &vconf->vcap) < 0)
+    v_error(vconf, LOG_ERR, "Problem getting video capabilities"); // exit
+  if ( (vconf->vcap.maxwidth < vconf->win.width) ||
+       (vconf->vcap.minwidth > vconf->win.width) ||
+       (vconf->vcap.maxheight < vconf->win.height) ||
+       (vconf->vcap.minheight > vconf->win.height) )
+    v_error(vconf, LOG_CRIT, "Device doesn't support width/height"); // exit
+  while (ioctl(vconf->dev, VIDIOCGWIN, &twin))
+    v_error(vconf, LOG_ERR, "Problem getting window information"); // exit
+  vconf->win.flags=twin.flags;
+  vconf->win.x=twin.x;
+  vconf->win.y=twin.y;
+  vconf->win.chromakey=twin.chromakey;
+  while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) && vconf->windowsize)
+    v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
+  while (ioctl(vconf->dev, VIDIOCGWIN, &vconf->win) <0)
+    v_error(vconf, LOG_ERR, "Problem getting window size"); // exit
+  while (ioctl(vconf->dev, VIDIOCGPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Problem getting picture properties"); // exit
+
+  // HERE we actually TRY to get a palette the device delivers.
+  // PROBLEM is that V4L does NOT provide a function to query available
+  // palettes for the device! Hence, this util has to rely on try-and-error
+  // to find a palette suitable.
+  // Currently, only palettes below are supported directly.
+  // If it is a different one, it has to be RGB24 or YUV420P - simply because
+  // I have no other conversion routines on hand.
+  // If this prog does not work with your device, please blame someone else for
+  // an insufficient V4L implementation.
+  // Sorry for the inconvenience!
+  
+  switch(vconf->vpic.palette) {
+  case VIDEO_PALETTE_RGB24:
+  case VIDEO_PALETTE_YUV420P:
+  case VIDEO_PALETTE_YUV420:
+  case VIDEO_PALETTE_YUYV:
+  case VIDEO_PALETTE_RGB32:
+    return vconf;
+    break;
+  default:
+    break;
+  }
+  v_error(vconf, LOG_WARNING, "Unknown palette, trying RGB24");
+  vconf->vpic.depth=24;
+  vconf->vpic.palette=VIDEO_PALETTE_RGB24;
+ 
+  while (ioctl(vconf->dev,VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to set palette"); // exit
+  
+  while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to get palette info"); // exit
+  
+  if (vconf->vpic.palette == VIDEO_PALETTE_RGB24)
+    return vconf;
+
+  v_error(vconf, LOG_WARNING, "Unable to set RGB24, trying YUV420");
+  vconf->vpic.palette=VIDEO_PALETTE_YUV420;
+
+  while (ioctl(vconf->dev,VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to set palette"); // exit
+
+  while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to get palette info"); // exit
+
+  if (vconf->vpic.palette == VIDEO_PALETTE_YUV420)
+    return vconf;
+
+  v_error(vconf, LOG_WARNING, "Unable to set YUV420, trying YUV420P");
+  vconf->vpic.palette=VIDEO_PALETTE_YUV420P;
+
+  while (ioctl(vconf->dev,VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to set palette"); // exit
+
+  while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to get palette info"); // exit
+
+  if (vconf->vpic.palette == VIDEO_PALETTE_YUV420P)
+    return vconf;
+
+   v_error(vconf, LOG_WARNING, "Unable to set YUV420P, trying YUYV");
+  vconf->vpic.palette=VIDEO_PALETTE_YUYV;
+
+  while (ioctl(vconf->dev,VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to set palette"); // exit
+
+  while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0)
+    v_error(vconf, LOG_ERR, "Unable to get palette info"); // exit
+
+  if (vconf->vpic.palette == VIDEO_PALETTE_YUYV)
+    return vconf;
+
+ v_error(vconf, LOG_CRIT, "Unable to set supported video-mode"); // exit
+  return vconf;
 }
 
-/* Manipulate image to show timestamp string  */
+unsigned char *switch_color(struct vconfig *vconf, unsigned char *buffer) {
+  char a;
+  long int y;
+  for (y = 0; y < (vconf->win.width * vconf->win.height); y++) {
+    memcpy(&a, buffer+(y*3),1);
+    memcpy(buffer+(y*3),buffer+(y*3)+2, 1);
+    memcpy(buffer+(y*3)+2, &a, 1);
+  }
+  return buffer;
+}
 
-int inserttext(unsigned char *buffer, char *font, TT_Engine engine, TT_Face face, 
-	       TT_Face_Properties *properties, TT_Instance instance, int font_size, 
-	       char *timestamp, int align, int width, int height, int border, int blend)
+unsigned char *conv_rgb32_rgb24(unsigned char *o_buffer, unsigned char *buffer,
+				int width, int height) {
+  long int y;
+  for (y = 0; y < (width * height); y++) 
+    memcpy(o_buffer+(y*4), buffer+(y*3), 3);
+  return o_buffer;
+}
+
+/* Read the image from device, adjust brightness, if wanted, for RGB24 */
+
+unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size) {
+  int f, newbright;
+  int err_count;
+
+  if (vconf->debug)
+    v_error(vconf, LOG_DEBUG, "Palette to be used: %s (%d), size: %d",
+	    palett[vconf->vpic.palette], vconf->vpic.palette, size);
+
+  // Read image via read()
+
+  err_count=0;
+  if (vconf->brightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
+    if (vconf->debug) 
+      v_error(vconf, LOG_INFO, "Doing brightness adjustment");
+    do {
+      while (read(vconf->dev, buffer, size) < size)
+	v_error(vconf, LOG_ERR, "Error reading from %s", vconf->in);
+      f = get_brightness_adj(vconf, buffer, &newbright);
+      if (f) {
+	vconf->vpic.brightness += (newbright << 8);
+	if (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic)==-1) 
+	  v_error(vconf, LOG_WARNING, "Problem setting brightness");
+	err_count++;
+	
+	if (err_count>100) {
+	  v_error(vconf, LOG_WARNING, "Brightness not optimal");
+	  break;
+	}
+      }
+    } while (f);
+    if (vconf->debug)
+      v_error(vconf, LOG_INFO, "Brightness adjusted");
+  } else
+      read(vconf->dev, buffer, size);
+  
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Image successfully read");
+  
+  while ( close(vconf->dev) )
+    v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
+  
+  vconf->dev=0;
+  
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  
+  return buffer;
+}
+		
+#ifdef HAVE_LIBTTF
+
+/* Open Face via routine found in font.c  */
+
+struct ttneed *OpenFace(struct ttneed *ttinit, struct vconfig *vconf) 
 {
+  int i, j;
+
+  if (vconf->debug)
+    v_error(vconf, LOG_INFO, "Initializing Font-Engine");
+
+  if (vconf->debug) {
+    TT_FreeType_Version( &i, &j);
+    v_error(vconf, LOG_DEBUG, "FreeType, Version %d.%d", i, j);
+  }
+
+  if (TT_Init_FreeType(&ttinit->engine))
+      ttinit->use = FALSE;
+
+  if (Face_Open (vconf->font, ttinit->engine, &ttinit->face, ttinit->properties,
+		 &ttinit->instance, vconf->font_size)) {
+    v_error(vconf, LOG_WARNING, "Font not found: %s, timestamp disabled", vconf->font);
+    TT_Done_FreeType (ttinit->engine);
+    ttinit->use = FALSE;
+    v_error(vconf, LOG_WARNING, "Could not initialize Font-Engine, timestamp disabled");
+  } else {
+    if (vconf->debug)
+      v_error(vconf, LOG_DEBUG, "Font-Engine initialized");
+    ttinit->use = TRUE;
+  }
+  return(ttinit);
+}
+
+/* Manipulate image to show timestamp string and return manipulated buffer */
+
+char *inserttext(unsigned char *buffer, struct vconfig *vconf)
+{
+    
   time_t t;
   struct tm *tm;
+  struct ttneed *ttinit;
   char ts_buff[TS_MAX+1];
   int ts_len;
   TT_Glyph *glyphs = NULL;
   TT_Raster_Map bit;
   TT_Raster_Map sbit;
   
-  if (debug) 
-    fprintf(stderr,"Getting all values for the timestamp.\n");
+  ttinit = malloc(sizeof(*ttinit));
+  ttinit->properties = malloc(sizeof(*ttinit->properties));
+
+  ttinit = OpenFace(ttinit, vconf);
+  if ( !ttinit->use )
+    return(buffer);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
+
   time (&t);
   tm = localtime (&t);
   ts_buff[TS_MAX] = '\0';
-  strftime (ts_buff, TS_MAX, timestamp, tm);
+  strftime (ts_buff, TS_MAX, vconf->timestamp, tm);
   ts_len = strlen (ts_buff);
-  if (debug) 
-    fprintf(stderr,"Timestring: %s, length: %d\n",ts_buff,ts_len);
-  glyphs = Glyphs_Load (face, properties, instance, ts_buff, ts_len);
-  if (debug) 
-    fprintf(stderr,"Glyphs loaded\n");
-  Raster_Init(face, properties, instance, ts_buff, ts_len, border, glyphs, &bit);
-  if (debug) 
-    fprintf(stderr,"Returned from Raster_Init\n");
-  Raster_Small_Init (&sbit, &instance);
-  if (debug) 
-    fprintf(stderr,"Returned from Raster_Small_Init\n");
-  Render_String (glyphs, ts_buff, ts_len, &bit, &sbit, border);
-  if (debug) 
-    fprintf(stderr,"Returned from Render_String\n");
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Stamp: %s, length: %d", ts_buff, ts_len);
+
+  glyphs = Glyphs_Load(ttinit->face, ttinit->properties, ttinit->instance,
+		       ts_buff, ts_len);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Glyphs loaded");
+
+  Raster_Init(ttinit->face, ttinit->properties, ttinit->instance, ts_buff,
+	      ts_len, vconf->border, glyphs, &bit);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Returned from Raster_Init");
+
+  Raster_Small_Init (&sbit, &ttinit->instance);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Returned from Raster_Small_Init");
+
+  Render_String (glyphs, ts_buff, ts_len, &bit, &sbit, vconf->border);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Returned from Render_String");
+
   if (bit.bitmap) 
     {
       int x, y, psize, i, x_off, y_off;
       unsigned char *p;
-      if (debug) 
-	fprintf(stderr,"Now performing calculation of position...\n");
-      if (bit.rows>height) 
-	bit.rows=height;
-      if (bit.width>width) 
-	bit.width=width;
+
+      if (vconf->debug) 
+	v_error(vconf, LOG_DEBUG, "Now performing calculation of position...");
+
+      if (bit.rows>vconf->win.height) 
+	bit.rows=vconf->win.height;
+      if (bit.width>vconf->win.width) 
+	bit.width=vconf->win.width;
       psize = 3;
-      switch (align) 
+      switch (vconf->align) 
 	{
 	case 1:
-	  x_off = (width - bit.width) * psize;
+	  x_off = (vconf->win.width - bit.width) * psize;
 	  y_off = 0;
 	  break;
 	case 2:
 	  x_off = 0;
-	  y_off = height - bit.rows;
+	  y_off = vconf->win.height - bit.rows;
 	  break;
 	case 3:
-	  x_off = (width - bit.width) * psize;
-	  y_off = height - bit.rows;
+	  x_off = (vconf->win.width - bit.width) * psize;
+	  y_off = vconf->win.height - bit.rows;
 	  break;
 	case 4:
-	  x_off = (width/2 - bit.width/2) * psize;
+	  x_off = (vconf->win.width/2 - bit.width/2) * psize;
 	  y_off = 0;
 	  break;
 	case 5:
-	  x_off = (width/2 - bit.width/2) * psize;
-	  y_off = height - bit.rows;
+	  x_off = (vconf->win.width/2 - bit.width/2) * psize;
+	  y_off = vconf->win.height - bit.rows;
 	  break;
 	default:
 	  x_off = y_off = 0;
 	  break;
 	}
-      if (debug) 
-	fprintf(stderr,"Wow, we did it... Now we change the image with the string.\n");
-      for (y = 0; y < bit.rows; y++) 
-	{
-	  p = buffer + (y + y_off) * (width * psize) + x_off;
-	  for (x = 0; x < bit.width; x++) 
-	    {
+
+      if (vconf->debug) 
+	v_error(vconf, LOG_DEBUG, "Done. Now we change the image with the string.");
+
+      for (y = 0; y < bit.rows; y++) {
+	  p = buffer + (y + y_off) * (vconf->win.width * psize) + x_off;
+	  for (x = 0; x < bit.width; x++) {
 	      switch (((unsigned char *)bit.bitmap)
-		      [((bit.rows-y-1)*bit.cols)+x]) 
-		{
+		      [((bit.rows-y-1)*bit.cols)+x]) {
 		case 0:
-		  for (i = 0; i < psize; i++) 
-		    {
-		      *p = (255 * blend + *p * (100 - blend))/100;
+		  for (i = 0; i < psize; i++) {
+		      *p = (255 * vconf->blend + *p * (100 - vconf->blend))/100;
 		      p++;
 		    }
 		  break;
 		case 1:
-		  for (i = 0; i < psize; i++) 
-		    {
-		      *p = (220 * blend + *p * (100 - blend))/100;
+		  for (i = 0; i < psize; i++) {
+		      *p = (220 * vconf->blend + *p * (100 - vconf->blend))/100;
 		      p++;
 		    }
 		  break;
 		case 2:
-		  for (i = 0; i < psize; i++) 
-		    {
-		      *p = (162 * blend + *p * (100 - blend))/100;
+		  for (i = 0; i < psize; i++) {
+		      *p = (162 * vconf->blend + *p * (100 - vconf->blend))/100;
 		      p++;
 		    }
 		  break;
 		case 3:
-		  for (i = 0; i < psize; i++) 
-		    {
-		      *p = (64 * blend + *p * (100 - blend))/100;
+		  for (i = 0; i < psize; i++) {
+		      *p = (64 * vconf->blend + *p * (100 - vconf->blend))/100;
 		      p++;
 		    }
 		  break;
 		default:
-		  for (i = 0; i < psize; i++) 
-		    {
-		      *p = (0 * blend + *p * (100 - blend))/100;
+		  for (i = 0; i < psize; i++) {
+		      *p = (0 * vconf->blend + *p * (100 - vconf->blend))/100;
 		      p++;
 		    }
 		  break;
@@ -433,568 +873,229 @@ int inserttext(unsigned char *buffer, char *font, TT_Engine engine, TT_Face face
 	    }
 	}
     }
-  if (debug) 
-    fprintf(stderr,"Image manipulated, now closing...\n");
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Image manipulated, now closing...");
+
   Raster_Done (&sbit);
-  if (debug) 
-    fprintf(stderr,"Returned from Raster_Done(sbit)\n");
   Raster_Done (&bit);
-  if (debug) 
-    fprintf(stderr,"Returned from Raster_Done(bit)\n");
   Glyphs_Done (glyphs);
-  if (debug) 
-    fprintf(stderr,"Returned from Glyphs_Done\n");
   glyphs = NULL;
+  Face_Done(ttinit->instance, ttinit->face);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_INFO, "Font-Engine unloaded, stamp inserted into image");
+
+  return buffer;
 }
+
+#endif
+
 
 /* Main loop  */
 
-
 int main(int argc, char *argv[]) 
 {
-  int y, dev, f, n, rc;
-  int bpp = RGB_DEFAULT;
-  boolean in_loop=FALSE;
-  int quality= QUAL_DEFAULT;
-  int err_count2;
-  int loop=0;
-  char tbuff[MAXPATHLEN];
-  char *in = VIDEO_DEV;
-  int outformat = OUTFORMAT_DEFAULT;
-  char *out = OUT_DEFAULT;
-  char *line;
-  unsigned char *buffer;
-  unsigned int i, src_depth;
-  
+  struct vconfig *vconf;
+  unsigned char *buffer, *o_buffer, *t_buffer;
+  int size;
   FILE *x;
-  
-  struct video_capability cap;
-  struct video_window win, twin;
-  struct video_picture vpic;
-  boolean enable_timestamp = FALSE, use_ts=FALSE;
-  boolean brightness=TRUE;
-  boolean windowsize=TRUE;
-  char *font = DEFAULT_FONT;
-  char *timestamp = DEFAULT_TIMESTAMP;
-  int font_size = DEFAULT_FONTSIZE;
-  int align = DEFAULT_ALIGN;
-  int border = DEFAULT_BORDER;
-  int blend = DEFAULT_BLEND;
-  TT_Engine engine;
-  TT_Face face;
-  TT_Face_Properties properties;
-  TT_Instance instance;
-  win.width=WIDTH_DEFAULT;
-  win.height=HEIGHT_DEFAULT;
-  
-  if (debug) fprintf(stderr,"Starting up...\n");
-  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:DB:m:w"))!=EOF) 
+
+  vconf=malloc(sizeof(*vconf));
+  vconf=decode_options(vconf, argc, argv);
+
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
+
+  vconf->init_done=TRUE;
+
+  if (vconf->loop) 
     {
-      switch (n) 
+      openlog(basename(argv[0]), LOG_DEBUG, LOG_DAEMON);
+      if (vconf->debug)
+	v_error(vconf, LOG_DEBUG, "Forking for daemon mode");
+
+      switch( fork() ) 
 	{
-	case 'l':
-	  rc=sscanf (optarg, "%d", &loop);
-	  if ( (rc!=1) || (loop<1) ) 
-	    {
-	      perror("Wrong sleeptime");
-	      usage(argv[0]);
-	    }
-	  loop=loop*1000000;
-	  break;
-	case 'L':
-	  rc=sscanf (optarg, "%d", &loop);
-	  if ( (rc!=1) || (loop<1) ) 
-	    {
-	      perror("Wrong sleeptime");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'f':
-	  if (!(x=fopen(out=optarg,"w+"))) 
-	    {
-	      perror("Couldn't acces output file");
-	      usage(argv[0]);
-	    }
-	  fclose(x);
-	  break;
-	case 'q':
-	  rc=sscanf (optarg, "%d", &quality);
-	  if ( (rc!=1) || (quality<0) || (quality>100) ) 
-	    {
-	      perror("Quality wrong");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'o':
-	  if ( !strcasecmp(optarg,"jpeg") || !strcasecmp(optarg,"jpg") )
-	    outformat=1;
-	  else
-	    if ( !strcasecmp(optarg,"png") ) outformat=2;
-	    else {
-	      perror("Wrong format specified");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'i':
-	  if ( !strcasecmp(optarg,"sqcif") ) 
-	    {
-	      win.width=128;
-	      win.height=96;
-	    }
-	  else 
-	    {
-	      if ( !strcasecmp(optarg,"qsif") ) 
-		{
-		  win.width=160;
-		  win.height=120;
-		}
-	      else 
-		{
-		  if ( !strcasecmp(optarg,"qcif") ) 
-		    {
-		      win.width=176;
-		      win.height=144;
-		    }
-		  else 
-		    {
-		      if ( !strcasecmp(optarg,"sif") ) 
-			{
-			  win.width=320;
-			  win.height=240;
-			}
-		      else 
-			{
-			  if ( !strcasecmp(optarg,"cif") ) 
-			    {
-			      win.width=352;
-			      win.height=288;
-			    }
-			  else 
-			    {
-			      if ( !strcasecmp(optarg,"vga") ) 
-				{
-				  win.width=640;
-				  win.height=480;
-				}
-			      else 
-				{
-				  perror("Wrong imagesize specified");
-				  usage(argv[0]);
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	  break;
-	case 'd':
-	  if ((dev=open(in=optarg,O_RDONLY))<0) 
-	    {
-	      perror("Device not accessible");
-	      usage(argv[0]);
-	    }
-	  close(dev);
-	  break;
-	case 't':
-	  if (!(x=fopen(font=optarg, "r"))) 
-	    {
-	      perror("Font-file not found");
-	      usage(argv[0]);
-	    }
-	  fclose(x);
-	  use_ts=TRUE;
-	  font=optarg;
-	  break;
-	case 'T':
-	  rc=sscanf(optarg, "%d", &font_size);
-	  if ((rc!=1)||(font_size<1)||font_size>100) 
-	    {
-	      perror("Wrong font-size (min. 1, max 100)");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'p':
-	  if (!(x=fopen(font, "r"))) 
-	    {
-	      perror("Font-file not found");
-	      usage(argv[0]);
-	    }
-	  fclose(x);
-	  timestamp=optarg;
-	  use_ts=TRUE;
-	  break;
-	case 'e':
-	  if (!(x=fopen(font, "r"))) 
-	    {
-	      perror("Font-file not found");
-	      usage(argv[0]);
-	    }
-	  fclose(x);
-	  use_ts=TRUE;
-	  break;
-	case 'a':
-	  rc=sscanf (optarg, "%d", &align);
-	  if ( (rc!=1) || (align<0) || (align>5) ) 
-	    {
-	      perror("Wrong Timestamp alignment");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'm':
-	  rc=sscanf (optarg, "%d", &blend);
-	  if ( (rc!=1) || (blend > 100) || (blend <1) ) 
-	    {
-	      perror("Wrong blend value");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'B':
-	  rc=sscanf (optarg, "%d", &border);
-	  if ( (rc!=1) || (border > 255) || (border <1) ) 
-	    {
-	      perror("Wrong border value");
-	      usage(argv[0]);
-	    }
-	  break;
-	case 'b':
-	  brightness=FALSE;
-	  break;
-	case 's':
-	  if ((dev=open(in=optarg,O_RDONLY))<0) 
-	    {
-	      perror("Device not accessible");
-	      usage(argv[0]);
-	    }
-	  close(dev);
-	  show_capabilities(in, argv[0]);
-	  break;
-	case 'D':
-	  debug=!debug;
-	  break;
-	case 'w':
-	  windowsize=FALSE;
-	  break;
-	default:
-	  usage (argv[0]);
-	  break;
-	}
-    }
-  if (debug) 
-    fprintf(stderr,"Read all arguments, now reading image...\n");
-  if (loop) 
-    {
-      if (debug) fprintf(stderr,"Forking for daemon mode...\n");
-      sleep(5);
-      openlog("vgrabbj", LOG_PID, LOG_DAEMON);
-      switch(fork()) 
-	{
-	case 0: /* Child  */
+	case 0: // Child 
+	  if (vconf->debug) 
+	    v_error(vconf, LOG_DEBUG, "I'm the child process and are going to read images...");
 	  closelog();
-	  setsid;
-	  if (debug) 
-	    perror("I'm the child process and are going to read images...");
 	  break;
 	case -1: /* Error  */
-	  perror("Can't fork, exiting...");
+	  v_error(vconf, LOG_CRIT, "Can't fork, exiting..."); // exit
 	  closelog();
-	  exit(1);
+	  break;
 	default: /* Parent  */
+	  if (vconf->debug) 
+	    v_error(vconf, LOG_DEBUG, "I'm the parent and exiting now"
+		    "(child takes care of the rest).");
 	  closelog();
-	  if (debug) 
-	    perror("I'm the parent and exiting now (child takes care of the rest).");
 	  exit(0);
 	}
       openlog("vgrabbj", LOG_PID, LOG_DAEMON);
-      syslog(LOG_INFO, "%s started, reading from %s\n", basename(argv[0]), in);
+      v_error(vconf, LOG_WARNING, "%s started, reading from %s", basename(argv[0]), vconf->in);
     }
   else
-    fprintf(stderr, "Reading image from %s\n", in);
+    v_error(vconf, LOG_WARNING, "Reading image from %s", vconf->in);
   
-  if (use_ts) 
-    enable_timestamp=OpenFace(font, engine, &face, &properties, &instance, font_size, loop);
-
   do 
     {
-      dev = open(in, O_RDONLY);
-      if (dev < 0) 
-	{
-	  if (loop) 
-	    {
-	      syslog(LOG_ERR, "Problem opening %s\n", in);
-	      usleep (250000);
-	    }
-	  else 
-	    {
-	      fprintf(stderr, "Can't open device %s\n", in);
-	      if (font && timestamp && enable_timestamp) 
-		{
-		  Face_Done (instance, face);
-		}
-	      exit(1);
-	    }
-	}
-      else 
-	{
-	  in_loop=TRUE;
-	  if (ioctl(dev, VIDIOCGCAP, &cap) < 0) 
-	    {
-	      if (loop) {
-		syslog(LOG_WARNING, "Problem getting video capabilities\n");
-		usleep(250000);
-	      }
-	      else {
-		perror("Problem getting video capabilities");
-		close(dev);
-		if (font && timestamp && enable_timestamp) 
-		  {
-		    Face_Done (instance, face);
-		  }
-		exit(1);
-	      }
-	    }
-	  else {
-	    if ( (cap.maxwidth < win.width) || (cap.minwidth > win.width) 
-		 || (cap.maxheight < win.height) 
-		 || (cap.minheight > win.height) ) 
-	      {
-		if (loop) 
-		  syslog(LOG_ALERT, "Device doesn't support width/height. Exiting...\n");
-		else 
-		  perror("Device doesn't support width/height");
-		close(dev);
-		if (font && timestamp && enable_timestamp) 
-		  Face_Done (instance, face);
-		if (debug) 
-		  fprintf(stderr,"Device-error - doesn't support image size...\n");
-		exit(1);
-	      }
-	    if (ioctl(dev, VIDIOCGWIN, &twin))
-	      {
-		if (loop)
-		  {
-		    syslog(LOG_WARNING, "Problem getting window information\n");
-		    usleep (250000);
-		  }
-		else
-		  {
-		    perror("Problem getting window information");
-		    close(dev);
-		    if (font && timestamp && enable_timestamp)
-		      Face_Done(instance, face);
-		    exit(1);
-		  }
-	      }
-	    else
-	      {
-		win.flags=twin.flags;
-		win.x=twin.x;
-		win.y=twin.y;
-		win.chromakey=twin.chromakey;
-		if (ioctl(dev, VIDIOCSWIN, &win) && windowsize) 
-		  {
-		    if (loop) 
-		      {
-			syslog(LOG_WARNING, "Problem setting window size\n");
-			usleep (250000);
-		      }
-		    else 
-		      {
-			perror("Problem setting window size");
-			close(dev);
-			if (font && timestamp && enable_timestamp)
-			  Face_Done (instance, face);
-			exit(1);
-		      }
-		  }
-		else 
-		  {
-		    if (ioctl(dev, VIDIOCGWIN, &win) <0) 
-		      {
-			if (loop) 
-			  {
-			    syslog(LOG_WARNING, "Problem getting window size\n");
-			    usleep (250000);
-			  }
-			else 
-			  {
-			    perror("Problem getting window size");
-			    close(dev);
-			    if (font && timestamp && enable_timestamp)
-			      Face_Done (instance, face);
-			    exit(1);
-			  }
-		      }
-		    else 
-		      {
-			//			vpic.depth=24;
-			//			vpic.palette=VIDEO_PALETTE_RGB24;
-	    
-			if (ioctl(dev, VIDIOCGPICT, &vpic) < 0) 
-			  {
-			    if (loop) 
-			      {
-				syslog(LOG_WARNING, "Problem getting picture properties %m\n");
-				usleep(250000);
-			      }
-			    else 
-			      {
-				perror("Problem getting picture properties");
-				close(dev);
-				if (font && timestamp && enable_timestamp)
-				  Face_Done (instance, face);
-				exit(1);
-			      }
-			  }
-			else 
-			  {
-			    // HERE we got to actually set the parameters at the device to RGB24
-			    // and depth 24, otherwise the device would still be set to whatever it
-			    // was before the above call of properties and never obeyed the need of
-			    // vgrabbj.
+      check_device(vconf);
+      
+      /* initialize appropriate memory */
+      
+      if (vconf->debug)
+	v_error(vconf, LOG_DEBUG, "Initializing memory");
+      
+      switch (vconf->vpic.palette) {
+      case VIDEO_PALETTE_RGB24:
+	size = vconf->win.width * vconf->win.height * 3;
+	break;
+      case VIDEO_PALETTE_RGB32:
+	size = vconf->win.width * vconf->win.height * 4;
+	break;
+      case VIDEO_PALETTE_YUYV:
+	size = vconf->win.width * vconf->win.height * 2;
+	break;
+      case VIDEO_PALETTE_YUV420:
+	size = vconf->win.width * vconf->win.height * 3 / 2;
+	break;
+      case VIDEO_PALETTE_YUV420P:
+	size = vconf->win.width * vconf->win.height * 3 / 2;
+	break;
+      default:
+	size = 0;
+	break;
+      }
 
-			    vpic.depth=24;
-			    vpic.palette=VIDEO_PALETTE_RGB24;
-			    if (ioctl(dev,VIDIOCSPICT, &vpic) < 0)
-			      {
-				if (loop) 
-				  {
-				    syslog(LOG_WARNING, "Problem setting picture properties (does not support RGB24) %m\n");
-				    usleep(250000);
-				  }
-				else 
-				  {
-				    perror("Problem setting picture properties (does not support RGB24)");
-				    close(dev);
-				    if (font && timestamp && enable_timestamp)
-				      Face_Done (instance, face);
-				    exit(1);
-				  }
-			      }
-			    else
-			      {
-				if (debug) fprintf(stderr,"Allocating memory for image.\n");
-				buffer = malloc(win.width * win.height * bpp);
-				if (!buffer) 
-				  {
-				    if (loop)
-				      syslog(LOG_ALERT, "Out of Memory! Exiting...\n");
-				    else
-				      perror("Out of Memory!");
-				    close(dev);
-				    if (font && timestamp && enable_timestamp) 
-				      Face_Done (instance, face);
-				    exit(9);
-				  }
-				err_count2=0;
-				if (debug) 
-				  fprintf(stderr,"See, if I shall adjust the brightness.\n");
-				if (brightness) 
-				  {
-				    do 
-				      {
-					int newbright;
-					read(dev, buffer, win.width * win.height * bpp);
-					f = get_brightness_adj(buffer, win.width * win.height, &newbright);
-					if (f) 
-					  {
-					    vpic.brightness += (newbright << 8);
-					    if(ioctl(dev, VIDIOCSPICT, &vpic)==-1) 
-					      {
-						if (loop)
-						  syslog(LOG_DEBUG, "Problem setting brightness %m\n");
-						else
-						  perror("Problem setting brightness");
-						break;
-					      }
-					    err_count2++;
-					    if (err_count2>100) 
-					      {
-						if (loop)
-						  syslog(LOG_WARNING,"Brightness not optimal\n");
-						else
-						  perror("Brightness not optimal");
-						break;
-					      }
-					  }
-				      } while (f);
-				    if (debug) 
-				      fprintf(stderr,"Finally, we have an image...\n");
-				  }
-				else 
-				  {
-				    read(dev, buffer, win.width * win.height * bpp);
-				    if (debug) 
-				      fprintf(stderr,"Image read without brightness-adjustment.\n");
-				  }
-				close(dev);
-				if (debug) 
-				  fprintf(stderr,"Video-Device closed.\n");
-				if (font && timestamp && enable_timestamp) 
-				  {
-				    inserttext(buffer, font, engine, face, &properties, 
-					       instance, font_size, timestamp, align, 
-					       win.width, win.height, border, blend);
-				  }
-				do 
-				  {
-				    if (debug) 
-				      fprintf(stderr,"Opening output-device.\n");
-				    x = fopen(out, "w+");
-				    if (!x) 
-				      {
-					if (loop) 
-					  {
-					    syslog(LOG_WARNING, "Could not open outputfile: %s\n", out);
-					    usleep(250000);
-					  }
-					else 
-					  {
-					    perror("Could not open Outputfile");
-					    close(dev);
-					    if (font && timestamp && enable_timestamp)
-					      Face_Done (instance, face);
-					    exit(1);
-					  }
-				      }
-				  } while (!x);
-				switch (outformat) 
-				  {
-				  case 1:
-				    while (write_jpeg(buffer, x, quality, win.width, win.height)) 
-				      {
-					syslog(LOG_WARNING, "Could not write to outputfile: %s\n", out);
-					usleep(25000);
-				      }
-				    break;
-				  case 2:
-				    write_png(buffer, x, win.width, win.height);
-				    break;
-				  default:		/* should never happen  */
-				    usage(argv[0]);
-				    break;
-				  }
-				fclose(x);
-				if (debug) 
-				  fprintf(stderr,"Output-device closed.\n");
-				free (buffer);
-				if (debug) 
-				  fprintf(stderr,"Image-buffer freed. Now sleeping if daemon.\n");
-				usleep(loop);
-			      }
-			  }
-		      }
-		  }
-	      }
-	  }
+      buffer=malloc(size);                                       // depending on palette
+      t_buffer=malloc(vconf->win.width * vconf->win.height * 4); // RGB32 (4 byte/pixel)
+      o_buffer=malloc(vconf->win.width * vconf->win.height * 3); // RGB24 (3 byte/pixel)
+      if (!buffer || !t_buffer || !o_buffer) 
+	v_error(vconf, LOG_CRIT, "Out of memory! Exiting...");
+
+      if (vconf->debug)
+	v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (tmp), %d (out)",
+		size, vconf->win.width * vconf->win.height * 4,
+		vconf->win.width * vconf->win.height * 3);
+
+      /* now read image and convert it, if necessary */
+
+      buffer = read_image(vconf, buffer, size);
+
+      switch (vconf->vpic.palette) {
+      case VIDEO_PALETTE_RGB24:
+	o_buffer=memcpy(o_buffer, buffer, 
+			vconf->win.width * vconf->win.height * 3);
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "No conversion, we have RGB24");
+	break;
+	
+      case VIDEO_PALETTE_RGB32:
+	if (vconf->debug)
+	  v_error(vconf, LOG_INFO, "Got RGB32, converting...");
+	
+	o_buffer=conv_rgb32_rgb24(o_buffer, buffer, vconf->win.width, vconf->win.height);
+	
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "converted to RGB24");
+	
+	break;
+	
+      case VIDEO_PALETTE_YUV420P:
+	if (vconf->debug)
+	  v_error(vconf, LOG_INFO, "Got YUV420p, converting...");
+	
+	ccvt_420p_rgb32(vconf->win.width, vconf->win.height, buffer, \
+			buffer + (vconf->win.width * vconf->win.height), \
+			buffer + (vconf->win.width * vconf->win.height)+ \
+			(vconf->win.width * vconf->win.height / 4), \
+			t_buffer);
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "converted to RGB32...");
+	o_buffer=conv_rgb32_rgb24(o_buffer, t_buffer, vconf->win.width, vconf->win.height);
+	
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "converted to RGB24");
+	
+	break;
+	
+      case VIDEO_PALETTE_YUV420:
+	if (vconf->debug)
+	  v_error(vconf, LOG_INFO, "Got YUV420, converting...");
+
+	ccvt_420i_rgb24(vconf->win.width, vconf->win.height, buffer, o_buffer);
+
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "converted to RGB24");
+
+	break;
+      case VIDEO_PALETTE_YUYV:
+	if (vconf->debug)
+	  v_error(vconf, LOG_INFO, "Got YUYV, converting...");
+
+	ccvt_yuyv_rgb32(vconf->win.width, vconf->win.height, buffer, t_buffer);
+	
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "converted to RGB32...");
+	o_buffer=conv_rgb32_rgb24(o_buffer, t_buffer, vconf->win.width, vconf->win.height);
+	
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "converted to RGB24...");
+
+	break;
+      default:
+	v_error(vconf, LOG_CRIT, "Should not happen - Unknown input image format");
+	break;
+      }
+
+#ifdef HAVE_LIBTTF
+      if (vconf->use_ts && vconf->font && vconf->timestamp) 
+	o_buffer=inserttext(o_buffer, vconf);
+#endif
+
+      if (vconf->switch_bgr) {
+	o_buffer=switch_color(vconf, o_buffer);
+	if (vconf->debug)
+	  v_error(vconf, LOG_DEBUG, "Switching vom BGR to RGB - or vice versa");
+      }
+
+      while (! (x = fopen(vconf->out, "w+") ) )
+	v_error(vconf, LOG_ERR, "Could not open outputfile %s", vconf->out);
+      if (vconf->debug)
+	v_error(vconf, LOG_DEBUG, "Opened output-file %s", vconf->out);
+
+      switch (vconf->outformat) 
+	{
+	case 1:
+	  while (write_jpeg(vconf, o_buffer, x))
+	    v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+	  break;
+	case 2:
+	  while (write_png(vconf, o_buffer, x)) 
+	    v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
+	  break;
+	default:		/* should never happen  */
+	  v_error(vconf, LOG_CRIT, "Unknown error! Report all circumstances to author");
+	  break;
 	}
-    } while (loop);
-  if (font && timestamp && enable_timestamp) 
-    {
-      Face_Done (instance, face);
-    }
-  if (debug) 
-    fprintf(stderr,"Returned from Face_Done.\n");
-  //  TT_Done_FreeType (engine);
-  if (debug) 
-    fprintf(stderr,"No daemon, therefore: exiting...\n");
+      fclose(x);
+      
+      if (vconf->debug) 
+	v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+      
+      free (buffer);
+      free (o_buffer);
+      
+      if (vconf->debug) 
+	v_error(vconf, LOG_DEBUG, "Image-buffers freed, now sleeping if daemon");
+      
+      usleep(vconf->loop);
+    } while (vconf->loop);
+  
+  if (vconf->debug) 
+    v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
+  
+  exit(0);
 }
