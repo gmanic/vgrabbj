@@ -76,6 +76,9 @@ void cleanup(struct vconfig *vconf,
   free(ttinit->properties);
   free(ttinit);
 #endif
+  if ( vconf->tmpout ) {
+    free(vconf->tmpout);
+  }
   free(vconf);
   syslog(LOG_CRIT, "exiting.");
   closelog();
@@ -289,6 +292,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->dev        = 0;
   vconf->forcepal   = 0;
   vconf->openonce   = FALSE;
+  vconf->tmpout     = NULL;
 #if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
   vconf->font       = DEFAULT_FONT;
   vconf->timestamp  = DEFAULT_TIMESTAMP;
@@ -486,7 +490,14 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
     vconf->win.height=is_height;
     v_error(vconf, LOG_WARNING, "Imagesize set to unchecked individual size!");
   }
-
+  
+  if ( (strcasecmp(vconf->out, DEFAULT_OUTPUT)) ) {
+    // init/malloc for tempfile string
+    vconf->tmpout = malloc(strlen(vconf->out)+5);
+    vconf->tmpout = strcpy(vconf->tmpout, vconf->out);
+    vconf->tmpout = strcat(vconf->tmpout, ".tmp");
+  }
+  
   v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
 
   vconf->init_done=TRUE;
@@ -1110,7 +1121,9 @@ int main(int argc, char *argv[])
   free(ttinit->properties);
   free(ttinit);
 #endif
-  
+  if ( vconf->tmpout ) {
+    free(vconf->tmpout);
+  }
   free(vconf);
   exit(0);
 }
