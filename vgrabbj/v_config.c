@@ -192,6 +192,11 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
 #endif
   vconf->archive     = NULL;
   l_opt[36].var = (char *)vconf->archive;
+  vconf->archnames[0] = NULL;
+  vconf->archiveeach = 0;
+  vconf->archivemax = 0;
+  l_opt[37].var = &vconf->archiveeach;
+  l_opt[38].var = &vconf->archivemax;
   return vconf;
 }  
 
@@ -223,6 +228,7 @@ void check_files(struct vconfig *vconf) {
     }
   }
 #endif
+  
 }
 
 #ifdef LIBFTP
@@ -359,12 +365,75 @@ void v_update_ptr(struct vconfig *vconf) {
   v_error(vconf, LOG_DEBUG, "Updated pointers to new allocated memory.");
 }
 
+/* Decode options */
+
+void decode_options(struct vconfig *vconf, char *option, char *value, int o, int n) {
+  int i;
+  for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
+    if ( (l_opt[i].name && !strcasecmp(option, l_opt[i].name) && !o) ||  
+	 (l_opt[i].short_name && o==*l_opt[i].short_name) ) {
+      switch (l_opt[i].var_type) {
+      case opt_int:
+	*(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_int(value), n, l_opt[i]);
+	break;
+      case opt_longint:
+	*(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i]);
+	break;
+      case opt_int_s:
+	*(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i])*1000000;
+	break;
+      case opt_bool:
+	*(boolean *)l_opt[i].var=check_minmax(vconf, value, get_bool(value), n, l_opt[i])
+	  ? TRUE : FALSE;
+	break;
+      case opt_charptr:
+	(int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
+					      l_opt[i], n);
+	break;
+      case opt_format:
+	*(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_format(value), n, l_opt[i]);
+	break;
+      case opt_size:
+	vconf->win.width= (int)check_minmax(vconf, value, get_width(value), n, l_opt[i]);
+	vconf->win.height=(int)check_minmax(vconf, value, get_height(value),n, l_opt[i]);
+	break;
+      case opt_position:
+	*(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_position(value), n, l_opt[i]);
+	break;
+      case opt_conf:
+	if (vconf->conf_file)
+	  v_error(vconf, LOG_DEBUG, "Overwriting old conf (%s) settings with new conf (%s)",
+		  vconf->conf_file, optarg);
+	vconf->conf_file=get_str(optarg, vconf->conf_file);
+	parse_config(vconf);
+	break;
+      case opt_version:
+	fprintf(stderr, "%s %s\n", option, VERSION);
+	exit(0);
+	break;
+      case opt_help:
+	usage (option);
+	break;
+      case opt_setting:
+	vconf->in=get_str(optarg, vconf->in);
+	open_device(vconf);
+	close_device(vconf);
+	show_capabilities(vconf->in, option);
+	break;
+      default:
+	v_error(vconf, LOG_WARNING, "Unknown option %s (line %d), shouldn't happen", value, n);
+	break;
+      }
+    }      
+  }
+}
+
 
 /* Parse a config-file for options */
 
 struct vconfig *parse_config(struct vconfig *vconf){
 
-  int           i=0, n=0;
+  int           n=0;//, i=0;
   char          line[MAX_LINE];
   char          *option=NULL, *value=NULL, *p=NULL;
   FILE          *fd;
@@ -383,58 +452,20 @@ struct vconfig *parse_config(struct vconfig *vconf){
     n++;
     p=line;
     /* hide comments */
-    if ( (p=index(line, '#')) )
-      *p='\0';
-    if ( (p=index(line, ';')) )
-      *p='\0';
+    line[strcspn(line, "#")]='\0';
+    line[strcspn(line, ";")]='\0';
     line[strcspn(line, "\n")]='\0';
+
     option=strcpy(malloc(strlen(line)+1), line);
-    /* Check options */
 
     if ( (strlen(option)>0) && (p=strpbrk(option," \t")) ) {
       *p='\0';
       p++;
-      value=strcpy(malloc(strlen(p)+1),p);
-      //    if ( (option=strtok(line," \t")) && (value=strtok(NULL, "\n")) ) {
-      /* eliminate whitespaces in value */
-      value=strip_white(value);
-      for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
-	if ( l_opt[i].name && !strcasecmp(option, l_opt[i].name) ) {
-	  v_error(vconf, LOG_DEBUG, "Found option %s in line %d, var index %d", option, n, i);
-	  switch (l_opt[i].var_type) {
-	  case opt_int:
-	    *(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_int(value), n, l_opt[i]);
-	    break;
-	  case opt_longint:
-	    *(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i]);
-	    break;
-	  case opt_int_s:
-	    *(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i])*1000000;
-	    break;
-	  case opt_bool:
-	    *(boolean *)l_opt[i].var=check_minmax(vconf, value, get_bool(value), n, l_opt[i])
-	      ? TRUE : FALSE;
-	    break;
-	  case opt_charptr:
-	    (int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
-						  l_opt[i],n);
-	    break;
-	  case opt_format:
-	    *(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_format(value), n, l_opt[i]);
-	    break;
-	  case opt_size:
-	    vconf->win.width= (int)check_minmax(vconf, value, get_width(value), n, l_opt[i]);
-	    vconf->win.height=(int)check_minmax(vconf, value, get_height(value),n, l_opt[i]);
-	    break;
-	  case opt_position:
-	    *(int *)l_opt[i].var=(int)check_minmax(vconf, value, get_position(value), n, l_opt[i]);
-	    break;
-	  default:
-	    v_error(vconf, LOG_WARNING, "Unknown option %s (line %d), shouldn't happen", value, n);
-	    break;
-	  }
-	}      
-      }
+      /* Strip whitespace */
+      value=strip_white(strcpy(malloc(strlen(p)+1),p));
+
+      decode_options(vconf, option, value, 0, n);
+
     }
     free_ptr(option);
   }
@@ -465,71 +496,16 @@ char *build_opt(struct v_options l_opt[]) {
 /* Parse the commandline */
 
 struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
-  int n, i;
+  int n;
+  //, i;
   char *opt_str;
   
   opt_str=build_opt(l_opt);
 
   while ( (n = getopt (argc, argv, opt_str) ) !=EOF ) {
-		      //"c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:gSVMN:F:Cw:H:nz:A:"))!=EOF) {
-    //if (optarg) optarg=strip_white(optarg);
-    for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
-      if ( l_opt[i].short_name &&  n==(int)*l_opt[i].short_name ) {
-	switch (l_opt[i].var_type) {
-	case opt_int:
-	  *(int *)l_opt[i].var=(int)check_minmax(vconf, optarg, get_int(optarg), 0, l_opt[i]);
-	  break;
-	case opt_longint:
-	  *(long *)l_opt[i].var=check_minmax(vconf, optarg, get_int(optarg), 0, l_opt[i]);
-	  break;
-	case opt_int_s:
-	  *(long *)l_opt[i].var=check_minmax(vconf, optarg, get_int(optarg), 0, l_opt[i])*1000000;
-	  break;
-	case opt_bool:
-	  *(boolean *)l_opt[i].var=*(boolean *)l_opt[i].var ? FALSE : TRUE;
-	  break;
-	case opt_charptr:
-	  (int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(optarg, (char *)l_opt[i].var),
-						   l_opt[i],0);
-	  break;
-	case opt_format:
-	  *(int *)l_opt[i].var=(int)check_minmax(vconf, optarg, get_format(optarg), 0, l_opt[i]);
-	  break;
-	case opt_size:
-	  vconf->win.width= (int)check_minmax(vconf, optarg, get_width(optarg), 0, l_opt[i]);
-	  vconf->win.height=(int)check_minmax(vconf, optarg, get_height(optarg),0, l_opt[i]);
-	  break;
-	case opt_position:
-	  *(int *)l_opt[i].var=(int)check_minmax(vconf, optarg, get_position(optarg), 0, l_opt[i]);
-	  break;
-	case opt_conf:
-	  if (vconf->conf_file)
-	    v_error(vconf, LOG_DEBUG, "Overwriting old conf (%s) settings with new conf (%s)",
-		    vconf->conf_file, optarg);
-	  vconf->conf_file=get_str(optarg, vconf->conf_file);
-	  parse_config(vconf);
-	  break;
-	case opt_version:
-	  fprintf(stderr, "%s %s\n", basename(argv[0]), VERSION);
-	  exit(0);
-	  break;
-	case opt_help:
-	  usage (argv[0]);
-	  break;
-	case opt_setting:
-	  vconf->in=get_str(optarg, vconf->in);
-	  open_device(vconf);
-	  close_device(vconf);
-	  show_capabilities(vconf->in, argv[0]);
-	  break;
-	default:
-	  v_error(vconf, LOG_WARNING, "Unknown option -%s, (shouldn't happen!)", n);
-	  break;
-	}
-      }      
-    }
+    decode_options(vconf, argv[0], optarg, n, 0);
   }
-  //free_ptr(opt_str);
+  free_ptr(opt_str);
   v_update_ptr(vconf);
   
   v_error(vconf, LOG_INFO, "Done parsing commandline");

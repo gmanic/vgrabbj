@@ -59,9 +59,13 @@ void free_mmap(struct vconfig *vconf) {
 /* Open Input Device */
 
 void open_device(struct vconfig *vconf) {
-  while ((vconf->dev=open(vconf->in, O_RDONLY)) < 0)
+  int err_count=0;
+  while ( ((vconf->dev=open(vconf->in, O_RDONLY)) < 0) && (!(err_count++>200)) )
+    usleep(25000);
+  if (err_count>200)
     v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
-  v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
+  else
+    v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
 }
 
 
@@ -274,6 +278,8 @@ int get_format(char *value) {
 
 int get_position(char *value) {
   int i;
+  if ((i=get_int(value))!=-1)
+    return i;
   for (i=0; position_list[i].name; i++) {
     if ( !(strcasecmp(value, position_list[i].name)) )
       return position_list[i].type;

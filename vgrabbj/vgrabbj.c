@@ -136,19 +136,19 @@ void show_capabilities(char *in, char *pname)
   int dev;
 
   if ( (dev = open(in, O_RDONLY)) < 0 ) {
-    fprintf(stderr, "Can't open device %s", in);
+    fprintf(stderr, "Can't open device %s\n", in);
     exit(1);
   }
   if (ioctl(dev, VIDIOCGCAP, &cap) < 0) {
-    fprintf(stderr, "Can't get capabilities of device %s", in);
+    fprintf(stderr, "Can't get capabilities of device %s\n", in);
     exit(1);
   }
   if (ioctl(dev, VIDIOCGPICT, &pic) < 0) {
-    fprintf(stderr, "Can't get picture properties of device %s", in);
+    fprintf(stderr, "Can't get picture properties of device %s\n", in);
     exit(1);
   }
   if (ioctl(dev, VIDIOCGWIN, &win) < 0) {
-    fprintf(stderr, "Can't get overlay values of device %s", in);
+    fprintf(stderr, "Can't get overlay values of device %s\n", in);
     exit(1);
   }
 
