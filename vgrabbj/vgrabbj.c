@@ -298,7 +298,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
       switch (n) 
 	{
 	case 'c':
-	  parse_config(vconf, optarg);
+	  vconf=parse_config(vconf, optarg);
 	  break;
 	case 'l':
 	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < MIN_LOOP ) ) 
@@ -1073,6 +1073,8 @@ int main(int argc, char *argv[])
   vconf=init_defaults(vconf);
   vconf=parse_config(vconf, DEFAULT_CONFIG);
   vconf=parse_commandline(vconf, argc, argv);
+
+  v_error(vconf, LOG_DEBUG, "Back to the image...");
 
   if (vconf->loop) 
     daemonize(vconf, basename(argv[0]));
