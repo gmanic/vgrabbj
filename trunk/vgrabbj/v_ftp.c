@@ -2,6 +2,7 @@
  * 
  * Copyright (C) 2000, 2001 Robert Wessels, Hengelo, The Netherlands
  * eMail: techie@GrassAndCows.eu.org
+ * Certain Changes (C) 2001 Jens Gecius, devel@gecius.de
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,24 +21,12 @@
  */
 
 
-#if defined(HAVE_LIBFTP) && defined(HAVE_FTPLIB_H)
 #include "vgrabbj.h"
-#include "ftplib.h"
 
-#define STATE_UNINITIALIZED 0
-#define STATE_CONNECT 1
-#define STATE_LOGIN 2
-#define STATE_CHDIR 3
-#define STATE_PUT 4
-#define STATE_RENAME 5
-#define STATE_FINISH 6
-
-/* globals */
+#ifdef LIBFTP
 
 static char mode = 'I';
 static netbuf *conn = NULL;
-
-extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
 
 void ftp_upload(struct vconfig *vconf){
   switch(vconf->ftp.state){
@@ -119,7 +108,6 @@ void ftp_upload(struct vconfig *vconf){
   }
   return;
 }
-
 
 #endif
 
