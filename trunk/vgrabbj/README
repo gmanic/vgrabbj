@@ -91,6 +91,12 @@ everything, see vgrabbj -h for details.
 If you get odd colors (e.g. blue and red switched), that means you have
 to use the -S switch the red and blue colors.
 
+In case you use a IBM USB Cam, or any other cam which doesn't let you
+set the resolution of the image after you load the driver, please make
+sure you have the desired resolution set up at driver load time and
+start vgrabbj with the parameter -w. This prevents vgrabbj to set the
+image size.
+
 vgrabbj takes a lot palettes, but certainly not everyone. The following
 palettes are supported:
 
