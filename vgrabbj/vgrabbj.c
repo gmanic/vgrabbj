@@ -23,8 +23,7 @@
 
 /* Globals, Typedefs  */
 
-void usage (char *pname);
-void show_capabilities(char *in, char *pname);
+int terminate=0;
 
 static char *palett[17] = {
   "Null", "Grey", "HI240", "RGB565/16bit", "RGB24", "RBG32", "RGB555/15bit",
@@ -69,6 +68,42 @@ struct ttneed {
 };
 #endif
 
+void usage (char *pname);
+void show_capabilities(char *in, char *pname);
+void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
+
+/* Event handler for SIGKILL */
+
+void sigterm();
+
+void sigterm() {
+  signal(SIGTERM,sigterm); /* reset signal */
+  syslog(LOG_WARNING, "Caught sigterm, cleaning up...");
+  terminate=1;
+}
+
+
+void cleanup(struct vconfig *vconf, 
+#ifdef HAVE_LIBTTF
+	     struct ttneed *ttinit, 
+#endif
+	     char *buffer, char *t_buffer, char *o_buffer) {
+
+#ifdef HAVE_LIBTTF
+  if ( vconf->use_ts ) {
+    Face_Done(ttinit->instance, ttinit->face);
+    TT_Done_FreeType(ttinit->engine);
+  }
+  free(ttinit->properties);
+  free(ttinit);
+#endif
+  free(vconf);
+  syslog(LOG_CRIT, "exiting.");
+  closelog();
+  _exit(1);
+}
+
+
 /* Routinely used error output */
 
 void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
@@ -86,7 +121,7 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
      6     normal information (LOG_INFO)
      7     debug information (LOG_DEBUG)
 
-     Every log-message with a loglevel equal-smaller than DEBUG-Level (supplied
+     Every log-message with a loglevel equal-smaller than LOGLEVEL-Level (supplied
      via command line, otherwise default=4) will be 
          a) displayed on screen (stderr) if non-daemon
          b) written to syslog if daemon
@@ -98,16 +133,6 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
 
   */
 
-  //  FILE *log;
-  //  time_t t;
-  //  struct tm *tm;
-  //  char ts_buff[TS_MAX+1];
-  //  log = fopen(logfile, "a");
-  //  time (&t);
-  //  tm = localtime (&t);
-  //  ts_buff[TS_MAX] = '\0';
-  //  strftime (ts_buff, TS_MAX, "%a %b %Y %H:%M:%S", tm);
-  
   if ( msg <= vconf->debug ) {
    
     va_start(arg_ptr, fmt);
@@ -116,14 +141,6 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
     
     strcat(buf, "\n");
 
-    /*fflush(stdout);*/
-    //  fputs(ts_buff, log);
-    //  fputs(" ", log);
-    //  fputs(msg, log);
-    //  fputs(": ", log);
-    //  fputs(buf, log);
-    //  fclose(log);
-  
     va_end(arg_ptr);
   
     if (vconf->loop && vconf->init_done) {
@@ -144,6 +161,7 @@ void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
 
   if ( (vconf->loop && msg < 3) || (vconf->err_count > 3600) ) {
     syslog(LOG_ERR, "Fatal Error, exiting...\n"); // exit
+    closelog();
     _exit(1);
   } else if ( !vconf->loop && msg < 4 ) {
     fprintf(stderr, "Fatal Error, exiting...\n"); // exit
@@ -169,7 +187,7 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
   vconf->loop       = 0;
   vconf->use_ts     = FALSE;
   vconf->init_done  = FALSE;
-  vconf->debug      = DEBUG;
+  vconf->debug      = LOGLEVEL;
   vconf->err_count  = 0;
   vconf->dev        = 0;
 #ifdef HAVE_LIBTTF
@@ -247,11 +265,11 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
 	  break;
 #ifdef HAVE_LIBTTF
 	case 't':
-	  if ( !( x = fopen(vconf->font = optarg, "r") ) ) 
+	  if ( !( x = fopen(vconf->font = optarg, "r") ) )
 	    v_error(vconf, LOG_CRIT, "Font-file %s not found", vconf->font); // exit
-	  fclose(x);
 	  vconf->use_ts=TRUE;
 	  vconf->font=optarg;
+	  fclose(x);
 	  break;
 	case 'T':
 	  if ( sscanf(optarg, "%d", &vconf->font_size) != 1 || vconf->font_size < 1
@@ -388,7 +406,7 @@ void usage (char *pname)
 	  DEFAULT_FONT, DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP,
 	  DEFAULT_ALIGN, DEFAULT_BLEND, DEFAULT_BORDER, 
 #endif
-	  DEBUG, basename(pname));
+	  LOGLEVEL, basename(pname));
   exit (1);
 }
 
@@ -494,7 +512,7 @@ int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x)
     }
   jpeg_finish_compress (&cjpeg);
   jpeg_destroy_compress (&cjpeg);
-  free (line);
+  free(line);
   return(0);
 }
 
@@ -725,47 +743,36 @@ struct ttneed *OpenFace(struct ttneed *ttinit, struct vconfig *vconf)
     v_error(vconf, LOG_DEBUG, "FreeType, Version %d.%d", i, j);
   }
 
-  if (TT_Init_FreeType(&ttinit->engine))
-      ttinit->use = FALSE;
-
   if (Face_Open (vconf->font, ttinit->engine, &ttinit->face, ttinit->properties,
 		 &ttinit->instance, vconf->font_size)) {
     v_error(vconf, LOG_WARNING, "Font not found: %s, timestamp disabled", vconf->font);
-    TT_Done_FreeType (ttinit->engine);
-    ttinit->use = FALSE;
-    v_error(vconf, LOG_WARNING, "Could not initialize Font-Engine, timestamp disabled");
-  } else {
-    if (vconf->debug)
-      v_error(vconf, LOG_DEBUG, "Font-Engine initialized");
-    ttinit->use = TRUE;
-  }
+    return(0);
+  } 
+  if (vconf->debug)
+    v_error(vconf, LOG_DEBUG, "Font-Engine initialized");
+
   return(ttinit);
 }
 
 /* Manipulate image to show timestamp string and return manipulated buffer */
 
-char *inserttext(unsigned char *buffer, struct vconfig *vconf)
+char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *vconf)
 {
     
   time_t t;
   struct tm *tm;
-  struct ttneed *ttinit;
   char ts_buff[TS_MAX+1];
   int ts_len;
   TT_Glyph *glyphs = NULL;
   TT_Raster_Map bit;
   TT_Raster_Map sbit;
-  
-  ttinit = malloc(sizeof(*ttinit));
-  ttinit->properties = malloc(sizeof(*ttinit->properties));
 
-  ttinit = OpenFace(ttinit, vconf);
-  if ( !ttinit->use ) {
-    free(ttinit->properties);
-    free(ttinit);
-    return(buffer);
+  ttinit=OpenFace(ttinit, vconf);
+  if ( !ttinit ) {
+      v_error(vconf, LOG_WARNING, "Could not initialize font-engine");
+      return(buffer);
   }
-
+  
   if (vconf->debug) 
     v_error(vconf, LOG_DEBUG, "Getting all values for the timestamp.");
 
@@ -895,8 +902,6 @@ char *inserttext(unsigned char *buffer, struct vconfig *vconf)
   if (vconf->debug) 
     v_error(vconf, LOG_INFO, "Font-Engine unloaded, stamp inserted into image");
 
-  free(ttinit->properties);
-  free(ttinit);
   return buffer;
 }
 
@@ -911,6 +916,16 @@ int main(int argc, char *argv[])
   unsigned char *buffer, *o_buffer, *t_buffer;
   int size;
   FILE *x;
+
+#ifdef HAVE_LIBTTF
+  struct ttneed *ttinit;
+#endif
+
+  signal(SIGTERM,sigterm);
+
+#ifdef DEBUGGING
+  mtrace();
+#endif
 
   vconf=malloc(sizeof(*vconf));
   vconf=decode_options(vconf, argc, argv);
@@ -942,14 +957,29 @@ int main(int argc, char *argv[])
 	    v_error(vconf, LOG_DEBUG, "I'm the parent and exiting now"
 		    "(child takes care of the rest).");
 	  closelog();
+	  free(vconf);
 	  exit(0);
 	}
-      openlog("vgrabbj", LOG_PID, LOG_DAEMON);
+      openlog(basename(argv[0]), LOG_PID, LOG_DAEMON);
       v_error(vconf, LOG_WARNING, "%s started, reading from %s", basename(argv[0]), vconf->in);
     }
   else
     v_error(vconf, LOG_WARNING, "Reading image from %s", vconf->in);
+
+#ifdef HAVE_LIBTTF
+  ttinit = malloc(sizeof(*ttinit));
+  ttinit->properties = malloc(sizeof(*ttinit->properties));
+ 
+  if ( !ttinit->properties || !ttinit )
+    vconf->use_ts=FALSE;
   
+  if (vconf->use_ts)
+    if (TT_Init_FreeType(&ttinit->engine)) {
+      v_error(vconf, LOG_WARNING, "Could not initialize Font-Engine, timestamp disabled");
+      vconf->use_ts=FALSE;
+  }
+#endif
+
   do 
     {
       check_device(vconf);
@@ -1062,8 +1092,8 @@ int main(int argc, char *argv[])
       }
 
 #ifdef HAVE_LIBTTF
-      if (vconf->use_ts && vconf->font && vconf->timestamp) 
-	o_buffer=inserttext(o_buffer, vconf);
+      if (vconf->use_ts) 
+	o_buffer=inserttext(ttinit, o_buffer, vconf);
 #endif
 
       if (vconf->switch_bgr) {
@@ -1103,11 +1133,27 @@ int main(int argc, char *argv[])
       if (vconf->debug) 
 	v_error(vconf, LOG_DEBUG, "Image-buffers freed, now sleeping if daemon");
       vconf->err_count=0;
+
       usleep(vconf->loop);
+
+      if (terminate == 1)
+	cleanup(vconf,
+#ifdef HAVE_LIBTTF
+		ttinit,
+#endif
+		buffer, t_buffer, o_buffer);
+
     } while (vconf->loop);
   
   if (vconf->debug) 
     v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
+
+#ifdef HAVE_LIBTTF
+  if (vconf->use_ts)
+    TT_Done_FreeType(ttinit->engine);
+  free(ttinit->properties);
+  free(ttinit);
+#endif
 
   free(vconf);
   exit(0);
