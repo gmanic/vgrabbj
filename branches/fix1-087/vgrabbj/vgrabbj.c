@@ -202,10 +202,10 @@ unsigned char *switch_color(struct vconfig *vconf) {
   long int y;
   for (y = 0; y < (vconf->win.width * vconf->win.height); y++) {
     memcpy(&a, vconf->buffer+(y*3),1);
-    memcpy(vconf->buffer+(y*3), vconf->buffer+(y*3)+2, 1);
-    memcpy(vconf->buffer+(y*3)+2, &a, 1);
+    memcpy(vconf->o_buffer+(y*3), vconf->buffer+(y*3)+2, 1);
+    memcpy(vconf->o_buffer+(y*3)+2, &a, 1);
   }
-  return vconf->buffer;
+  return vconf->o_buffer;
 }
 
 /* Strips last byte of RGB32 to convert to RGB24 - breaks picture if alpha is used! */
