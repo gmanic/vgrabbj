@@ -23,6 +23,10 @@
 #include <config.h>
 #endif
 
+#ifndef DEBUGGING
+#define DEBUGGING 0
+#endif
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -44,6 +48,8 @@
 #include <jpeglib.h>
 #include <png.h>
 #include <ccvt.h>
+#include <signal.h>
+#include <mcheck.h>
 
 #ifdef HAVE_LIBTTF
 #include <freetype/freetype.h>
@@ -58,7 +64,7 @@
 #define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png
 #define DEFAULT_BRIGHTNESS TRUE
 #define MAX_ERRORMSG_LENGTH 1024
-#define DEBUG 4
+#define LOGLEVEL 4
 
 
 #ifdef HAVE_LIBTTF
