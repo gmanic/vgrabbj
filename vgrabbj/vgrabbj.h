@@ -141,7 +141,7 @@ struct vconfig {
     char *password;
     unsigned int loggedin;
     unsigned int tryharder;
-  }Ftp;
+  }ftp;
 };
 
 #ifdef HAVE_LIBTTF
