@@ -34,7 +34,7 @@ static struct v_options l_opt[] = {
   {"DebugLevel",      "D", req,  NULL, opt_int,     0,     7,   0, "4", NULL},
   {"Daemon",          "L", req,  NULL, opt_longint, 0,     0,   0, "0", NULL},
   {"DaemonSeconds",   "l", req,  NULL, opt_int_s,   0,     0,   0, "0", NULL},
-  {"Brightness",      "b", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
+  {"AutoBrightness",  "a", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {"ImageQuality",    "q", req,  NULL, opt_int,     0,   100,   0, "75", NULL},
   {"ImageSize",       "i", req,  NULL, opt_size,    0,     0,   0, "cif", NULL},
   {"ImageWidth",      "w", req,  NULL, opt_int,     0, 65535,   0, "352", NULL},
@@ -53,7 +53,7 @@ static struct v_options l_opt[] = {
   {"FontFile",        "t", req,  NULL, opt_charptr, 0,     0, 255, "/usr/share/fonts/truetype/Arialn.ttf", NULL},
   {"TimeStamp",       "p", req,  NULL, opt_charptr, 0,     0, 255, "%A, %e. %B %Y - %T", NULL},
   {"FontSize",        "T", req,  NULL, opt_int,     3,   100,   0, "12", NULL},
-  {"Position",        "a", req,  NULL, opt_position,0,     5,   0, "upperright", NULL},
+  {"Position",        "P", req,  NULL, opt_position,0,     5,   0, "upperright", NULL},
   {"Blend",           "m", req,  NULL, opt_int,     1,   100,   0, "60", NULL},
   {"BorderSize",      "B", req,  NULL, opt_int,     0,   255,   0, "2", NULL},
 #endif
@@ -72,6 +72,11 @@ static struct v_options l_opt[] = {
   {NULL,              "V", none, NULL, opt_version, 0,     0,   0, NULL, NULL},
   {NULL,              "s", req,  NULL, opt_setting, 0,     0, 255, NULL, NULL},
   {NULL,              "h", none, NULL, opt_help,    0,     0,   0, NULL, NULL},
+  {"Hue",             "u", req,  NULL, opt_int,    -1, 65535,   0, "-1", NULL},
+  {"Brightness",      "b", req,  NULL, opt_int,    -1, 65535,   0, "-1", NULL},
+  {"Contrast",        "x", req,  NULL, opt_int,    -1, 65535,   0, "-1", NULL},
+  {"Colour",          "r", req,  NULL, opt_int,    -1, 65535,   0, "-1", NULL},
+  {"Whiteness",       "W", req,  NULL, opt_int,    -1, 65535,   0, "-1", NULL},
   /* New options are to be added in front of this line, which serves as a    */
   /* marker for the config-parser (no long- and no short-option)             */
   {"Archive",         "A", req,  NULL, opt_charptr, 0,     0, 255, "/tmp/arch/cam-%Y-%d-%m-%H-%M-%S.jpg", NULL},
@@ -79,5 +84,6 @@ static struct v_options l_opt[] = {
   {"ArchiveMax",      "M", req,  NULL, opt_int,     0, 65535,   0, "100", NULL},
   {"SwapRL",          "R", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {"NoUseMmap",       "G", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
+  {"SwapTB",          "U", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {NULL, NULL, none, NULL, 0, 0, 0, 0, NULL}
 };
