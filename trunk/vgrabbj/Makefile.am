@@ -20,12 +20,12 @@
 bin_PROGRAMS = vgrabbj
 vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c ftplib.c
 
-sysconf_DATA = vgrabbj.conf.default
+#sysconf_DATA = vgrabbj.conf.default
 EXTRA_DIST = vgrabbj.conf.default
 
 DEFAULT_CONFIG_FILE = $(sysconfdir)/vgrabbj.conf
 
-install-data-local: install-sysconfDATA
+install-data-local: #install-sysconfDATA
 	@if test -f $(DESTDIR)$(sysconfdir)/vgrabbj.conf ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/vgrabbj.conf" ; \
 	else \
