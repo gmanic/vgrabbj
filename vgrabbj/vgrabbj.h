@@ -105,7 +105,7 @@
 #define MAX_SIZE 65535
 #define RGB_DEFAULT 24
 #define MIN_PALETTE 1
-#define MAX_PALETTE 17
+#define MAX_PALETTE 16
 #define MIN_DISCARD 0
 #define MAX_DISCARD 255
 #define MIN_BOOL 0
@@ -190,6 +190,7 @@ struct vconfig {
   boolean brightness;
   boolean init_done;
   boolean swaprl;
+  boolean nousemmap;
   int inputnorm;
   int channel;
   int forcepal;

@@ -88,6 +88,8 @@ void usage (char *pname)
 	  "                   for possible tokens.\n"
 	  " -M <value>        Maximum number of images to keep in archive.\n"
 	  " -E <value>        Take a snapshot for the archive each <value> image.\n"
+	  " -R                Swap left/right like a mirror.\n"
+	  " -G                Do not use mmap'ed memory - needed only for certain cams\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -141,6 +143,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->openonce   = TRUE;
   vconf->usetmpout  = TRUE;
   vconf->swaprl     = FALSE;
+  vconf->nousemmap  = FALSE;
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
   vconf->o_buffer   = NULL;
@@ -205,6 +208,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[37].var = &vconf->archiveeach;
   l_opt[38].var = &vconf->archivemax;
   l_opt[39].var = &vconf->swaprl;
+  l_opt[40].var = &vconf->nousemmap;
   return vconf;
 }  
 
@@ -352,14 +356,17 @@ struct vconfig *check_device(struct vconfig *vconf) {
 	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUYV, vconf->dev))   ||
 	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420, vconf->dev)) ||
 	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, vconf->dev)) )
-      v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
+      ;
     else
       v_error(vconf, LOG_CRIT, "Unable to set supported video-palette");
     break;
   }
     
+  v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
+
   if ( (ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) || 
-       ((vconf->brightness) && (vconf->vpic.palette==VIDEO_PALETTE_RGB24)) )
+       ((vconf->brightness) && (vconf->vpic.palette==VIDEO_PALETTE_RGB24)) ||
+       (vconf->nousemmap) )
     vconf->usemmap=FALSE;
 
   if (!vconf->openonce)
@@ -405,9 +412,9 @@ void decode_options(struct vconfig *vconf, char *option, char *value, int o, int
 	*(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i])*1000000;
 	break;
       case opt_bool:
-	*(boolean *)l_opt[i].var=check_minmax(vconf, value, n?get_bool(value):!*(boolean *)l_opt[i].var,
-					      n, l_opt[i])
-	  ? TRUE : FALSE;
+	*(boolean *)l_opt[i].var=check_minmax(vconf, value, 
+					      n?get_bool(value):!*(boolean *)l_opt[i].var,
+					      n, l_opt[i]) ? TRUE : FALSE;
 	break;
       case opt_charptr:
 	(int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
