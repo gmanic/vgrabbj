@@ -188,12 +188,13 @@ void check_files(struct vconfig *vconf) {
   } else {
     fclose(x);
   }
-  
+#ifdef LIBTTF
   if (!(x=fopen(vconf->font, "r"))) {
     v_error(vconf, LOG_CRIT, "Can't open %s as FontFile!", vconf->font);
   } else { 
     fclose(x);
   }
+#endif
 }
 
 
