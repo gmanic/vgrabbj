@@ -1,4 +1,4 @@
-; * Copyright (C) 2000, 2001 Jens Gecius, Larchmont, USA
+; * Copyright (C) 2000, 2001, 2002 Jens Gecius, Larchmont, USA
 ; * eMail: devel@gecius.de
 ; * 
 ; * This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,10 @@
 Brightness 	Off
 ;	Brightness adjustment to be performed by vgrabbj, default Off
 ;	if set to off, image from cam is taken without adjustment
+;	If you set this to On, the input has to be handled as RGB24 and
+;	via normal read(). To enable this, you might need to set ForcePalette
+;	to 4 (for RGB24). Without, it might not work (depends on your cam's
+;	default palette).
 DebugLevel	4
 ;	Valid Debuglevels are between 0 and 7, with 7 babbling all the time,
 ;	0 saying nothing; defaults to 4
@@ -84,6 +88,9 @@ SwitchColor	Off
 ;	14	VIDEO_PALETTE_YUV411P				not supported
 ;	15	VIDEO_PALETTE_YUV420P
 ;	16	VIDEO_PALETTE_YUV410P				not supported
+;
+;	You might need to set this to 4 (RGB24) if the brightness adjustment
+;	does not seem to work.
 OutputFormat	jpg
 ;	Options are jpg, png, or ppm; default: jpg
 OutputFile	/dev/stdout
