@@ -294,7 +294,7 @@ char *timestring(char *format) {
   }
   archive[sizeof(archive)-1]='\0';
   i=strftime(archive, sizeof(archive)-1, format, tm);
-  fprintf(stdout, "ts=%s.%d\n", archive,i);
+  //  fprintf(stdout, "ts=%s.%d\n", archive,i);
   return (strcpy(malloc(++i),archive));
 }
 
