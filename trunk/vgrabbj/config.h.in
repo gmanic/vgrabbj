@@ -18,6 +18,9 @@
 /* Define if you have the <freetype/freetype.h> header file.  */
 #undef HAVE_FREETYPE_FREETYPE_H
 
+/* Define if you have the <freetype1/freetype.h> header file.  */
+#undef HAVE_FREETYPE1_FREETYPE_H
+
 /* Define if you have the <ftplib.h> header file.  */
 #undef HAVE_FTPLIB_H
 

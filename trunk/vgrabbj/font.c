@@ -24,9 +24,9 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_LIBTTF
-
 #include <vgrabbj.h>
+
+#ifdef LIBTTF
 
 #define ERROR -1
 #define DPI 76

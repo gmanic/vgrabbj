@@ -20,6 +20,7 @@
  */  
 
 #include <vgrabbj.h>
+#include <v_plist.h>
 
 int signal_terminate=0;
 
