@@ -43,13 +43,13 @@ Daemonize & loop with \fIseconds\fP intervals (min. 1).
 Daemonize & loop \fImicroseconds\fP intervals (min. 1). Same as \fB\-l\fP
 except you can control it more precisely.
 .TP
-\fBBrightness\fP \fIOn\fP|\fIOff\fP
+\fBAutoBrightness\fP \fIOn\fP|\fIOff\fP
 Defines if vgrabbj's brightness adjustment is used. This option works only
 if the device supports data fetch via read and RGB24 videopalette. See 
 \fBForcePalette\fP on how-to set RGB24. Some device do not support RGB24,
 hence, \fBBrightness\fP is ignored.
 .TP
-\fBQuality\fP \fIquality\fP
+\fBImageQuality\fP \fIquality\fP
 Sets the quality of a jpeg output to \fIquality\fP (1-100, default: 75).
 .TP
 \fBImageSize\fP \fIimagesize\fP
@@ -113,7 +113,11 @@ Switches colormap from BGR to RGB (or vice versa) if set to \fIOn\fP. Default
 is \fIOff\fP. Use if you have odd colors.
 .TP
 \fBSwapRL\fP \fIOn\fP|\fIOff\fP
-Swaps left and right of the image like a mirror.. Default
+Swaps left and right of the image like a mirror. Default: Off.
+is \fIOff\fP.
+.TP
+\fBSwapTB\fP \fIOn\fP|\fIOff\fP
+Swaps top and bottom of the image like a mirror. Default: Off.
 is \fIOff\fP.
 .TP
 \fBNoUseMmap\fP \fIOn\fP|\fIOff\fP
@@ -175,6 +179,23 @@ from videodev.h):
 \fIvalue\fP images are grabbed and immediately discarded. Only the
 last image is written to the output. This might be helpful if your v4l-device
 needs to take a couple of images to auto-adjust to the current light.
+.SH ARCHIVE OPTIONS
+.Sp
+The following options are useful if you want to keep a certain amount
+of images in an archive. Currently, the archive is only supported if kept
+on the same filesystem as the images taken.
+.TP
+\fBArchive\fP <\fIarchive-filename-pattern\fP>
+The \fIarchive-filename-pattern\fP is evaluated as a timestring, hence
+the same applies as to \fBTimeStamp\fP (see below, default: /tmp/arch/cam-%Y-%d-%m-%H-%M-%S.jpg)
+.TP
+\fBArchiveEach\fP <\fIvalue\fP>
+Defines how many images have to be taken before a copy is made for the
+archive. E.g. if defined 1, each image is put in the archive; if defined 5
+every fifth image is put in the archive.
+.TP
+\fBArchiveMax\fP <\fIvalue\fP>
+Sets the maximum number of images to be put in the archive.
 .SH TIMESTAMP OPTIONS
 .Sp
 The following options are available only if vgrabbj was compiled with
@@ -247,7 +268,9 @@ defined by \fBRemoteHost\fP (default: foo.bar.com).
 The name of the user to log on the remote ftp-server (default: foo).
 .TP
 \fBPassword\fP \fIpassword\fP
-The password of the user to log on the remote ftp-server (default: bar).
+The password of the user to log on the remote ftp-server (default: bar). Be
+aware, that the password is kept unencrypted in memory, it might be read by
+others.
 .TP
 \fBKeepAlive\fP \fIOn\fP|\fIOff\fP
 If set to \fIOn\fP, the connection will be kept. This will cause a dial-up
@@ -262,9 +285,30 @@ ftp servers from the inside of a NAT-ed network.
 .TP
 \fBTryHarder\fP \fIOn\fP|\fIOff\fP
 Not implemented, yet.
+.SH HARDWARE SETTINGS
+.Sp
+With the following options you may alter the settings of your hardware (the cam), if
+supported by the cam. Be aware, this might break your hardware, as there are no checks
+if the values supplied are valid, allowed, or supported!
+.TP
+\fB\-W\fP <\fIvalue\fP>
+Whiteness definition.
+.TP
+\fB\-r\fP <\fIvalue\fP>
+Color definition.
+.TP
+\fB\-x\fP <\fIvalue\fP>
+Contrast definition.
+.TP
+\fB\-b\fP <\fIvalue\fP>
+Brightness definition.
+.TP
+\fB\-u\fP <\fIvalue\fP>
+Hue definition.
 .SH BUGS
 .P
-No bugs are known at this time.
+At my own machine running vgrabbj, the %F in a Archive-Filename causes memory corruption.
+This is not validated by any other machine. No further bugs are known at this time.
 .SH SEE ALSO
 \fBvgrabbj\fP(1), \fBstrftime\fP(3), \fBps\fP(1)
 .SH AUTHOR
