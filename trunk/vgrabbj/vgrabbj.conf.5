@@ -179,7 +179,15 @@ needs to take a couple of images to auto-adjust to the current light.
 .Sp
 The following options are available only if vgrabbj was compiled with
 the freetype library available. The timestamp will only be enabled if
-you all values evaluated (inlcuding defaults) lead to a valid configuration.
+all values evaluated (inlcuding defaults) lead to a valid configuration
+and UseTimestamp is set to On.
+.TP
+\fBUseTimestamp\fP \fIOn\fP|\fIOff\fP
+This is the essential setting to enable timestamps
+if defined in the config file. Without this being set
+to On, it just won't work (although, if there are options
+set to have an invalid configuration, it won't work either).
+This is different to the handling on the commandline.
 .TP
 \fBFontFile\fP \fIfilename\fP
 The TrueType font to be used for the timestamp
@@ -220,30 +228,33 @@ to provide a password which would be visible via the \fBps\fP(1) command.
 .TP
 \fBEnableFtp\fP \fIOn\fP|\fIOff\fP
 Ftp-Connection will only be opened if set to \fIOn\fP. Be aware that this
-might bring up a dial-up connection. See \fBKeepAlive\fP.
+might bring up a dial-up connection. See also \fBKeepAlive\fP. (default: Off)
 .TP
 \fBRemoteHost\fP \fIhostname\fP
 Host to which a ftp-connection will be established everytime an image has
 been written (see also: \fBDaemon\fP, \fBDaemonSeconds\fP, \fBKeepAlive\fP,
-no default).
+default: camimage.jpg).
 .TP
-\fBRemoteImage\fP \fIfilename\fP
+\fBRemoteDir\fP \fIpath\fP
+The \fIpath\fP consists of the full path on the remote host defined by
+\fBRemoteHost\fP (default: /).
+.TP
+\fBRemoteImageName\fP \fIfilename\fP
 The \fIfilename\fP consists of the full path and filename on the remote host
-defined by \fBRemoteHost\fP (no default).
+defined by \fBRemoteHost\fP (default: foo.bar.com).
 .TP
 \fBUsername\fP \fIusername\fP
-The name of the user to log on the remote ftp-server (no default).
+The name of the user to log on the remote ftp-server (default: foo).
 .TP
 \fBPassword\fP \fIpassword\fP
-The password of the user to log on the remote ftp-server (no default).
+The password of the user to log on the remote ftp-server (default: bar).
 .TP
 \fBKeepAlive\fP \fIOn\fP|\fIOff\fP
 If set to \fIOn\fP, the connection will be kept. This will cause a dial-up
 line to be up all the time, which in turn may cost a lot of money! If set
 to \fIOff\fP, the connection will be established after an image was written
 to the \fBOutputFile\fP. After transmission, the ftp-connection will be ended.
-This may also result in phone charges, for which Author takes no responsibility.
-See License.
+This may also result in phone charges, for which Author takes no responsibility. See License.
 .TP
 \fBPassive\fP \fIOn\fP|\fIOff\fP
 If set to \fIOn\fP, passive ftp will be used. This can help connecting to

@@ -46,7 +46,7 @@ void ftp_upload(struct vconfig *vconf){
       		FtpOptions(FTPLIB_CONNMODE, FTPLIB_PORT, conn);
 	}
         vconf->ftp.state = STATE_LOGIN;
-        v_error(vconf, LOG_INFO, "ftp state 1: connection successfull");	
+        v_error(vconf, LOG_INFO, "ftp state 1: connection successfull");
       } else {
         v_error(vconf, LOG_WARNING, "ftp state 1: connection failed with reason: %s", FtpLastResponse(conn));
       	return;
@@ -56,10 +56,10 @@ void ftp_upload(struct vconfig *vconf){
     case STATE_LOGIN:
       if(FtpLogin( vconf->ftp.username, vconf->ftp.password, conn)){
         vconf->ftp.state = STATE_CHDIR;
-        v_error(vconf, LOG_INFO, "ftp state 2: login successfull");	        
+        v_error(vconf, LOG_INFO, "ftp state 2: login successfull");
       } else {
         v_error(vconf, LOG_WARNING, "ftp state 2: login failed with reason: %s", FtpLastResponse(conn));
-      	return;      
+      	return;
       }
       ftp_upload(vconf);
       break;
@@ -67,10 +67,10 @@ void ftp_upload(struct vconfig *vconf){
       if (vconf->ftp.remoteDir) {
 	if(FtpChdir(vconf->ftp.remoteDir, conn)){
 	  vconf->ftp.state = STATE_PUT;
-	  v_error(vconf, LOG_INFO, "ftp state 3: chdir successfull");	        
+	  v_error(vconf, LOG_INFO, "ftp state 3: chdir successfull");
 	} else {
 	  v_error(vconf, LOG_WARNING, "ftp state 3: chdir failed with reason: %s", FtpLastResponse(conn));
-	  return;      
+	  return;
 	}
       }
       else {
@@ -82,20 +82,20 @@ void ftp_upload(struct vconfig *vconf){
     case STATE_PUT:
       if(FtpPut(vconf->out, "vgrabbj.tmp", mode, conn)){
         vconf->ftp.state = STATE_RENAME;
-        v_error(vconf, LOG_INFO, "ftp state 4: image upload successfull");	        
+        v_error(vconf, LOG_INFO, "ftp state 4: image upload successfull");
       } else {
         v_error(vconf, LOG_WARNING, "ftp state 4: image upload failed with reason: %s", FtpLastResponse(conn));
-      	return;      
+      	return;
       }
       ftp_upload(vconf);
       break;
     case STATE_RENAME:
       if(FtpRename("vgrabbj.tmp", vconf->ftp.remoteImageName, conn)){
         vconf->ftp.state = STATE_FINISH;
-        v_error(vconf, LOG_INFO, "ftp state 5: rename image successfull");	        
+        v_error(vconf, LOG_INFO, "ftp state 5: rename image successfull");
       } else {
         v_error(vconf, LOG_WARNING, "ftp state 5: rename image failed with reason %s",FtpLastResponse(conn));
-      	return;      
+      	return;
       }
       ftp_upload(vconf);
       break;
@@ -120,8 +120,3 @@ void ftp_upload(struct vconfig *vconf){
 }
 
 #endif
-
-
-
-
-

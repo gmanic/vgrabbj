@@ -1,3 +1,9 @@
+2003-12-31  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Changed pointer-update to be
+			correct in any case. Fixed error
+			in archiving functionality.
+
 2003-10-06  Robert van der Meulen <rvdm@wiretrip.org>
 	* General:	Added support for passive ftp.
  
