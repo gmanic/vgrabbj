@@ -263,7 +263,7 @@ struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int c
   archive=realloc(archive, sizeof(struct s_arch));
   archive->filename=NULL;
   archive->next=NULL;
-  if ( count--<1 )
+  if ( count-->1 )
     archive->next=init_archive(vconf, archive->next, count);
   else
     archive->next=vconf->arch;
@@ -403,7 +403,7 @@ void decode_options(struct vconfig *vconf, char *option, char *value, int o, int
 	*(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i])*1000000;
 	break;
       case opt_bool:
-	*(boolean *)l_opt[i].var=check_minmax(vconf, value, get_bool(value), n, l_opt[i])
+	*(boolean *)l_opt[i].var=check_minmax(vconf, value, n?get_bool(value):!l_opt[i].var, n, l_opt[i])
 	  ? TRUE : FALSE;
 	break;
       case opt_charptr:
@@ -478,7 +478,7 @@ struct vconfig *parse_config(struct vconfig *vconf){
 
     option=strcpy(malloc(strlen(line)+1), line);
 
-    if ( (strlen(option)>0) && (p=strpbrk(option," \t")) ) {
+    if ( (strlen(option)>1) && (p=strpbrk(option," \t")) ) {
       *p='\0';
       p++;
       /* Strip whitespace */
