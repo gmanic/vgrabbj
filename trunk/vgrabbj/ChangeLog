@@ -1,3 +1,13 @@
+2004-03-20  Jens Gecius  <jens@gecius.de>
+
+	* ccvt_c.c:	Fixed bug to convert image from
+			p420 to rgb - big thanks to 
+			Olaf Hartmann! This one fixes the
+			one line offset in the resulting
+			image.
+	* v_config.c:	Fixed wrong -a to correct -P
+			parameter in help-message
+	
 2004-01-03  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.conf.5/vgrabbj.1: 
