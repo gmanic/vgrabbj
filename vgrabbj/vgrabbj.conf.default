@@ -134,6 +134,9 @@ Username	foo
 Password	bar
 ;	Password to log into the remote box (WARNING: cleartext transmission!
 ;	NO protection against sniffers!!!!)
+KeepAlive On
+;	When set to On this option keeps the ftp connection alive
 TryHarder	2
 ;	If the remote box is not as helpful as expected, possible:
 ;	not implemented, yet
+
