@@ -1,0 +1,110 @@
+README
+======
+
+You wanna know the whole story? OK, here it is... For information on the prog,
+(install and so on) just read on...
+
+
+THE STORY
+=========
+
+I Goofed around with my new and nice Philips Vesta Pro (680K) for a week or
+so. Nothing worked. Except camstream 0.16a (yes, the old version... the new
+one gave me compile errors all the time) without snapshots etc.
+[http://www.smcc.demon.nl/camstream/index.html]
+
+Then, I found vgrabber.c, made by Phil Blundell in 1998... It was easy to
+find, if you know what to take... (yes, I was at [www.linux-usb.org] before)
+[http://www.tazenda.demon.co.uk/phil/v4l.html].
+
+Worked fine with ppm's and a script solution around it to convert it to a
+.gif and publish it via [http://gecius.de].
+
+But that's the first problem with vgrabber: it supports .ppm only. And
+because I didn't want to search for a ppm to jpeg tool and .gif ain't no
+right for a webcam I decided to start a project on my own.
+
+Despite all this: 256 colors for a webcam just look nasty :-).
+
+I took a closer look on the w3cam.cgi source and found pretty simple code
+for the jpeg transition. I grabbed this one, too.
+[http://www.hdk-berlin.de/~rasca/w3cam/]
+
+After several segmentation faults (as I already mentione, I'm not a
+programmer!), I finally got it working.
+
+It does -at the moment of writing this- exactly what I want. Grabb an image
+from the cam, convert to jpeg and put it directly into the appropriate
+web-directory.
+
+I plan to implement a bit more. But I won't release these plans because that
+could put some pressure on me. And that's another thing I don't need now...
+
+So, that's the story so far. Here you go for the installation :-).
+
+
+INSTALLATION
+============
+
+Well, this is an easy one. No configure, no nothing except a Makefile.
+
+One little thing about the freetype: if you have a newer implementation,
+please change the include file from freetype.h to freetype/freetype.h
+Thanks to Ari Pollak.
+
+You have exactly one option to compile this thing:
+
+%make
+
+If you want to copy the binary to /usr/local/bin do an additional
+
+%make install
+
+That's it. Just call the prog and get the information about the params.
+
+%vgrabbj -h                // for help
+%vgrabbj -s /dev/video     // for information about the device /dev/video
+
+
+And remember: output is at stdout, so it could mess up your term...
+
+One final note: if the prog starts to mess around, try set DEBUG=1 in the
+Makefile and recompile. Then you get a better idea how far the prog works.
+
+CREDITS
+=======
+
+Thanks to all the people being helpful and patient with this program.
+
+A couple of people I'd like to mention:
+
+First of all, my wife for being patient with me while coding.
+Phil Blundell for the code of vgrabber.c.
+Nemosoft, for the device-driver for the Philips USB Cam.
+All the USB people for the USB code for linux.
+rasca for the vidcat.c and font.c provided in the archive of w3cam.
+      Thanks for the inspiration :-)
+And finally, Philips for the webcam.
+
+I'm not affiliated or anything else with Philips. I just like this cam.
+
+DISCLAIMER
+==========
+
+ * Copyright (C) 2000 Jens Gecius
+ * eMail: vgrabbj@gecius.de
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at you option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public Licence for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+ * USA
