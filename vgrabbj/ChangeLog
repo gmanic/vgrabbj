@@ -1,12 +1,23 @@
-2001-07-12  Jens Gecius  <jens@gecius.de>
+2001-07-14  Jens Gecius  <jens@gecius.de> (0.7.3)
+
+	* vgrabbj.c:	Finally fixed the memory leak while using timestamp.
+			Implemented a SIGTERM handler (very simple).
+			vgrabbj will always finish the current image (if any)
+			and then exit gracefully.
+			Renamed DEBUG to LOGLEVEL and implemented DEBUGGING,
+			which has to be set manually to use mtrace(). Off
+			by default, of course. Usually, you shouldn't worry
+			about this.
+
+2001-07-12  Jens Gecius  <jens@gecius.de> (0.7.2)
 
 	* vgrabbj.c: 	Fixed missing free() for the temp-buffer. This led to
 			the box running out of memory and hence kill vgrabbj
 			(only daemon mode).
 			Fixed interchanged factors in conv_rgb32_rgb24 leading
-			to a seg-fault.
+			to a seg-fault. 
 
-2001-07-09  Jens Gecius  <jens@gecius.de>
+2001-07-09  Jens Gecius  <jens@gecius.de> (0.7.1)
 
 	* vgrabbj.h: 	Changed default debug/log-level to 4.
 
@@ -36,7 +47,7 @@
 			Added video palettes YUYV, YUV420P to the try-palettes.
 			I hope this covers almost all devices out there.
 
-2001-07-08  Jens Gecius  <jens@gecius.de>
+2001-07-08  Jens Gecius  <jens@gecius.de> (0.7.0  -  not very useful, though)
 
 	* vgrabbj.c: 	Added convertion routine from YUV 4-2-0-planar and YUYV
 			to RGB24 to accomodate (hopefully) all V4L devices, 
