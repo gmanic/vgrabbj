@@ -1,0 +1,39 @@
+This is vgrabbj.info, produced by makeinfo version 4.0 from
+vgrabbj.texinfo.
+
+   This file documents the v4l image grabber vgrabbj.
+
+   Copyright 2001 Jens Gecius
+
+   Permission is granted to copy and use under Gnu Public License.
+
+
+File: vgrabbj.info,  Node: Top,  Next: Overview,  Up: (dir)
+
+   This document describes the functionalities of vgrabbj.
+
+   This document applies to version 0.6.1
+
+* Menu:
+
+* Copying::          Your rights and freedoms.
+* Overview::         Overview
+* First Chapter::    Getting started
+* Second Chapter::   Grabbing a single image
+* Third Chapter::    Using daemon mode
+* Fourth Chapter::   Timestamp of the image
+* Fifth Chapter::    Examples
+
+
+File: vgrabbj.info,  Node: First Chapter,  Next: Second Chapter,  Prev: Top,  Up: Top
+
+First Chapter
+*************
+
+
+
+Tag Table:
+Node: Top232
+Node: First Chapter680
+
+End Tag Table

@@ -1,0 +1,178 @@
+2001-03-27	0.6.3
+		* Added parameter -w to disable vgrabbj's setting of the V4L
+		  image size. This is needed for certain cams which do not
+		  allow programs to set it. They have to be set at module load
+		  time. Reported by St0rm and nate - thanks.
+
+2001-03-26	0.6.2
+		* Fixed a bug which may or may not occur due to uninitialized
+		  variables for a system call (VIDIOCSWIN). Now, the current
+		  values are read from the device first and taken for the
+		  SET-call.
+
+2001-02-11	0.6.1
+		* Way too many problems with the new autoconf/make dist.
+		  I really have to work on quality control here...
+		  Sorry folks!
+	
+2001-02-10	0.6.0
+		* More GNU'ification - now using ./ocnfigure to check for
+		  required libs and headers. I hope I didn't forget any.
+		* timestamp now widely configurable. Chose the following
+		  options:
+		  Position (one of upper/lower left/right or center
+		  FontSize (between 1 and 100, but only 8-25 makes sense :-)
+		  Border (how many pixels should be blended besides the text)
+		  Blend (0-100) how much of the original image shall be
+		   viewable under the timestamp
+		* also rewrote the code (more to come) to modularize it more.
+		  right now there's just to much code in main{}...
+
+2001-01-29	0.5.2
+		* Updated Address of Free Software Foundation, Inc., in
+		  several files. No technical changes.
+
+2001-01-06	0.5.1
+		* Unfortunately, the timestamper-code was enable by default
+		  and there was no chance to stop it without changing the 
+		  source. Fixed.
+		  Drawback:
+		  If you want the timestamper enabled, you have to tell
+		  vgrabbj on the command-line!
+
+2000-12-16	0.5.0
+		* And another one: freetype was initialized multiple times,
+		  posing the risk of segmentation fault. fixed. Code should
+		  be pretty clean now (?)
+		* Changed sort of CHANGES (newest now on top)
+
+2000-12-12	0.4.4
+		* Thanks to Zsolt I fount a little bug - Freetype font was
+		  closed even though it even might not have been open.
+
+2000-09-18	0.4.3a
+		* 0.4.2 only a sleep was inserted to accomodate unloaded
+		  modules at that time. This didn't really work, so ensure
+		  all modules are loaded BEFORE you start vgrabbj.
+		* 0.4.3a is a REAL alpha. Be prepared that it may mess up
+		  your machine - up to total frozen state!!
+		  Even though I run this version here on my machine, it
+		  may mess up yours!
+		* changed the handling of startup for timestamp. Now the
+		  Font-Engine is started during commandline evaluation.
+		* Font-Engine is never shut down via TT_Done_Engine - I
+		  only get segmentation faults with that function :-(.
+		  But it doesn't really matter:
+		  If run in daemon mode, you need the engine anyway,
+		  If run standalone, it should be freed when the program
+		  terminates...
+		  This should solve a bug reported with a totally frozen
+		  machine, I hope.
+		* Same applies for "Face_Open" from the included font.c...
+		* Added a lot of simple debug-code. Enable this via Makefile
+		  DEBUG=1 (and recompile)
+
+2000-07-05	0.4.1
+		* added five seconds delay if started as daemon to accomodate
+		  time to load up the driver during boot of the machine.
+		  This is not really needed if vgrabbj is started after the
+		  appropriate driver modules have been loaded or the drivers
+		  are compiled into the kernel. Maybe this fixes another bug
+		  reported (where no picture-output took place at all).
+
+2000-05-22	0.4.1
+		* added ability to size image to sqcif, qsif, qcif, sif, cif,
+		  vga. Still only rgb24
+		* removed wrong syslog-reporting in rare condition when not
+		  running as daemon
+
+		  
+2000-05-02	0.4.0 (finally released 2000-05-11 after 9 days continous run)
+		* Argument check realized, I hope it works but I also KNOW
+		  that not every error in the command line is found.
+		* filenames, numeric options are definetly checked for
+		  existence and sense, respectively; if a value makes no sense
+		  at all (e.g. quality=-1, sleeptime=-1) or a filename/device
+		  is not accessible vgrabbj ends with a rc!=0
+		* realized real daemon mode (fork, child process)
+		* removed option -n (not necessary in daemon mode)
+		  
+2000-04-30	0.3.4
+		* Found a missing fclose()... Hope this solves the problem.
+		  I returned back to the 0.3.1 source.
+
+2000-04-29	0.3.0
+		* Implemented PNG output format.
+		* Added timestamp (try it by just saying "-e" on the
+		  commandline). This is fully configurable to your system
+		  needs (except the timestamp is always in the upper right
+		  of the image). Thanks to rasca for the font.c code and
+		  the example in w3cam
+		* Fixed a bug in errorhandling while opening input device.
+		  It didn't even try to open the input-device again if an
+		  error was encountered...
+		* In loop-mode all err/messages are now directed to syslog.
+		  You'll get a whole bunch of msg if an error is encountered,
+		  but so what...
+		* Increased the usleep time to a quarter second. Gives much
+		  less msg to syslog serves my needs better :-)
+		Still missing: argument check
+
+		0.3.1
+		* Added -b to disable vgrabbj's own attempt to adjust the
+		  brightness of the picture. Thanks to Ari Pollak
+
+		0.3.2
+		* If you encounter a problem regarding freetype and have a
+		  recent lib installed, please change the following:
+		  #include <freetype.h>
+		  to
+		  #include <freetype/freetype.h>
+		  (Thanks to Ari Pollak)
+		* Serious Bug regarding the loop-mode again. Because I changed
+		  the logic vgrabbj had serious problems opening the device
+		  after about 1:30h. I changed the logic back and hope it'll
+		  work. (currently test-run at my machine)
+		  Therefore, not yet released.
+		  
+	    	0.3.3 (released)
+		* Still the same problem - after 1.5h access to /dev/video is
+		  no longer possible.
+		  Now I change the code so /dev/video will be kept open ALL
+		  the time vgrabbj is running. I hope this helps...
+		  I guess it is/was a big logical bug somewhere inside.
+		  /dev/video is open all the time now, this speeds operation
+		  a little bit, but on the other hand no other application
+		  can use /dev/video while vgrabb is running.
+		  The code is a mess right now and I will further investigate
+		  the problem.
+2000-04-26	0.2.0 (first development release)
+		* OK, redesigned the structure of the source to better
+		  accomodate possible failures during loop-running (it
+		  shouldn't just shut down while experiencing some problems).
+		  It's not optimal because it just keeps trying to do the
+		  things - but included a couple of small usleeps()
+		* Added option -s <device>. Get all information about the
+		  video-device
+		* Still missing: errorhandler, syslogger, argumentcheck
+
+2000-04-23	0.0.1
+		First version. Just tested with Philips Vesta Pro Input
+		and output to a predefined jpg file. Never got released...
+		
+		0.1.0
+		Finally, I made some enhancements, based on the vidcat
+		utility. Now you can
+		- change the quality
+		- run a forever loop with optional (sleep) between reads
+		- define an output filename (still only jpg)
+		- define an input video stream
+		- get the help screen
+		Be aware, this is still kind of alpha code because, again,
+		I'm not a programmer...
+		First release.
+		
+		0.1.1
+		Wow, what a memory leak. If used in loop-mode, you loose about
+		(width*height*3) bytes of memory with each image drawn...
+		To clean this, I had to find another memory related bug...
