@@ -64,6 +64,10 @@ void cleanup(struct vconfig *vconf,
 #endif
 	     char *buffer, char *o_buffer) {
 
+  if (vconf->openonce) {
+    close(vconf->dev);
+  }
+
 #ifdef HAVE_LIBTTF
   if ( vconf->use_ts ) {
     Face_Done(ttinit->instance, ttinit->face);
@@ -326,11 +330,11 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
 	  break;
 	case 'W':
-	  if ( sscanf (optarg, "%ld", &is_width) != 1 ) 
+	  if ( sscanf (optarg, "%d", &is_width) != 1 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong individual image width"); // exit
 	  break;
 	case 'H':
-	  if ( sscanf (optarg, "%ld", &is_width) != 1 ) 
+	  if ( sscanf (optarg, "%d", &is_width) != 1 ) 
 	    v_error(vconf, LOG_CRIT, "Wrong individual image height"); // exit
 	  break;
 	case 'f':
@@ -475,7 +479,7 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
   if ( (is_width != 0) && (is_height != 0) ) {
     vconf->win.width=is_width;
     vconf->win.height=is_height;
-    v_error(vconf, LOG_WARN, "Imagesize set to unchecked individual size!");
+    v_error(vconf, LOG_WARNING, "Imagesize set to unchecked individual size!");
   }
 
   v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
@@ -568,7 +572,7 @@ int write_png(struct vconfig *vconf, char *image, FILE *x)
   png_set_bgr (png_ptr);
   png_write_info (png_ptr, info_ptr);
   p = image;
-  t vconf->win.width * 3;
+  t = vconf->win.width * 3;
   for (y = 0; y < t; y++) 
     {
       png_write_row (png_ptr, p);
@@ -798,7 +802,7 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
 
   // Closing Input Device
   
-  if ( !vconf-openonce ) {
+  if ( !vconf->openonce ) {
     while ( close(dev) )
       v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
     
