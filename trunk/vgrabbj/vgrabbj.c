@@ -155,7 +155,7 @@ void usage (char *pname)
 	  " -l <seconds>      Daemonize & sleep <seconds> (min. 1!) between images\n"
 	  " -L <microseconds> Daemonize & sleep <microseconds> between images\n"
 	  " -b                Switch vgrabbj's brightness adjustment (default: off)\n"
-	  " -q <quality>      Quality setting (1-100, default: %d), JPEG only\n"
+	  " -q <quality>      Quality setting (%d-%d, default: %d), JPEG only\n"
 	  " -i <sqcif|qsif|qcif|sif|cif|vga|svga|xga|sxga|uxga>\n"
 	  "                   Sets the imagesize of input device to sqcif=128x96,\n"
 	  "                   qsif=160x120, qcif=176x144, sif=320x240, cif=352x288,\n"
@@ -166,7 +166,7 @@ void usage (char *pname)
 	  "                   Be careful! These settings supersede any other setting of\n"
 	  "                   the imagesize and may damage your hardware!!\n"
 	  "                   The values are NOT checked to be valid!!!!\n"
-	  " -o <jpeg|png>     Output format (default: jpeg)\n"
+	  " -o <jpg|png>      Output format (default: jpg)\n"
 	  " -f <filename>     Write to <filename> (default: %s)\n"
 	  " -d <device>       Read from <device> as input (default: %s)\n"
 	  " -C                Open device permanently instead of opening for each image\n"
@@ -177,21 +177,21 @@ void usage (char *pname)
 #ifdef HAVE_LIBTTF
 	  " -t <font-file>    Full path to the font file\n"
 	  "                   (default: %s)\n"
-	  " -T <font-size>    Font-size (min. 1, max. 100, default: %d)\n"
+	  " -T <font-size>    Font-size (min. %d, max. %d, default: %d)\n"
 	  " -p <format-str>   Definable timestamp format (see man strftime)\n"
 	  "                   (default: \"%s\")\n"
 	  "                   *MUST* be with \" and \" !\n"
 	  " -a <0|1|2|3|4|5>  Alignment of timestamp: 0=upper left, 1=upper right,\n"
 	  "                   2=lower left, 3=lower right, 4=upper center, 5=lower center\n"
 	  "                   you still have to enable the timestamp (default: %d) \n"
-	  " -m <blendvalue>   Blending of timestamp on original image (1-100, default: %d)\n"
-	  "                   1 = most original, 100 = no original image \"behind\" timestamp\n"
+	  " -m <blendvalue>   Blending of timestamp on original image (%d-%d, default: %d)\n"
+	  "                   %d = most original, %d = no original image \"behind\" timestamp\n"
 	  " -B <pixel>        Border of timestamp to be blended around string in pixel\n"
-	  "                   (1-255, default: %d)\n"
+	  "                   (%d-%d, default: %d)\n"
 	  " -e                enable timestamp with defaults (default: disabled)\n"
 	  "                   if any other timestamp option is given, it is enabled\n"
 #endif
-	  " -D <0|2|3|4|6|7>  Set log/debug-level (0=silent, 7=debug, default: %d)\n"
+	  " -D <0|2|3|4|6|7>  Set log/debug-level (%d=silent, %d=debug, default: %d)\n"
 	  " -V                Display version information and exit\n"
 	  " -F <value>        Force usage of specified palette (see videodev.h for values)\n"
 	  "                   (Fallback to supported palette, if this one is not supported\n"
@@ -200,14 +200,15 @@ void usage (char *pname)
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
 	  "\n"
 	  "The video stream has to one of RGB24, RGB32, YUV420, YUV420P or YUYV.\n",
-	  basename(pname), VERSION, basename(pname), 
+	  basename(pname), VERSION, basename(pname), MIN_QUALITY, MAX_QUALITY, 
 	  DEFAULT_QUALITY, DEFAULT_WIDTH, DEFAULT_HEIGHT,
 	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV, 
 #ifdef HAVE_LIBTTF
-	  DEFAULT_FONT, DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP,
-	  DEFAULT_ALIGN, DEFAULT_BLEND, DEFAULT_BORDER, 
+	  DEFAULT_FONT, MIN_FONTSIZE, MAX_FONTSIZE, DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP,
+	  DEFAULT_ALIGN, MIN_BLEND, MAX_BLEND, DEFAULT_BLEND, MIN_BLEND, MAX_BLEND,
+	  MIN_BORDER, MAX_BORDER, DEFAULT_BORDER, 
 #endif
-	  LOGLEVEL, basename(pname));
+	  MIN_DEBUG, MAX_DEBUG, LOGLEVEL, basename(pname));
   exit (1);
 }
 
@@ -553,8 +554,7 @@ int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x)
 int write_png(struct vconfig *vconf, char *image, FILE *x) 
 {
   register int y;
-  register char *p;
-  int t;
+  png_bytep rowpointers[vconf->win.height];
   png_infop info_ptr;
   png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
 						 NULL, NULL, NULL);
@@ -562,22 +562,26 @@ int write_png(struct vconfig *vconf, char *image, FILE *x)
   if (!png_ptr)
     return(1);
   info_ptr = png_create_info_struct (png_ptr);
-  if (!info_ptr)
+  if (!info_ptr) {
+    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     return(1);
-  
+  }
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    /* If we get here, we had a problem reading the file */
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    return (1);
+  }
+
   png_init_io (png_ptr, x);
   png_set_IHDR (png_ptr, info_ptr, vconf->win.width, vconf->win.height,
 		8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-  png_set_bgr (png_ptr);
+		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
   png_write_info (png_ptr, info_ptr);
-  p = image;
-  t = vconf->win.width * 3;
-  for (y = 0; y < t; y++) 
+  for (y = 0; y < vconf->win.height; y++) 
     {
-      png_write_row (png_ptr, p);
-      p += t;
+      rowpointers[y] = image + y*vconf->win.width*3;
     }
+  png_write_image(png_ptr, rowpointers);
   png_write_end (png_ptr, info_ptr);
   png_destroy_write_struct (&png_ptr, &info_ptr);
   return(0);
