@@ -87,7 +87,9 @@ bin_PROGRAMS = vgrabbj
 vgrabbj_SOURCES = vgrabbj.c vgrabbj.h v_config.c v_config.h font.c ccvt_c.c ccvt.h v_ftp.c v_ftp.h v_writer.c v_writer.h v_utils.c v_utils.h v_stamp.c v_stamp.h v_plist.h v_options.h
 
 #sysconf_DATA = vgrabbj.conf.default
-EXTRA_DIST = vgrabbj.conf.default
+EXTRA_DIST = vgrabbj.conf.default $(man_MANS)
+
+man_MANS = vgrabbj.1 vgrabbj.conf.5
 
 DEFAULT_CONFIG_FILE = $(sysconfdir)/vgrabbj.conf
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -110,6 +112,11 @@ CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+man1dir = $(mandir)/man1
+man5dir = $(mandir)/man5
+MANS = $(man_MANS)
+
+NROFF = nroff
 DIST_COMMON =  README ./stamp-h.in AUTHORS COPYING ChangeLog INSTALL \
 Makefile.am Makefile.in NEWS THANKS TODO acconfig.h aclocal.m4 \
 config.guess config.h.in config.sub configure configure.in install-sh \
@@ -215,6 +222,78 @@ maintainer-clean-compile:
 vgrabbj: $(vgrabbj_OBJECTS) $(vgrabbj_DEPENDENCIES)
 	@rm -f vgrabbj
 	$(LINK) $(vgrabbj_LDFLAGS) $(vgrabbj_OBJECTS) $(vgrabbj_LDADD) $(LIBS)
+
+install-man1:
+	$(mkinstalldirs) $(DESTDIR)$(man1dir)
+	@list='$(man1_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.1*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man1dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man1dir)/$$inst; \
+	done
+
+uninstall-man1:
+	@list='$(man1_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.1*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man1dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man1dir)/$$inst; \
+	done
+
+install-man5:
+	$(mkinstalldirs) $(DESTDIR)$(man5dir)
+	@list='$(man5_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.5*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	  else file=$$i; fi; \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man5dir)/$$inst"; \
+	  $(INSTALL_DATA) $$file $(DESTDIR)$(man5dir)/$$inst; \
+	done
+
+uninstall-man5:
+	@list='$(man5_MANS)'; \
+	l2='$(man_MANS)'; for i in $$l2; do \
+	  case "$$i" in \
+	    *.5*) list="$$list $$i" ;; \
+	  esac; \
+	done; \
+	for i in $$list; do \
+	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
+	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
+	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
+	  echo " rm -f $(DESTDIR)$(man5dir)/$$inst"; \
+	  rm -f $(DESTDIR)$(man5dir)/$$inst; \
+	done
+install-man: $(MANS)
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-man1 install-man5
+uninstall-man:
+	@$(NORMAL_UNINSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-man1 uninstall-man5
 
 tags: TAGS
 
@@ -344,20 +423,21 @@ all-recursive-am: config.h
 install-exec-am: install-binPROGRAMS
 install-exec: install-exec-am
 
-install-data-am: install-data-local
+install-data-am: install-man install-data-local
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am: uninstall-binPROGRAMS uninstall-man
 uninstall: uninstall-am
-all-am: Makefile $(PROGRAMS) config.h
+all-am: Makefile $(PROGRAMS) $(MANS) config.h
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(bindir)
+	$(mkinstalldirs)  $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 \
+		$(DESTDIR)$(mandir)/man5
 
 
 mostlyclean-generic:
@@ -401,15 +481,16 @@ maintainer-clean: maintainer-clean-am
 mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
 maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
 mostlyclean-compile distclean-compile clean-compile \
-maintainer-clean-compile tags mostlyclean-tags distclean-tags \
-clean-tags maintainer-clean-tags distdir mostlyclean-depend \
-distclean-depend clean-depend maintainer-clean-depend info-am info \
-dvi-am dvi check check-am installcheck-am installcheck all-recursive-am \
-install-exec-am install-exec install-data-local install-data-am \
-install-data install-am install uninstall-am uninstall all-redirect \
-all-am all installdirs mostlyclean-generic distclean-generic \
-clean-generic maintainer-clean-generic clean mostlyclean distclean \
-maintainer-clean
+maintainer-clean-compile install-man1 uninstall-man1 install-man5 \
+uninstall-man5 install-man uninstall-man tags mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck all-recursive-am install-exec-am \
+install-exec install-data-local install-data-am install-data install-am \
+install uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
 install-data-local: #install-sysconfDATA

@@ -33,6 +33,7 @@ void usage (char *pname)
 	  "%s, Version %s\n"
 	  "Usage: %s [options]\n"
 	  " -h                This screen\n"
+	  " -c <filename>     parse <filename> as config file\n"
 	  " -l <seconds>      Daemonize & sleep <seconds> (min. 1!) between images\n"
 	  " -L <microseconds> Daemonize & sleep <microseconds> between images\n"
 	  " -b                Switch vgrabbj's brightness adjustment (default: off)\n"

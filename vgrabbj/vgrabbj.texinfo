@@ -49,7 +49,8 @@ This document applies to version 0.6.1
 * Second Chapter::   Grabbing a single image
 * Third Chapter::    Using daemon mode
 * Fourth Chapter::   Timestamp of the image
-* Fifth Chapter::    Examples
+* Fifth Chapter::    ftp-upload
+* Sixth Chapter::    Examples
 @end menu
 
 @node    First Chapter, Second Chapter, top,      top

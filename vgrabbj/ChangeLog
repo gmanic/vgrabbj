@@ -1,3 +1,11 @@
+2002-02-24  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed missing explanation of parameter
+			-c on the commandline for the -h
+			commanline parameter.
+
+			Enhanced manual.
+
 2002-02-18  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c: 	Finished rewrite of conf-parser. 
