@@ -64,6 +64,9 @@ ImageSize	cif
 SwitchColor	Off
 ;	If your output has red and green swapped, turn this switch
 ;	it swaps red and green; default: Off
+SwitchRL	Off
+;	If you would like to get a mirrored image (left-right), turn
+;	this switch on; default: Off
 ;DiscardFrames  0
 ;	You can discard x frames before the actual picture is taken
 ;	This might be helpful if your image is over- or underexposed
