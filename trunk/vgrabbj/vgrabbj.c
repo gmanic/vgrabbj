@@ -356,6 +356,9 @@ int main(int argc, char *argv[])
     vconf->buffer=read_image(vconf, img_size(vconf, vconf->vpic.palette));
     vconf->o_buffer = conv_image(vconf);
     
+    if (vconf->swaprl) 
+      vconf->o_buffer=swap_left_right(vconf->o_buffer, vconf->win.width, vconf->win.height);
+
 #ifdef LIBTTF
     if (vconf->use_ts) 
       vconf->o_buffer=inserttext(vconf->ttinit, vconf->o_buffer, vconf);

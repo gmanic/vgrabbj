@@ -189,6 +189,7 @@ struct vconfig {
   boolean use_ts;
   boolean brightness;
   boolean init_done;
+  boolean swaprl;
   int inputnorm;
   int channel;
   int forcepal;
@@ -300,6 +301,7 @@ extern char           *check_maxlen(struct vconfig *vconf, char *value, struct v
 extern FILE           *open_outfile(char *filename);
 extern char           *timestring(char *format);
 extern struct vconfig *parse_config(struct vconfig *vconf);
+extern unsigned char  *swap_left_right(char *buffer, int width, int height);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

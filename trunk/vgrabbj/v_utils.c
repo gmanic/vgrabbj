@@ -115,6 +115,32 @@ unsigned char *conv_rgb32_rgb24(struct vconfig *vconf) {
 }
 
 
+/* Swap Left to Right (like a mirror) */
+
+unsigned char *swap_left_right(char *buffer, int width, int height) 
+{
+  char a, b, c;
+  int i, j;
+  for (j=0;j < height;j++) {
+    for (i=0;i < width/2;i++) {
+      a = buffer[(j*width*3)+(i*3)];
+      b = buffer[(j*width*3)+(i*3)+1];
+      c = buffer[(j*width*3)+(i*3)+2];
+      
+      buffer[(j*width*3)+(i*3)]   = buffer[(j*width*3)+(width-i)*3];
+      buffer[(j*width*3)+(i*3)+1] = buffer[(j*width*3)+(width-i)*3+1];
+      buffer[(j*width*3)+(i*3)+2] = buffer[(j*width*3)+(width-i)*3+2];
+      
+      buffer[(j*width*3)+(width-i)*3]   = a;
+      buffer[(j*width*3)+(width-i)*3+1] = b;
+      buffer[(j*width*3)+(width-i)*3+2] = c;
+    }
+  }
+  return buffer;
+}
+
+
+
 /* Adjustment of brightness of picture  */
 
 int brightness_adj(struct vconfig *vconf, int *brightness) 

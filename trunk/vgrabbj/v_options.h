@@ -63,12 +63,12 @@ static struct v_options l_opt[] = {
   {"RemoteImageName", NULL,none, NULL, opt_charptr, 0,            0,            255},
   {"Username",        NULL,none, NULL, opt_charptr, 0,            0,            255},
   {"Password",        NULL,none, NULL, opt_charptr, 0,            0,            255},
-  {"KeepAlive",       NULL,none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     255},
+  {"KeepAlive",       NULL,none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     0},
   {"TryHarder",       NULL,none, NULL, opt_int,     0,            0,            0  },
   {"RemoteDir",       NULL,none, NULL, opt_charptr, 0,            0,            255},
 #endif
     /* and here's the commandline options which have no conf-file equivalent */
-  {NULL,              "c", req, NULL, opt_conf,    0,            0,            0  },
+  {NULL,              "c", req,  NULL, opt_conf,    0,            0,            0  },
   {NULL,              "V", none, NULL, opt_version, 0,            0,            0  },
   {NULL,              "s", req,  NULL, opt_setting, 0,            0,            255},
   {NULL,              "h", none, NULL, opt_help,    0,            0,            0  },
@@ -77,5 +77,6 @@ static struct v_options l_opt[] = {
   {"Archive",         "A", req,  NULL, opt_charptr, 0,            0,            255},
   {"ArchiveEach",     "E", req,  NULL, opt_int,     MIN_ARCHIVE,  MAX_ARCHIVE,  0  },
   {"ArchiveMax",      "M", req,  NULL, opt_int,     MIN_ARCHIVE,  MAX_ARCHIVE,  0  },
+  {"SwapRL",          "R", none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     0},
   {NULL, NULL, none, NULL, 0, 0, 0, 0}
 };
