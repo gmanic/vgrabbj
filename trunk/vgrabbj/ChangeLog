@@ -1,3 +1,10 @@
+2002-02-09  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c:	Added a parameter to discard frames before
+			the actual picture is taken. Might be
+			necessary, if your cam needs a little time
+			for adjustment of the current brightness.
+
 2002-02-08  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c:	Fixed a #define bug in checkfiles (if you

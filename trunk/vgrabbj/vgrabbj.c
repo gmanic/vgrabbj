@@ -230,6 +230,7 @@ int img_size(struct vconfig *vconf, int palette) {
 unsigned char *read_image(struct vconfig *vconf, int size) {
   int f, newbright;
   int err_count, dev;
+  int discard=vconf->discard;
   struct video_mmap vmap;
   struct video_mbuf vbuf;
   //  struct video_channel vchan;
@@ -291,26 +292,30 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
     }
   } else { // read mmaped
     v_error(vconf, LOG_DEBUG, "Using mmap for image grabbing");
-    vmap.height=vconf->win.height;
-    vmap.width=vconf->win.width;
-    vmap.frame=0;
-    vmap.format=vconf->vpic.palette;
+    do {
+      vmap.height=vconf->win.height;
+      vmap.width=vconf->win.width;
+      vmap.frame=0;
+      vmap.format=vconf->vpic.palette;
 
-    map = mmap(0, vbuf.size, PROT_READ, MAP_SHARED, dev, 0);
-    v_error(vconf, LOG_DEBUG, "Size allocated for framebuffer: %d", vbuf.size);
+      map = mmap(0, vbuf.size, PROT_READ, MAP_SHARED, dev, 0);
+      v_error(vconf, LOG_DEBUG, "Size allocated for framebuffer: %d", vbuf.size);
 
-    if (!map)
-      v_error(vconf, LOG_CRIT, "mmap'ed area not allocated");
+      if (!map)
+	v_error(vconf, LOG_CRIT, "mmap'ed area not allocated");
 
-    while (ioctl(dev,VIDIOCMCAPTURE,&vmap) < 0)
-      v_error(vconf, LOG_ERR, "Could not grab a frame");    // grab a frame
+      while (ioctl(dev,VIDIOCMCAPTURE,&vmap) < 0)
+	v_error(vconf, LOG_ERR, "Could not grab a frame");    // grab a frame
 
-    while (ioctl(dev,VIDIOCSYNC,&vmap.frame) < 0)
-      v_error(vconf, LOG_ERR, "Could not sync with frame");  // sync with frame and wait for result
+      while (ioctl(dev,VIDIOCSYNC,&vmap.frame) < 0)
+	v_error(vconf, LOG_ERR, "Could not sync with frame");  // sync with frame and wait for result
 
-    vconf->buffer=memcpy(vconf->buffer, map, size);
+      vconf->buffer=memcpy(vconf->buffer, map, size);
 
-    munmap(map, vbuf.size);
+      munmap(map, vbuf.size);
+      if (discard) 
+	v_error(vconf, LOG_DEBUG, "%d frames to discard\n", discard);
+    } while (discard--);
   }
   
   v_error(vconf, LOG_DEBUG, "Image successfully read");
