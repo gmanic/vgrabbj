@@ -25,8 +25,18 @@
 #include <config.h>
 #endif
 
-#if defined(HAVE_LIBTTF) && defined(HAVE_FREETYPE_FREETYPE_H)
+#if defined(HAVE_LIBTTF)
+#if defined(HAVE_FREETYPE_FREETYPE_H)
 #define LIBTTF 1
+#define TTF_H_LOC <freetype/freetype.h>
+#else
+#if defined(HAVE_FREETYPE1_FREETYPE_H)
+#define LIBTTF 1
+#define TTF_H_LOC <freetype1/freetype.h>
+#else
+#undef LIBTTF
+#endif
+#endif
 #else
 #undef LIBTTF
 #endif
@@ -76,7 +86,7 @@
 #include <sys/mman.h>
 
 #ifdef LIBTTF
-#include <freetype/freetype.h>
+#include TTF_H_LOC
 #endif
 
 #ifdef LIBFTP
@@ -229,24 +239,3 @@ extern unsigned char *Render_String (TT_Glyph *gl, char *str, int len,
 				     TT_Raster_Map *bit, TT_Raster_Map *sbit,
 				     int border);
 #endif
-
-static struct palette_list plist[] = {
-  { 0, NULL },
-  { VIDEO_PALETTE_GREY,   "GREY", 0, 1 },
-  { VIDEO_PALETTE_HI240,  "HI240", 0, 1 },
-  { VIDEO_PALETTE_RGB565, "RGB565", 0, 1 },
-  { VIDEO_PALETTE_RGB24,  "RGB24", 3, 1 },
-  { VIDEO_PALETTE_RGB32,  "RGB32", 4, 1 },
-  { VIDEO_PALETTE_RGB555, "RGB555", 0, 1 },
-  { VIDEO_PALETTE_YUV422, "YUV422", 2, 1 },
-  { VIDEO_PALETTE_YUYV,   "YUYV", 2, 1 },
-  { VIDEO_PALETTE_UYVY,   "UYVY", 0, 1 },
-  { VIDEO_PALETTE_YUV420, "YUV420", 3, 2 },
-  { VIDEO_PALETTE_YUV411, "YUV411", 0, 1 },
-  { VIDEO_PALETTE_RAW,    "RAW", 0, 1 },
-  { VIDEO_PALETTE_YUV422P,"YUV422P", 0, 1 },
-  { VIDEO_PALETTE_YUV411P,"YUV411P", 0, 1 },
-  { VIDEO_PALETTE_YUV420P,"YUV420P", 3, 2 },
-  { VIDEO_PALETTE_YUV410P,"YUV410P", 0, 1 },
-  { -1, NULL }
-};

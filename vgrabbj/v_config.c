@@ -24,6 +24,7 @@
 
 
 #include "vgrabbj.h"
+#include "v_plist.h"
 
 extern int signal_terminate;
 
