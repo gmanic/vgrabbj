@@ -199,6 +199,16 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	else
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %d", option, vconf->outformat);
       }
+      else if ( !strcasecmp(option, "OpenOnce") ) {
+	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else if (tmp==1)
+	  vconf->openonce=TRUE;
+	else
+	  vconf->openonce=FALSE;
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
       else if ( !strcasecmp(option, "Brightness") ) {
 	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
@@ -286,7 +296,6 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_CRIT, "Can't not open %s as %s (line %d, %s)",
 		  value, option, n, path);
 	else {
-	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
 	}
       }
@@ -295,7 +304,6 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
-	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
 	}
       }
@@ -305,7 +313,6 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
-	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
 	}
       }
@@ -315,7 +322,6 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
-	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
 	}
       }
@@ -324,7 +330,6 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
-	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
 	}
       }
@@ -334,7 +339,6 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, path);
 	else {
-	  vconf->use_ts=TRUE;
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
 	}
       }

@@ -4,11 +4,17 @@
 			data in vconf and possible segfaults
 			Added xga, sxga, uxga as valid options for
 			image size on command line
-			Added ftp-code from Robert Wessels
+			Added ftp-code from Robert Wessels; be careful
+			I have NOT tested this new part of vgrabbj!!
 			Added individual imagesize (-W and -H on 
 			commandline); be careful! These values are not
 			checked for valid values! You may damage your
 			hardware with wrong values (and a poor driver)
+			Added openonce to avoid vgrabbj opens and closes
+			the videodevice everytime an image is acquired;
+			this renders the videodevice unuseable for other
+			applications while vgrabbj sits idling in daemon
+			mode. It also does not affect non-daemon mode.
 
 	* v_config.c:   Added xga, sxga, uxga as valid options for
 			image size in config file
