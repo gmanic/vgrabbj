@@ -163,7 +163,7 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
   fclose(x);
   if ( vconf->tmpout ) {
     v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
-    execl("/bin/cp","-f",vconf->tmpout,vconf->out,NULL);
+    system(vconf->cpyline);
     v_error(vconf, LOG_DEBUG, "Temporary output %s copied to final destination %s", vconf->tmpout, vconf->out);
   } else {
     v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
