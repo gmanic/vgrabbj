@@ -1,0 +1,202 @@
+README
+======
+
+You wanna know the whole story? OK, here it is... For information on the prog,
+(install and so on) just read on...
+
+
+THE STORY
+=========
+
+I goofed around with my new and nice Philips Vesta Pro (680K) for a week or
+so. Nothing worked. Except camstream 0.16a (yes, the old version... the new
+one gave me compile errors all the time) without snapshots etc.
+[http://www.smcc.demon.nl/camstream/index.html]
+
+Then, I found vgrabber.c, made by Phil Blundell in 1998... It was easy to
+find, if you know what to take... (yes, I was at [www.linux-usb.org] before)
+[http://www.tazenda.demon.co.uk/phil/v4l.html].
+
+Worked fine with ppm's and a script solution around it to convert it to a
+.gif and publish it via [http://gecius.de].
+
+But that's the first problem with vgrabber: it supports .ppm only. And
+because I didn't want to search for a ppm to jpeg tool and .gif ain't no
+right for a webcam I decided to start a project on my own.
+
+Despite all this: 256 colors for a webcam looks just nasty :-).
+
+I took a closer look on the w3cam.cgi source and found pretty simple code
+for the jpeg transition. I grabbed this one, too.
+[http://www.hdk-berlin.de/~rasca/w3cam/]
+
+After several segmentation faults (as I already mentione, I'm not a
+programmer!), I finally got it working.
+
+It does -at the moment of writing this- exactly what I want. Grabb an image
+from the cam, convert to jpeg and put it directly into the appropriate
+web-directory. Well, not true anymore. It does a lot I don't need (e.g. ftp,
+hopefully). But still, I have fun doing this and will continue.
+
+So, that's the story so far. Here you go for the installation :-).
+
+
+INSTALLATION
+============
+
+Well, this is should be a no-brainer.
+
+%./configure
+
+This will find out if you have all required libs etc. In case you don't
+have the freetype lib, it'll just disable the timestamp functionallity.
+
+Options are ftp and timestamp. They are enabled by default. If you wish
+to disable them, add --disable-<option> to the above commandline.
+
+Of course, there are more options to configure, read the INSTALL file.
+
+%make
+
+If you want to install under /usr/local do an additional
+
+%make install
+
+That's it. Just call the prog and get the information about the params.
+
+%vgrabbj -h                // for help
+%vgrabbj -s /dev/video     // for information about the device /dev/video
+
+If you need some more specific installation, refer to ./configure --help
+and the usual places.
+
+A couple notes on the...
+
+
+USAGE
+=====
+
+During startup, the config file is parsed and checked, then every
+commandline-option is checked. If any one of them fails (e.g. font-file
+not available), vgrabbj exits immediately, not taking any picture! 
+
+vgrabbj defaults to certain values, you can find them in the usage
+screen which you get by the command vgrabbj -h. Or you gather them by
+taking a look in the file vgrabbj.h.
+
+Especially the output defaults to <stdout>! If you call vgrabbj without
+piping the output to a file or using the commandline-option, it WILL 
+mess up your terminal. To get it back in a useful state, start any
+program using ncurses (e.g. mc). After you exit that it'll look like
+you want it.
+
+If you don't like the defaults, there's a commandline option for almost
+everything, see `vgrabbj -h` or the vgrabbj.conf for details.
+
+The only thing only to be defined in vgrabbj.conf is the ftp-section.
+Due to `ps a` every user can see the commandlines of every program
+running on that box, if the user is not restricted from ps (usually not).
+This means any password for ftp would be visible, if supplied on the
+commandline. Hence, no ftp-commandline option. Define it in vgrabbj.conf.
+
+If you suspect vgrabbj's constant open/close of the video-device messes
+the device driver (hey, not my fault!), try the OpenOnce setting. This
+will change vgrabbj's behaviour that it will open the videodevice once
+and keep it open. Yes, that also means you can't use the videodevice
+with any other program while vgrabbj idles in daemon mode during two
+shots.
+
+In case your cam can do some wired imagesize and you want to use it, the
+new options -W -H (or their equivalent in vgrabbj.conf) may be helpful.
+BUT: the values you supply to vgrabbj are not validated! That means, if
+Murphy calls on you, you'll damage your hardware (again, blame the author
+of the driver, they shouldn't allow something like this ;-). Mails with
+"my cam broke thanks to your prog" will not be answered. Get a new one
+and try again (of course, after you re-read and again re-read this
+paragraph).
+
+If you get odd colors (e.g. blue and red switched), that means you have
+to use the -S switch the red and blue colors.
+
+In case you use a IBM USB Cam, or any other cam which doesn't let you
+set the resolution of the image after you load the driver, please make
+sure you have the desired resolution set up at driver load time and
+start vgrabbj with the parameter -w. This prevents vgrabbj to set the
+image size.
+
+vgrabbj takes a lot palettes, but certainly not everyone. The following
+palettes are supported:
+
+RGB24, RGB32, YUYV (which equals YUV422), YUV420, and YUY420P.
+
+Remember, if you use the timestamp-string on the command line, ALWAYS
+quote it with "! Otherwise, the options may get messed up. If you don't
+know anything about how to put together a timestamp-string, take a look
+at man strftime. All options are described in detail.
+
+In daemon mode, it is NOT useful to use -D 7 (log _every_ little step),
+because it would really fill your syslog *fast*! Use the default or even
+less, if you run "production" (hey, this is still beta software, did you
+know?)
+
+In case something goes wrong in daemon mode (e.g. video-device not
+accessible), vgrabbj will retry for a while (approx. 1h). This is to
+accomodate other applications you might run while vgrabbj tries to get
+an image. After that time, it'll exit! In case e.g. the font-file gets
+lost, vgrabbj will mention this in the logfile, but continue just
+without the timestamp. As soon as you reinstate the font-file, it'll
+work as desired :-).
+
+vgrabbj reacts to a `kill <pid>` that it finishes the current image, if
+any, cleans up, and exits. If it takes a moment, this may be because it
+is sleeping (in daemon mode).
+
+If you need any further instructions, please re-read this README, see
+the vgrabbj-helpscreen and doublecheck your commandline and vgrabbj.conf.
+If everything fails, let me know. You'll find the email address somewhere
+in this archive :-). Don't forget to send me any helpful output (e.g. -D 7
+debug information, example image, make and configure output etc.).
+
+Oh, and doublecheck vgrabbj.conf again. Everything is documented in there.
+
+CREDITS
+=======
+
+Thanks to all the people being helpful and patient with this program.
+
+A couple of people I'd like to mention:
+
+First of all, my wife for being patient with me while coding.
+Phil Blundell	for the code of vgrabber.c.
+Nemosoft	for the device-driver for the Philips USB Cam and the
+          	conversion routines for different palettes.
+Robert Wessels	for some good ideas and code - especially ftp
+All USB people	for the USB code for linux.
+rasca		for the vidcat.c and font.c provided in the archive of
+		w3cam. Thanks for the inspiration :-)
+Michael Janssen for packaging vgrabbj for debian - my favorite!
+
+And finally, Philips for the webcam - even though I had to pay for it :-)
+
+I'm not affiliated or anything else with Philips. I just like this cam.
+
+DISCLAIMER
+==========
+
+ * Copyright (C) 2000, 2001, 2002 Jens Gecius
+ * eMail: devel@gecius.de
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at you option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public Licence for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+ * USA

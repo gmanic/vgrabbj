@@ -1,0 +1,68 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
+
+/* Define if you have the strftime function.  */
+#undef HAVE_STRFTIME
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if your <sys/time.h> declares struct tm.  */
+#undef TM_IN_SYS_TIME
+
+/* Define where the config file is */
+#undef SYSCONF_DIR
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <freetype/freetype.h> header file.  */
+#undef HAVE_FREETYPE_FREETYPE_H
+
+/* Define if you have the <freetype1/freetype.h> header file.  */
+#undef HAVE_FREETYPE1_FREETYPE_H
+
+/* Define if you have the <ftplib.h> header file.  */
+#undef HAVE_FTPLIB_H
+
+/* Define if you have the <jpeglib.h> header file.  */
+#undef HAVE_JPEGLIB_H
+
+/* Define if you have the <linux/videodev.h> header file.  */
+#undef HAVE_LINUX_VIDEODEV_H
+
+/* Define if you have the <png.h> header file.  */
+#undef HAVE_PNG_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define if you have the <syslog.h> header file.  */
+#undef HAVE_SYSLOG_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the ftp library (-lftp).  */
+#undef HAVE_LIBFTP
+
+/* Define if you have the jpeg library (-ljpeg).  */
+#undef HAVE_LIBJPEG
+
+/* Define if you have the m library (-lm).  */
+#undef HAVE_LIBM
+
+/* Define if you have the png library (-lpng).  */
+#undef HAVE_LIBPNG
+
+/* Define if you have the ttf library (-lttf).  */
+#undef HAVE_LIBTTF
+
+/* Define if you have the z library (-lz).  */
+#undef HAVE_LIBZ
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+
