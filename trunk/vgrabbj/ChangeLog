@@ -1,3 +1,9 @@
+2002-03-27  Jens Gecius  <jens@gecius.de>
+
+	* General: 	Update manuals, uploaded man's to
+			cvs, increased version no. to 0.8.9,
+			release.
+
 2002-03-26  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c:	Added Archive option to create an
