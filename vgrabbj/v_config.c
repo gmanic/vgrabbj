@@ -916,6 +916,7 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
   
 #ifdef LIBTTF
   if ( reinit==1 ) {
+    if ( vconf->use_ts ) TT_Done_FreeType(vconf->ttinit->engine);
     free(vconf->ttinit->properties);
     free(vconf->ttinit);
   }
