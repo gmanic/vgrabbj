@@ -119,6 +119,35 @@ void debug_vconf(struct vconfig *vconf) {
 }  
 #endif
 
+struct v_options *init_conf_list(struct v_options *conf)
+{
+  struct v_options *list;
+  struct v_options *list_start;
+  int i;
+
+  list=malloc(sizeof(list));
+  list_start=list;
+  for (i=0; l_opt[i].name||l_opt[i].shortname; i++) {
+    list.name=l_opt[i].name;
+    list.short_name=l_opt[i].short_name;
+    list.has_arg=l_opt[i].has_arg;
+    list.var=decode_options(struct vconfig *vconf, char *option, char *value, int o, int n)
+    //decode default options!!!    list.var=l_opt[i].default;
+    list.var_type=l_opt[i].var_type;
+    list.min_value=l_opt[i].min_value;
+    list.max_value=l_opt[i].max_value;
+    list.max_length=l_opt[i].max_length;
+    list.default=l_opt[i].default;
+    list.next=malloc(sizeof(list));
+    list=list.next;
+  }
+  free(list.next);
+  list.next=list_start;
+
+  return (list_start);
+}
+
+
 struct vconfig *init_defaults(struct vconfig *vconf) {
   /* Set defaults */
   vconf->debug      = LOGLEVEL;
