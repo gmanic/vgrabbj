@@ -1,5 +1,12 @@
+2000-11-12	* NTSC/PAL/SECAM and channel selector for various
+		  tv-cards
+		* man-page (sigh)
+
 2000-05-22	* First To Do List. (obviously done)
 		* ability to select colormode (currently only rgb)
+		  (done)
 		* COMPLETE argument/device check BEFORE forking
+		  (mostly - need anything? Otherwise I consider this
+		  done)
 		* did I forget anything?
-		
+		  (no) :-)

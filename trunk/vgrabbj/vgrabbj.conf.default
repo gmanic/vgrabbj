@@ -56,9 +56,12 @@ SwitchColor	Off
 ;	16	VIDEO_PALETTE_YUV410P				not supported
 OutputFormat	jpg
 ;	Options are jpg or png
-OutputFile	/share/t.jpg
+OutputFile	/dev/stdout
 ;	Where to write the grabbed image. This file must be read/writeable by
-;	the user running vgrabbj
+;	the user running vgrabbj; default: /dev/stdout
+;	If you don't pipe the output someplace else, this WILL mess up you
+;	current console/terminal! Set it to something useful, especially for
+;	daemon mode
 VideoDevice	/dev/video
 ;	Where to get the data from. This device must be read/writeable by the
 ;	user running vgrabbj

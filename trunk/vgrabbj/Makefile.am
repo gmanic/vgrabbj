@@ -18,7 +18,7 @@
 # USA  
 
 bin_PROGRAMS = vgrabbj
-vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c ftplib.c
+vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c ftplib.c ftplib.h
 
 #sysconf_DATA = vgrabbj.conf.default
 EXTRA_DIST = vgrabbj.conf.default
@@ -29,6 +29,9 @@ install-data-local: #install-sysconfDATA
 	@if test -f $(DESTDIR)$(sysconfdir)/vgrabbj.conf ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/vgrabbj.conf" ; \
 	else \
+		if ! test -d $(DESTDIR)$(sysconfdir); then \
+		    mkdir $(DESTDIR)$(sysconfdir); \
+		fi; \
 	        echo "$(INSTALL_DATA) $(srcdir)/vgrabbj.conf.default $(DESTDIR)$(sysconfdir)/vgrabbj.conf" ;\
 	        $(INSTALL_DATA) $(srcdir)/vgrabbj.conf.default $(DESTDIR)$(sysconfdir)/vgrabbj.conf; \
 	fi

@@ -24,7 +24,7 @@ But that's the first problem with vgrabber: it supports .ppm only. And
 because I didn't want to search for a ppm to jpeg tool and .gif ain't no
 right for a webcam I decided to start a project on my own.
 
-Despite all this: 256 colors for a webcam just look nasty :-).
+Despite all this: 256 colors for a webcam looks just nasty :-).
 
 I took a closer look on the w3cam.cgi source and found pretty simple code
 for the jpeg transition. I grabbed this one, too.
@@ -35,10 +35,8 @@ programmer!), I finally got it working.
 
 It does -at the moment of writing this- exactly what I want. Grabb an image
 from the cam, convert to jpeg and put it directly into the appropriate
-web-directory.
-
-I plan to implement a bit more. But I won't release these plans because that
-could put some pressure on me. And that's another thing I don't need now...
+web-directory. Well, not true anymore. It does a lot I don't need (e.g. ftp,
+hopefully). But still, I have fun doing this and will continue.
 
 So, that's the story so far. Here you go for the installation :-).
 
@@ -57,7 +55,7 @@ Of course, there are more options to configure, read the INSTALL file.
 
 %make
 
-If you want to copy the binary to /usr/local/bin do an additional
+If you want to install under /usr/local do an additional
 
 %make install
 
@@ -66,15 +64,18 @@ That's it. Just call the prog and get the information about the params.
 %vgrabbj -h                // for help
 %vgrabbj -s /dev/video     // for information about the device /dev/video
 
+If you need some more specific installation, refer to ./configure --help
+and the usual places.
+
 A couple notes on the...
 
 
 USAGE
 =====
 
-During startup every commandline-option is checked. If any one of them
-fails (e.g. font-file not available), vgrabbj exits immediately, not
-taking any picture! 
+During startup, the config file is parsed and checked, then every
+commandline-option is checked. If any one of them fails (e.g. font-file
+not available), vgrabbj exits immediately, not taking any picture! 
 
 vgrabbj defaults to certain values, you can find them in the usage
 screen which you get by the command vgrabbj -h. Or you gather them by
@@ -87,7 +88,29 @@ program using ncurses (e.g. mc). After you exit that it'll look like
 you want it.
 
 If you don't like the defaults, there's a commandline option for almost
-everything, see vgrabbj -h for details.
+everything, see `vgrabbj -h` or the vgrabbj.conf for details.
+
+The only thing only to be defined in vgrabbj.conf is the ftp-section.
+Due to `ps a` every user can see the commandlines of every program
+running on that box, if the user is not restricted from ps (usually not).
+This means any password for ftp would be visible, if supplied on the
+commandline. Hence, no ftp-commandline option. Define it in vgrabbj.conf.
+
+If you suspect vgrabbj's constant open/close of the video-device messes
+the device driver (hey, not my fault!), try the OpenOnce setting. This
+will change vgrabbj's behaviour that it will open the videodevice once
+and keep it open. Yes, that also means you can't use the videodevice
+with any other program while vgrabbj idles in daemon mode during two
+shots.
+
+In case your cam can do some wired imagesize and you want to use it, the
+new options -W -H (or their equivalent in vgrabbj.conf) may be helpful.
+BUT: the values you supply to vgrabbj are not validated! That means, if
+Murphy calls on you, you'll damage your hardware (again, blame the author
+of the driver, they shouldn't allow something like this ;-). Mails with
+"my cam broke thanks to your prog" will not be answered. Get a new one
+and try again (of course, after you re-read and again re-read this
+paragraph).
 
 If you get odd colors (e.g. blue and red switched), that means you have
 to use the -S switch the red and blue colors.
@@ -109,8 +132,9 @@ know anything about how to put together a timestamp-string, take a look
 at man strftime. All options are described in detail.
 
 In daemon mode, it is NOT useful to use -D 7 (log _every_ little step),
-because it would really fill you syslog *fast*! Use the default or even
-less.
+because it would really fill your syslog *fast*! Use the default or even
+less, if you run "production" (hey, this is still beta software, did you
+know?)
 
 In case something goes wrong in daemon mode (e.g. video-device not
 accessible), vgrabbj will retry for a while (approx. 1h). This is to
@@ -125,9 +149,10 @@ any, cleans up, and exits. If it takes a moment, this may be because it
 is sleeping (in daemon mode).
 
 If you need any further instructions, please re-read this README, see
-the vgrabbj-helpscreen and doublecheck your commandline. If everything
-fails, let me know. You'll find the email address somewhere in this
-archive :-).
+the vgrabbj-helpscreen and doublecheck your commandline and vgrabbj.conf.
+If everything fails, let me know. You'll find the email address somewhere
+in this archive :-). Don't forget to send me any helpful output (e.g. -D 7
+debug information, example image, make and configure output etc.).
 
 CREDITS
 =======
@@ -140,7 +165,7 @@ First of all, my wife for being patient with me while coding.
 Phil Blundell	for the code of vgrabber.c.
 Nemosoft	for the device-driver for the Philips USB Cam and the
           	conversion routines for different palettes.
-Robert Wessels	for some good ideas and code.
+Robert Wessels	for some good ideas and code - especially ftp
 All USB people	for the USB code for linux.
 rasca		for the vidcat.c and font.c provided in the archive of
 		w3cam. Thanks for the inspiration :-)
@@ -153,7 +178,7 @@ DISCLAIMER
 ==========
 
  * Copyright (C) 2000, 2001 Jens Gecius
- * eMail: vgrabbj@gecius.de
+ * eMail: devel@gecius.de
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
