@@ -126,7 +126,7 @@ struct vconfig {
   int align;
   int border;
   int blend;
-  boolean copy;
+  boolean openonce;
 #endif
   struct video_window win;
   struct video_picture vpic;
@@ -139,7 +139,7 @@ struct vconfig {
     char *remoteImageName;
     char *username;
     char *password;
-    unsigned int loggedin;
+    unsigned int state;
     unsigned int tryharder;
   }ftp;
 };
@@ -166,7 +166,7 @@ struct palette_list {
 extern char *basename (const char *);
 
 extern struct vconfig *parse_config(struct vconfig *vconf, char *path); 
-
+extern void ftp_upload(struct vconfig *vconf);
 #ifdef HAVE_LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
 extern int       Face_Open   (char *file, TT_Engine engine, TT_Face *face,
@@ -185,3 +185,6 @@ extern unsigned char *Render_String (TT_Glyph *gl, char *str, int len,
 				     int border);
 
 #endif
+
+
+

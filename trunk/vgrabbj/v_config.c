@@ -42,9 +42,9 @@ char *get_str(char *value) {
 }
 
 int get_bool(char *value) {
-  if ( !(strcasecmp(value, "On")) )
+  if ( !(strcasecmp(value, "oN")) || !(strcasecmp(value, "Yes")))
     return 1;
-  else if ( !(strcasecmp(value, "Off")) )
+  else if ( !(strcasecmp(value, "Off")) || !(strcasecmp(value, "No")) )
     return 0;
   return -1;
 }
@@ -93,7 +93,15 @@ int decode_size(char *value) {
     tmp=22;
   else if ( !(strcasecmp(value, "vga")) )
     tmp=40;
-  else
+  else if ( !(strcasecmp(value, "svga")) )
+    tmp=50;
+  else if ( !(strcasecmp(value, "xga")) )
+    tmp=64;
+  else if ( !(strcasecmp(value, "sxga")) )
+    tmp=80;
+  else if ( !(strcasecmp(value, "uxga")) )
+    tmp=100;
+ else
     tmp=0;
   return tmp;
 }
@@ -107,6 +115,8 @@ int get_height(char *value) {
     return 144;
   else if ( decode_size(value) == 22 )
     return 288;
+  else if ( decode_size(value) == 80 )
+    return 1024;
   return (12 * decode_size(value));
 }
 
@@ -236,6 +246,20 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	  vconf->use_ts=FALSE;
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
+      else if ( !strcasecmp(option, "ImageWidth") ) {
+	if ( is_width=get_int((value=strtok(NULL, " \t\n"))) ) 
+	  v_error(vconf, LOG_CRIT, "Wrong value '%s' for %s (line %d, %s)",
+		  value, option, n, path);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+      else if ( !strcasecmp(option, "ImageHeight") ) {
+	if ( is_height=get_int((value=strtok(NULL, " \t\n"))) )
+	  v_error(vconf, LOG_CRIT, "Wrong value '%s' for %s (line %d, %s)",
+		  value, option, n, path);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
       else if ( !strcasecmp(option, "DebugLevel") ) {
 	if ( (MIN_DEBUG > (vconf->debug=get_int((value=strtok(NULL, " \t\n"))))) ||
 	     (vconf->debug > MAX_DEBUG))
@@ -311,10 +335,82 @@ struct vconfig *parse_config(struct vconfig *vconf, char *path){
 	}
       }
 #endif
+/* ftp */      
+      else if ( !strcasecmp(option, "EnableFtp") ) {
+	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else if (tmp==1)
+	  vconf->ftp.enable=TRUE;
+	else
+	  vconf->ftp.enable=FALSE;
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+      else if ( !strcasecmp(option, "KeepAlive") ) {
+	if ( (tmp=get_bool((value=strtok(NULL, " \t\n")))) < 0 )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else if (tmp==1)
+	  vconf->ftp.keepalive=TRUE;
+	else
+	  vconf->ftp.keepalive=FALSE;
+	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+      else if ( !strcasecmp(option, "RemoteHost") ) {
+	if ( !(vconf->ftp.remoteHost=get_str((value=strtok(NULL, "\"\t\n")))) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+      else if ( !strcasecmp(option, "Username") ) {
+	if ( !(vconf->ftp.username=get_str((value=strtok(NULL, "\"\t\n")))) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+      else if ( !strcasecmp(option, "Password") ) {
+	if ( !(vconf->ftp.password=get_str((value=strtok(NULL, "\"\t\n")))) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else 
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }      
+      else if ( !strcasecmp(option, "RemoteDir") ) {
+	if ( !(vconf->ftp.remoteDir=get_str((value=strtok(NULL, "\"\t\n")))) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }      
+      else if ( !strcasecmp(option, "RemoteImageName") ) {
+	if ( !(vconf->ftp.remoteImageName=get_str((value=strtok(NULL, "\"\t\n")))) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, path);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }      
+/* end ftp */
     }
     else
       v_error(vconf, LOG_CRIT, "Unknown Option %s (value %s, line %d, %s)", option, value, n, path);
   }
   fclose(fd);
+
+  if ( (is_width!=0) && (is_height!=0) ) {
+    vconf->win.width = width;
+    vconf->win.height = height;
+    v_error(vconf, LOG_WARN, "Imagesize set to unchecked individual size!\n");
+  }
+
   return(vconf);
 }
+
+
+
+
+
+
+
+

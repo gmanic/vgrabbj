@@ -152,13 +152,20 @@ void usage (char *pname)
 	  " -L <microseconds> Daemonize & sleep <microseconds> between images\n"
 	  " -b                Switch vgrabbj's brightness adjustment (default: off)\n"
 	  " -q <quality>      Quality setting (1-100, default: %d), JPEG only\n"
-	  " -i <sqcif|qsif|qcif|sif|cif|vga>\n"
+	  " -i <sqcif|qsif|qcif|sif|cif|vga|svga|xga|sxga|uxga>\n"
 	  "                   Sets the imagesize of input device to sqcif=128x96,\n"
-	  "                   qsif=160x120, qcif=176x144, sif=320x240, cif=352x288, or\n"
-	  "                   vga=640x480 (default: %dx%d)\n"
+	  "                   qsif=160x120, qcif=176x144, sif=320x240, cif=352x288,\n"
+	  "                   vga=640x480, svga=800x600, xga=1024x768, sxga=1280x1024, or\n"
+	  "                   uxga=1600x1200 (default: %dx%d)\n"
+	  " -W                Set imagesize to individual width (needs -H)\n"
+	  " -H                Set imagesize to individual height (needs -W)\n"
+	  "                   Be careful! These settings supersede any other setting of\n"
+	  "                   the imagesize and may damage your hardware!!\n"
+	  "                   The values are NOT checked to be valid!!!!\n"
 	  " -o <jpeg|png>     Output format (default: jpeg)\n"
 	  " -f <filename>     Write to <filename> (default: %s)\n"
 	  " -d <device>       Read from <device> as input (default: %s)\n"
+	  " -C                Open device permanently instead of opening for each image\n"
 	  " -w                Disable setting of image-size, necessary for certain cams\n"
 	  "                   (e.g. IBM USB-Cam, QuickCam)\n"
 	  " -s <device>       See capabilities of <device>\n"
@@ -276,6 +283,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->err_count  = 0;
   vconf->dev        = 0;
   vconf->forcepal   = 0;
+  vconf->openonce   = FALSE;
 #ifdef HAVE_LIBTTF
   vconf->font       = DEFAULT_FONT;
   vconf->timestamp  = DEFAULT_TIMESTAMP;
@@ -284,6 +292,8 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->align      = DEFAULT_ALIGN;
   vconf->blend      = DEFAULT_BLEND;
 #endif
+  vconf->ftp.enable = FALSE;
+  vconf->ftp.state  = 0;
   return vconf;
 }  
 
@@ -292,13 +302,19 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
   int n;
   FILE *x;
   int dev;
+  int is_width=0;
+  int is_height=0;
 
-  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:F:"))!=EOF) 
+  while ((n = getopt (argc, argv, "c:L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:F:CW:H:"))!=EOF) 
     {
       switch (n) 
 	{
 	case 'c':
 	  vconf=parse_config(vconf, optarg);
+	  break;
+	case 'C':
+	  vconf->openonce=TRUE;
+	  v_error(vconf, LOG_DEBUG, "Videodevice set to be permanently open");
 	  break;
 	case 'l':
 	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < MIN_LOOP ) ) 
@@ -308,6 +324,14 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	case 'L':
 	  if ( sscanf (optarg, "%ld", &vconf->loop) != 1 || ( vconf->loop < MIN_LOOP ) ) 
 	    v_error(vconf, LOG_CRIT, "Wrong sleeptime"); // exit
+	  break;
+	case 'W':
+	  if ( sscanf (optarg, "%ld", &is_width) != 1 ) 
+	    v_error(vconf, LOG_CRIT, "Wrong individual image width"); // exit
+	  break;
+	case 'H':
+	  if ( sscanf (optarg, "%ld", &is_width) != 1 ) 
+	    v_error(vconf, LOG_CRIT, "Wrong individual image height"); // exit
 	  break;
 	case 'f':
 	  if ( !(x=fopen((vconf->out=optarg), "w+") ) )
@@ -348,6 +372,18 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  } else if ( !strcasecmp(optarg,"vga") ) {
 	    vconf->win.width  = 640;
 	    vconf->win.height = 480;
+	  } else if ( !strcasecmp(optarg,"svga") ) {
+	    vconf->win.width  = 600;
+	    vconf->win.height = 800;
+	  } else if ( !strcasecmp(optarg,"xga") ) {
+	    vconf->win.width  = 1024;
+	    vconf->win.height = 768;
+	  } else if ( !strcasecmp(optarg,"sxga") ) {
+	    vconf->win.width  = 1280;
+	    vconf->win.height = 1024;
+	  } else if ( !strcasecmp(optarg,"uxga") ) {
+	    vconf->win.width  = 1600;
+	    vconf->win.height = 1200;
 	  } else
 	    v_error(vconf, LOG_CRIT, "Wrong imagesize specified"); // exit
 	  break;
@@ -435,6 +471,13 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	  break;
 	}
     }
+
+  if ( (is_width != 0) && (is_height != 0) ) {
+    vconf->win.width=is_width;
+    vconf->win.height=is_height;
+    v_error(vconf, LOG_WARN, "Imagesize set to unchecked individual size!");
+  }
+
   v_error(vconf, LOG_DEBUG, "Read all arguments, starting up...");
 
   vconf->init_done=TRUE;
@@ -507,6 +550,7 @@ int write_png(struct vconfig *vconf, char *image, FILE *x)
 {
   register int y;
   register char *p;
+  int t;
   png_infop info_ptr;
   png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
 						 NULL, NULL, NULL);
@@ -524,11 +568,11 @@ int write_png(struct vconfig *vconf, char *image, FILE *x)
   png_set_bgr (png_ptr);
   png_write_info (png_ptr, info_ptr);
   p = image;
-  vconf->win.width *= 3;
-  for (y = 0; y < vconf->win.height; y++) 
+  t vconf->win.width * 3;
+  for (y = 0; y < t; y++) 
     {
       png_write_row (png_ptr, p);
-      p += vconf->win.width;
+      p += t;
     }
   png_write_end (png_ptr, info_ptr);
   png_destroy_write_struct (&png_ptr, &info_ptr);
@@ -676,11 +720,14 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
 	  plist[vconf->vpic.palette].name, vconf->vpic.palette, img_size(vconf, vconf->vpic.palette));
 
   // Opening input device
-
-  while ((dev=open(vconf->in, O_RDONLY)) < 0)
-    v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
-
-  v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
+  if ( !vconf->openonce) {
+    while ((dev=open(vconf->in, O_RDONLY)) < 0)
+      v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
+    
+    v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
+  } else {
+    dev=vconf->dev;
+  }
 
   // Re-initialize the palette, in case someone changed it meanwhile
 
@@ -751,10 +798,12 @@ unsigned char *read_image(struct vconfig *vconf, unsigned char *buffer, int size
 
   // Closing Input Device
   
-  while ( close(dev) )
-    v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
-  
-  v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  if ( !vconf-openonce ) {
+    while ( close(dev) )
+      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
+    
+    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  }
 
   return buffer;
 }
@@ -876,9 +925,10 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
       v_error(vconf, LOG_CRIT, "Unknown outformat %d (should not happen!!)", vconf->outformat);
       break;
     }
-  fclose(x);
-  
+  fclose(x);  
   v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
+  if(vconf->ftp.enable == TRUE)
+    ftp_upload(vconf);
   return;
 }
 
@@ -1107,6 +1157,13 @@ int main(int argc, char *argv[])
   }
 #endif
 
+  if (vconf->openonce) {
+    while ((vconf->dev=open(vconf->in, O_RDONLY)) < 0)
+      v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
+    
+    v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
+  } 
+  
   // now start the loop (if daemon), read image and convert it, if necessary 
   do {
     
@@ -1133,6 +1190,13 @@ int main(int argc, char *argv[])
     
   } while (vconf->loop);
   
+  if (vconf->openonce) {
+    while ( close(vconf->dev) )
+      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
+    
+    v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
+  }
+     
   v_error(vconf, LOG_DEBUG,"No daemon, exiting...");
   
   free (buffer);
@@ -1149,3 +1213,9 @@ int main(int argc, char *argv[])
   free(vconf);
   exit(0);
 }
+
+
+
+
+
+
