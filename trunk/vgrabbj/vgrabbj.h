@@ -109,6 +109,7 @@ struct vconfig {
   int align;
   int border;
   int blend;
+  boolean copy;
 #endif
   struct video_window win;
   struct video_picture vpic;
