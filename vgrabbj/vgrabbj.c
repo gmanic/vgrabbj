@@ -1129,6 +1129,9 @@ int main(int argc, char *argv[])
 
   vconf=malloc(sizeof(*vconf));
   vconf=init_defaults(vconf);
+  if ((argv[1]) && (!strcasecmp(argv[1],"-h"))) {
+    usage(argv[0]);
+  }
   vconf=parse_config(vconf, DEFAULT_CONFIG);
   vconf=parse_commandline(vconf, argc, argv);
 
