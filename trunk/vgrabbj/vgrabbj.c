@@ -184,6 +184,7 @@ void usage (char *pname)
 	  " -V                Display version information and exit\n"
 	  " -F <value>        Force usage of specified palette (see videodev.h for values)\n"
 	  "                   (Fallback to supported palette, if this one is not supported\n"
+	  " -C                Show copyright information in image (lower left corner)\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -289,7 +290,7 @@ struct vconfig *decode_options(struct vconfig *vconf, int argc, char *argv[]) {
   vconf->blend      = DEFAULT_BLEND;
 #endif
   
-  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:C:F:"))!=EOF) 
+  while ((n = getopt (argc, argv, "L:l:f:q:hd:s:o:t:T:p:ebi:a:D:B:m:wSVMN:F:"))!=EOF) 
     {
       switch (n) 
 	{
@@ -603,7 +604,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
   case VIDEO_PALETTE_YUV420P:
   case VIDEO_PALETTE_YUV420:
   case VIDEO_PALETTE_YUYV:
-  case VIDEO_PALETTE_YUV422: // equal to YUYV
+  case VIDEO_PALETTE_YUV422: // equal to YUYV with my cam
   case VIDEO_PALETTE_RGB32:
     break;
   default:
@@ -860,7 +861,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
   if (vconf->debug) 
     v_error(vconf, LOG_DEBUG, "Returned from Raster_Small_Init");
 
-  Render_String (glyphs, ts_buff, ts_len, &bit, &sbit, vconf->border);
+  Render_String(glyphs, ts_buff, ts_len, &bit, &sbit, vconf->border);
 
   if (vconf->debug) 
     v_error(vconf, LOG_DEBUG, "Returned from Render_String");
@@ -970,7 +971,7 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
 int main(int argc, char *argv[]) 
 {
   struct vconfig *vconf;
-  unsigned char *buffer, *o_buffer;
+  unsigned char *buffer, *o_buffer, *t_buffer;
   int size;
   FILE *x;
 
@@ -1085,8 +1086,22 @@ int main(int argc, char *argv[])
     case VIDEO_PALETTE_YUV420:
       if (vconf->debug)
 	v_error(vconf, LOG_INFO, "Got YUV420, converting...");
-      
-      ccvt_420i_rgb24(vconf->win.width, vconf->win.height, buffer, o_buffer);
+
+      t_buffer=malloc(size);
+      ccvt_420i_420p(vconf->win.width, vconf->win.height, buffer, t_buffer,
+		     t_buffer + (vconf->win.width * vconf->win.height),
+		     t_buffer + (vconf->win.width * vconf->win.height)+
+		     (vconf->win.width * vconf->win.height / 4));
+      ccvt_420p_bgr24(vconf->win.width, vconf->win.height, t_buffer,
+		      t_buffer + (vconf->win.width * vconf->win.height),
+		      t_buffer + (vconf->win.width * vconf->win.height)+
+		      (vconf->win.width * vconf->win.height / 4),
+		      o_buffer);
+		      free(t_buffer);
+		      // As of now the direct conversion does not work properly.
+		      // Therefore, I use a very slow but working solution...
+//      ccvt_420i_rgb24(vconf->win.width, vconf->win.height, buffer, o_buffer);
+		    
       break;
     case VIDEO_PALETTE_YUYV:
     case VIDEO_PALETTE_YUV422:
