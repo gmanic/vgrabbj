@@ -873,7 +873,7 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
 	v_error(vconf, LOG_ERR, "Could not write outputfile %s", vconf->out);
       break;
     default:		// should never happen  
-      v_error(vconf, LOG_CRIT, "Unknown error! Report all circumstances to author");
+      v_error(vconf, LOG_CRIT, "Unknown outformat %d (should not happen!!)", vconf->outformat);
       break;
     }
   fclose(x);
@@ -1073,8 +1073,6 @@ int main(int argc, char *argv[])
   vconf=init_defaults(vconf);
   vconf=parse_config(vconf, DEFAULT_CONFIG);
   vconf=parse_commandline(vconf, argc, argv);
-
-  v_error(vconf, LOG_DEBUG, "Back to the image...");
 
   if (vconf->loop) 
     daemonize(vconf, basename(argv[0]));
