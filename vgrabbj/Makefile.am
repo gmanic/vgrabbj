@@ -18,7 +18,7 @@
 # USA  
 
 bin_PROGRAMS = vgrabbj
-vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c v_writer.c v_plist.h
+vgrabbj_SOURCES = vgrabbj.c v_config.c font.c ccvt_c.c vgrabbj.h ccvt.h v_ftp.c v_writer.c v_plist.h v_options.h
 
 #sysconf_DATA = vgrabbj.conf.default
 EXTRA_DIST = vgrabbj.conf.default

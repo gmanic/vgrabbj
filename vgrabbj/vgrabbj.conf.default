@@ -127,6 +127,9 @@ Daemon		0
 ;	you box is under constant load from vgrabbj and the file might not be
 ;	readable by any other app because it's constantly rewritten!
 ;	If not set, daemon mode is not enabled (default)
+DaemonSeconds	0
+;	Same as Daemon, but value is taken as a value of seconds. Use if you're
+;	to lazy to write that many zeros and don't need that fine resolution.
 UseTmpOut	On
 ;	Images taken are written to a temporary file (named /tmp/t<outputfile>)
 ;	in case <outputfile> is not /dev/stdout. After this is done, the file

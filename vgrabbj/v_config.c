@@ -25,6 +25,7 @@
 
 #include "vgrabbj.h"
 #include "v_plist.h"
+#include "v_options.h"
 
 extern int signal_terminate;
 
@@ -128,6 +129,7 @@ void sighup() {
 struct vconfig *init_defaults(struct vconfig *vconf) {
   // Set defaults
   vconf->quality    = DEFAULT_QUALITY;
+  long_options[4].var = &vconf->quality;
   vconf->in         = strcpy(malloc(strlen(DEFAULT_VIDEO_DEV)+1),DEFAULT_VIDEO_DEV);
   vconf->out        = strcpy(malloc(strlen(DEFAULT_OUTPUT)+1),DEFAULT_VIDEO_DEV);
   vconf->conf_file  = strcpy(malloc(strlen(DEFAULT_CONFIG)+1),DEFAULT_CONFIG);
@@ -145,6 +147,8 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->dev        = 0;
   vconf->forcepal   = 0;
   vconf->discard    = 0;
+  vconf->mmapsize   = 0;
+  vconf->usemmap    = TRUE;
   vconf->openonce   = FALSE;
   vconf->usetmpout  = TRUE;
   vconf->tmpout     = NULL;
@@ -228,6 +232,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
 
   struct video_window twin;
   int dev;
+  struct video_mbuf vbuf;
 
   while ((dev=open(vconf->in, O_RDONLY)) < 0)
     v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
@@ -280,17 +285,23 @@ struct vconfig *check_device(struct vconfig *vconf) {
   case VIDEO_PALETTE_RGB32:
     break;
   default:
-    if ( (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB24, dev)) ||
-	 ( vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB32, dev)) ||
-	 ( vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUYV, dev)) ||
-	 ( vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420, dev)) ||
-	 ( vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, dev)) )
+    if ( (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB24, dev))  ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB32, dev))  ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUYV, dev))   ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420, dev)) ||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, dev)) )
       v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
     else
       v_error(vconf, LOG_CRIT, "Unable to set supported video-palette"); // exit
     break;
   }
     
+  if ( (ioctl(dev, VIDIOCGMBUF, &vbuf) < 0) || 
+       ((vconf->brightness) && (vconf->vpic.palette==VIDEO_PALETTE_RGB24)) )
+    vconf->usemmap=FALSE;
+  else
+    vconf->mmapsize=vbuf.size;
+
   while ( close(dev) )
     v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in); // exit
   
@@ -312,8 +323,7 @@ char *get_str(char *value, char *var) {
   if (var) free(var);
   if ( strlen(value)<1 )
     return NULL;
-  var=malloc(strlen(value)+1);
-  var=strcpy(var, value);
+  var=strcpy(malloc(strlen(value)+1),value);
   return var;
 }
 
@@ -440,6 +450,7 @@ struct vconfig *parse_config(struct vconfig *vconf){
       if ( !strcasecmp(option, "ImageQuality")) {
 	if ( (MIN_QUALITY > (vconf->quality=get_int((value=strtok(NULL, " \t\n"))))) ||
 	      (vconf->quality > MAX_QUALITY) ) 
+	  
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)", 
 		  value, option, n, vconf->conf_file);
 	else
@@ -511,6 +522,13 @@ struct vconfig *parse_config(struct vconfig *vconf){
 	else
 	  vconf->windowsize=FALSE;
 	v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
+      }
+      else if ( !strcasecmp(option, "DaemonSeconds") ) {
+	if ( ((vconf->loop=1000000*get_int((value=strtok(NULL, " \t\n")))) < MIN_LOOP) && (vconf->loop != 0 ) )
+	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
+		  value, option, n, vconf->conf_file);
+	else
+	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }
       else if ( !strcasecmp(option, "Daemon") ) {
 	if ( ((vconf->loop=get_int((value=strtok(NULL, " \t\n")))) < MIN_LOOP) && (vconf->loop != 0 ) )
@@ -682,7 +700,8 @@ struct vconfig *parse_config(struct vconfig *vconf){
 	  v_error(vconf, LOG_DEBUG, "Setting option %s to value %s", option, value);
       }      
       else if ( !strcasecmp(option, "RemoteImageName") ) {
-	if ( !(vconf->ftp.remoteImageName=get_str((value=strtok(NULL, "\"\t\n")), vconf->ftp.remoteImageName)) )
+	if ( !(vconf->ftp.remoteImageName=get_str((value=strtok(NULL, "\"\t\n")),
+						  vconf->ftp.remoteImageName)) )
 	  v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s)",
 		  value, option, n, vconf->conf_file);
 	else
@@ -692,7 +711,8 @@ struct vconfig *parse_config(struct vconfig *vconf){
 #endif
     }
     else
-      v_error(vconf, LOG_ERR, "Ignoring unknown Option %s (value %s, line %d, %s)", option, value, n, vconf->conf_file);
+      v_error(vconf, LOG_ERR, "Ignoring unknown Option %s (value %s, line %d, %s)",
+	      option, value, n, vconf->conf_file);
   }
   fclose(fd);
 
@@ -718,8 +738,12 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
       switch (n) 
 	{
 	case 'c':
-	  vconf->conf_file=malloc(strlen(optarg)+1);
-	  vconf->conf_file=strcpy(vconf->conf_file, optarg);
+	  if (vconf->conf_file) {
+	    v_error(vconf, LOG_DEBUG, "Discarding old conf (%s), reading new conf (%s)",
+		    vconf->conf_file, optarg);
+	    vconf->conf_file=free_ptr(vconf->conf_file);
+	  }
+	  vconf->conf_file=strcpy(malloc(strlen(optarg)+1), optarg);
 	  parse_config(vconf);
 	  break;
 	case 'C':
@@ -798,21 +822,37 @@ struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[])
 	    v_error(vconf, LOG_CRIT, "Wrong imagesize specified"); // exit
 	  break;
 	case 'd':
+	  if (vconf->in) {
+	    v_error(vconf, LOG_DEBUG, "Discarding old input-device %d, using new device %s",
+		    vconf->in, optarg);
+	    vconf->in=free_ptr(vconf->in);
+	  }
 	  vconf->in = strcpy(malloc(strlen(optarg)+1),optarg);
 	  v_error(vconf, LOG_DEBUG, "Input device set to %s", vconf->in);
 	  break;
 #ifdef LIBTTF
 	case 't':
-	  vconf->font = strcpy(malloc(strlen(optarg)+1),optarg);
+	  if (vconf->font) {
+	    v_error(vconf, LOG_DEBUG, "Discarding old font-file %s, using new at %s",
+		    vconf->font, optarg);
+	    vconf->font=free_ptr(vconf->font);
+	  }
+	  vconf->font=strcpy(malloc(strlen(optarg)+1),optarg);
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'T':
 	  if ( sscanf(optarg, "%d", &vconf->font_size) != 1 || vconf->font_size < MIN_FONTSIZE
 	       || vconf->font_size > MAX_FONTSIZE ) 
-	    v_error(vconf, LOG_CRIT, "Wrong fontsize (min. %d, max %d)", MIN_FONTSIZE, MAX_FONTSIZE); // exit
+	    v_error(vconf, LOG_CRIT, "Wrong fontsize (min. %d, max %d)",
+		    MIN_FONTSIZE, MAX_FONTSIZE); // exit
 	  vconf->use_ts=TRUE;
 	  break;
 	case 'p':
+	  if (vconf->timestamp) {
+	    v_error(vconf, LOG_DEBUG, "Discarding old timestamp '%s', using new '%s'",
+		    vconf->timestamp, optarg);
+	    vconf->timestamp=free_ptr(vconf->timestamp);
+	  }
 	  vconf->timestamp = strcpy(malloc(strlen(optarg)+1),optarg);
 	  vconf->use_ts = TRUE;
 	  break;
@@ -912,9 +952,13 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
   }
 
   if ( (strcasecmp(vconf->out, DEFAULT_OUTPUT)) && vconf->usetmpout ) {
-    if(vconf->tmpout) free(vconf->tmpout);
-    vconf->tmpout = malloc(strlen(vconf->out)+6);
+    vconf->tmpout=free_ptr(vconf->tmpout);
+    vconf->tmpout=malloc(strlen(vconf->out)+6);
     sprintf(vconf->tmpout, "%s.tmp", vconf->out);
+    v_error(vconf, LOG_DEBUG, "Setting tmpout file to %s", vconf->tmpout);
+  }
+  else {
+    vconf->usetmpout=FALSE;
   }
   
   check_files(vconf);
@@ -925,8 +969,8 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
   
   v_error(vconf, LOG_DEBUG, "Re-initializing memory");
 
-  if ( vconf->buffer ) free(vconf->buffer);
-  if ( vconf->o_buffer ) free(vconf->o_buffer);
+  vconf->buffer=free_ptr(vconf->buffer);
+  vconf->o_buffer=free_ptr(vconf->o_buffer);
 
   vconf->buffer=malloc(img_size(vconf, vconf->vpic.palette));  // depending on palette
   vconf->o_buffer=malloc(img_size(vconf, VIDEO_PALETTE_RGB24)); // RGB24 (3 byte/pixel)
@@ -939,15 +983,17 @@ struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]
 #ifdef LIBTTF
   if ( reinit==1 ) {
     if ( vconf->use_ts ) TT_Done_FreeType(vconf->ttinit->engine);
-    free(vconf->ttinit->properties);
-    free(vconf->ttinit);
+    vconf->ttinit->properties=free_ptr(vconf->ttinit->properties);
+    vconf->ttinit=free_ptr(vconf->ttinit);
   }
 
   vconf->ttinit = malloc(sizeof(*vconf->ttinit));
   vconf->ttinit->properties = malloc(sizeof(*vconf->ttinit->properties));
  
-  if ( !vconf->ttinit->properties || !vconf->ttinit )
+  if ( !vconf->ttinit->properties || !vconf->ttinit ) {
+    v_error(vconf, LOG_ERR, "No memory for timestamp, disabled!");
     vconf->use_ts=FALSE;
+  }
   
   if (vconf->use_ts)
     if (TT_Init_FreeType(&vconf->ttinit->engine)) {

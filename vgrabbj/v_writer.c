@@ -131,6 +131,7 @@ int write_ppm(struct vconfig *vconf, char *image, FILE *x)
 void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
   FILE *x;
 
+  //  v_error(vconf, LOG_DEBUG, "vconf->out = %s", vconf->out);
   if ( vconf->usetmpout ) {
     while (! (x = fopen(vconf->tmpout, "w+") ) )
       v_error(vconf, LOG_ERR, "Could not open temporary outputfile %s", vconf->tmpout);
@@ -160,6 +161,7 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
     }
   fclose(x);
   if ( vconf->usetmpout ) {
+    //    v_error(vconf, LOG_DEBUG, "vconf->out = %s", vconf->out);
     v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
     unlink(vconf->out);
     if (-1 == link(vconf->tmpout, vconf->out)) {

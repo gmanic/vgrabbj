@@ -24,6 +24,11 @@
 
 int signal_terminate=0;
 
+void *free_ptr(void *buf) {
+  if (buf) free(buf);
+  return NULL;
+}
+
 void cleanup(struct vconfig *vconf, boolean clean) {
 
   if (vconf->openonce) {
@@ -37,24 +42,29 @@ void cleanup(struct vconfig *vconf, boolean clean) {
   if ( vconf->use_ts ) {
     TT_Done_FreeType(vconf->ttinit->engine);
   }
-  free(vconf->ttinit->properties);
-  free(vconf->ttinit);
-  v_error(vconf, LOG_DEBUG, "TrueType engine ended");
+  vconf->ttinit->properties=free_ptr(vconf->ttinit->properties);
+  vconf->ttinit=free_ptr(vconf->ttinit);
+  vconf->timestamp=free_ptr(vconf->timestamp);
+  vconf->font=free_ptr(vconf->font);
+  v_error(vconf, LOG_DEBUG, "TrueType engine ended, vars freed");
 #endif
-  free (vconf->buffer);
-  free (vconf->o_buffer);
-  v_error(vconf, LOG_DEBUG, "Image-buffers freed");
-  
-  if ( vconf->tmpout ) {
-    free(vconf->tmpout);
-  }
-  free(vconf);
-  if ( !clean) {
+
+  vconf->buffer=free_ptr(vconf->buffer);
+  vconf->o_buffer=free_ptr(vconf->o_buffer);
+  vconf->tmpout=free_ptr(vconf->tmpout);
+  vconf->in=free_ptr(vconf->in);
+  vconf->out=free_ptr(vconf->out);
+  vconf->conf_file=free_ptr(vconf->conf_file);
+  v_error(vconf, LOG_DEBUG, "vars freed");
+
+  vconf=free_ptr(vconf);
+			 
+  if ( !clean ) {
     syslog(LOG_CRIT, "exiting.");
     closelog();
     _exit(1);
   }
-  v_error(vconf, LOG_DEBUG, "No daemon, exiting...");
+  fprintf(stderr, "No daemon, exiting...\n");
 }
 
 /* Event handler for SIGHUP */
@@ -202,10 +212,10 @@ unsigned char *switch_color(struct vconfig *vconf) {
   long int y;
   for (y = 0; y < (vconf->win.width * vconf->win.height); y++) {
     memcpy(&a, vconf->buffer+(y*3),1);
-    memcpy(vconf->buffer+(y*3), vconf->buffer+(y*3)+2, 1);
-    memcpy(vconf->buffer+(y*3)+2, &a, 1);
+    memcpy(vconf->o_buffer+(y*3), vconf->buffer+(y*3)+2, 1);
+    memcpy(vconf->o_buffer+(y*3)+2, &a, 1);
   }
-  return vconf->buffer;
+  return vconf->o_buffer;
 }
 
 /* Strips last byte of RGB32 to convert to RGB24 - breaks picture if alpha is used! */
@@ -260,62 +270,87 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
   
   // Read image via read()
 
-  if (ioctl(dev, VIDIOCGMBUF, &vbuf) < 0 || vconf->brightness) {
+  if (!vconf->usemmap) {
     if (vconf->brightness)
       v_error(vconf, LOG_INFO, "Forced to use brightness adj. - using read()");
     else
       v_error(vconf, LOG_INFO, "Could not get mmap-buffer - Falling back to read()");
-
-    err_count=0;
-    if (vconf->brightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
-      v_error(vconf, LOG_INFO, "Doing brightness adjustment");
-      do {
-	while (read(dev, vconf->buffer, size) < size)
-	  v_error(vconf, LOG_ERR, "Error reading from %s", vconf->in);
-	f = get_brightness_adj(vconf, &newbright);
-	if (f) {
-	  vconf->vpic.brightness += (newbright << 8);
-	  if (ioctl(dev, VIDIOCSPICT, &vconf->vpic)==-1) 
-	    v_error(vconf, LOG_WARNING, "Problem setting brightness");
-	  err_count++;
+    do {
+      err_count=0;
+      if (vconf->brightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
+	v_error(vconf, LOG_INFO, "Doing brightness adjustment");
+	do {
+	  while (read(dev, vconf->buffer, size) < size)
+	    v_error(vconf, LOG_ERR, "Error reading from %s", vconf->in);
+	  f = get_brightness_adj(vconf, &newbright);
+	  if (f) {
+	    vconf->vpic.brightness += (newbright << 8);
+	    if (ioctl(dev, VIDIOCSPICT, &vconf->vpic)==-1) 
+	      v_error(vconf, LOG_WARNING, "Problem setting brightness");
+	    err_count++;
 	  
-	  if (err_count>100) {
-	    v_error(vconf, LOG_WARNING, "Brightness not optimal");
-	    break;
+	    if (err_count>100) {
+	      v_error(vconf, LOG_WARNING, "Brightness not optimal");
+	      break;
+	    }
 	  }
-	}
-      } while (f);
-      v_error(vconf, LOG_INFO, "Brightness adjusted");
-    } else {
-      v_error(vconf, LOG_DEBUG, "Using normal read for image grabbing");
-      read(dev, vconf->buffer, size);
-    }
+	} while (f);
+	v_error(vconf, LOG_INFO, "Brightness adjusted");
+      } else {
+	v_error(vconf, LOG_DEBUG, "Using normal read for image grabbing");
+	read(dev, vconf->buffer, size);
+      }
+    } while (discard--);
   } else { // read mmaped
     v_error(vconf, LOG_DEBUG, "Using mmap for image grabbing");
+    vmap.height=vconf->win.height;
+    vmap.width=vconf->win.width;
+    vmap.frame=0;
+    vmap.format=vconf->vpic.palette;
+
+    if ( (map = mmap(0, vconf->mmapsize, PROT_READ, MAP_SHARED, dev, 0)) < 0 )
+      v_error(vconf, LOG_CRIT, "Could not get mmap-area of size %d", vconf->mmapsize);
+    if ( ioctl(dev, VIDIOCGMBUF, &vbuf) < 0 )
+      v_error(vconf, LOG_CRIT, "Could not initialize mmap-vars");
+
+    v_error(vconf, LOG_DEBUG, "Size allocated for framebuffer: %d", vconf->mmapsize);
+
+    if (!map)
+      v_error(vconf, LOG_CRIT, "mmap'ed area not allocated");
+
     do {
-      vmap.height=vconf->win.height;
-      vmap.width=vconf->win.width;
-      vmap.frame=0;
-      vmap.format=vconf->vpic.palette;
 
-      map = mmap(0, vbuf.size, PROT_READ, MAP_SHARED, dev, 0);
-      v_error(vconf, LOG_DEBUG, "Size allocated for framebuffer: %d", vbuf.size);
+      err_count=0;
+      do {
+	if  (err_count++>100) {
+	  v_error(vconf, LOG_ERR, "Could not grab frame (100 tries)");
+	  break;
+	}
+      } while (ioctl(dev, VIDIOCMCAPTURE, &vmap) < 0);
 
-      if (!map)
-	v_error(vconf, LOG_CRIT, "mmap'ed area not allocated");
+      v_error(vconf, LOG_DEBUG, "Captured frame");
 
-      while (ioctl(dev,VIDIOCMCAPTURE,&vmap) < 0)
-	v_error(vconf, LOG_ERR, "Could not grab a frame");    // grab a frame
+      err_count=0;
+      do {
+	if (err_count++>100) {
+	  v_error(vconf, LOG_ERR, "Could not sync with frame (100 tries)");
+	  break;
+	}
+      } while (ioctl(dev, VIDIOCSYNC, &vmap.frame) < 0);
 
-      while (ioctl(dev,VIDIOCSYNC,&vmap.frame) < 0)
-	v_error(vconf, LOG_ERR, "Could not sync with frame");  // sync with frame and wait for result
+      v_error(vconf, LOG_DEBUG, "Sync'd with frame, ready to get it");
+      v_error(vconf, LOG_DEBUG, "map %ld, offset %ld, size %ld", map, vbuf.offsets[vmap.frame], img_size(vconf, vconf->vpic.palette));
+      
+      vconf->buffer=memcpy(vconf->buffer, map+vbuf.offsets[vmap.frame], img_size(vconf, vconf->vpic.palette));
 
-      vconf->buffer=memcpy(vconf->buffer, map, size);
+      v_error(vconf, LOG_DEBUG, "Copied frame to our memory");
 
-      munmap(map, vbuf.size);
-      if (discard) 
-	v_error(vconf, LOG_DEBUG, "%d frames to discard\n", discard);
+      if (discard)
+	v_error(vconf, LOG_DEBUG, "%d frames to discard", discard);
+      
     } while (discard--);
+
+    munmap(map, vbuf.size);
   }
   
   v_error(vconf, LOG_DEBUG, "Image successfully read");
@@ -369,14 +404,12 @@ unsigned char *conv_image(struct vconfig *vconf) {
 		    vconf->win.width * vconf->win.height * 3);
     v_error(vconf, LOG_DEBUG, "No conversion, we have RGB24");
     break;
-   
   case VIDEO_PALETTE_RGB32:
     v_error(vconf, LOG_INFO, "Got RGB32, converting...");
    
     vconf->o_buffer=conv_rgb32_rgb24(vconf->o_buffer, vconf->buffer,
 				     vconf->win.width, vconf->win.height);
     break;
-   
   case VIDEO_PALETTE_YUV420P:
     v_error(vconf, LOG_INFO, "Got YUV420p, converting...");
    
@@ -386,27 +419,10 @@ unsigned char *conv_image(struct vconfig *vconf) {
 		    (vconf->win.width * vconf->win.height / 4),
 		    vconf->o_buffer);
     break;
-   
   case VIDEO_PALETTE_YUV420:
     v_error(vconf, LOG_INFO, "Got YUV420, converting...");
 
-    ////    t_buffer=malloc(img_size(vconf, vconf->vpic.palette));
-   
-    //      ccvt_420i_420p(vconf->win.width, vconf->win.height, buffer, t_buffer,
-    //	     t_buffer + (vconf->win.width * vconf->win.height),
-    //	     t_buffer + (vconf->win.width * vconf->win.height)+
-    //	     (vconf->win.width * vconf->win.height / 4));
-    //      ccvt_420p_bgr24(vconf->win.width, vconf->win.height, t_buffer,
-    //	      t_buffer + (vconf->win.width * vconf->win.height),
-    //	      t_buffer + (vconf->win.width * vconf->win.height)+
-    //	      (vconf->win.width * vconf->win.height / 4),
-    //	      o_buffer);
-    //	      free(t_buffer);
-    // As of now the direct conversion does not work properly.
-    // Therefore, I use a very slow but working solution...
-   
     ccvt_420i_rgb24(vconf->win.width, vconf->win.height, vconf->buffer, vconf->o_buffer);
-      
     break;
   case VIDEO_PALETTE_YUYV:
   case VIDEO_PALETTE_YUV422:
@@ -424,7 +440,7 @@ unsigned char *conv_image(struct vconfig *vconf) {
      
   if (vconf->switch_bgr) {
     vconf->o_buffer=switch_color(vconf);
-    v_error(vconf, LOG_DEBUG, "Switching vom BGR to RGB - or vice versa");
+    v_error(vconf, LOG_DEBUG, "Switched from BGR to RGB - or vice versa");
   }
   return vconf->o_buffer;
 }

@@ -157,12 +157,14 @@ struct vconfig {
   int outformat;
   int dev;
   int discard;
+  int mmapsize;
   char *in;
   char *out;
   char *tmpout;
   char *conf_file;
   char *buffer;
   char *o_buffer;
+  boolean usemmap;
   boolean usetmpout;
   boolean windowsize;
   boolean switch_bgr;
@@ -207,6 +209,20 @@ struct palette_list {
   int div;
 };
 
+struct v_options {
+  const char *name;
+  const char *short_name;
+  int has_arg;
+  int *var;
+  int var_type;
+  int min_value;
+  int max_value;
+  int max_length;
+};
+
+enum { opt_void, opt_int, opt_longint, opt_char, opt_bool, opt_intptr, opt_longintptr, opt_charptr };
+enum { none, req, opt };
+
 /* External functions */
 
 extern char *basename (const char *);
@@ -224,6 +240,8 @@ extern void write_image(struct vconfig *vconf, unsigned char *o_buffer);
 extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
 
 extern int img_size(struct vconfig *vconf, int palette);
+
+extern void *free_ptr(void *buf);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
