@@ -21,7 +21,7 @@
  */
 
 
-#include "vgrabbj.h"
+#include "v_ftp.h"
 
 #ifdef LIBFTP
 

@@ -41,3 +41,5 @@ static struct palette_list plist[] = {
   { VIDEO_PALETTE_YUV410P,"YUV410P", 0, 1 },
   { -1, NULL }
 };
+
+
