@@ -91,7 +91,7 @@ void usage (char *pname)
 	  " -R                Swap left/right like a mirror.\n"
 	  " -U                Swap top/bottom like a mirror.\n"
 	  " -G                Do not use mmap'ed memory - needed only for certain cams\n"
-	  " -N                Do not fork in daemon mode, good for testing/debbuging\n"
+	  " -X                Do not fork in daemon mode, good for testing/debbuging\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -260,6 +260,8 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = &vconf->swaprl;
   l_opt[idx++].var  = &vconf->nousemmap;
   l_opt[idx++].var  = &vconf->swaptb;
+  vconf->nofork     = FALSE;
+  l_opt[idx++].var  = &vconf->nofork;
   if ( idx != sizeof(l_opt)/sizeof(l_opt[0])-1 ) {
     v_error(vconf, LOG_CRIT, "Bug in l_opt - contact developer with full debug details.");
   }
@@ -323,7 +325,7 @@ struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int c
   archive=realloc(archive, sizeof(struct s_arch));
   archive->filename=NULL;
   archive->next=NULL;
-  v_error(vconf, LOG_DEBUG, "setup of archive structure (%s)",vconf->arch);
+  //  v_error(vconf, LOG_DEBUG, "setup of archive structure (%s)",vconf->arch);
   if ( count-->1 )
     archive->next=init_archive(vconf, archive->next, count);
   else
@@ -438,22 +440,24 @@ struct vconfig *check_device(struct vconfig *vconf) {
 void v_update_ptr(struct vconfig *vconf) {
   int i=9;
   vconf->out=(char *)l_opt[i++].var;
-  vconf->in=(char *)l_opt[i].var;
+  vconf->in=(char *)l_opt[i++].var;
+  i=i+7;
 #ifdef LIBTTF
-  i=i+9;
-  vconf->timestamp=(char *)l_opt[i--].var;
-  vconf->font=(char *)l_opt[i].var;
+  vconf->font=(char *)l_opt[i++].var;
+  vconf->timestamp=(char *)l_opt[i++].var;
+  i=i+4;
 #endif
 #ifdef LIBFTP
-  i=i+7;
+  i++;
   vconf->ftp.remoteHost=(char *)l_opt[i++].var;
   vconf->ftp.remoteImageName=(char *)l_opt[i++].var;
   vconf->ftp.username=(char *)l_opt[i++].var;
   vconf->ftp.password=(char *)l_opt[i++].var;
   i++;i++;
-  vconf->ftp.remoteDir=(char *)l_opt[i].var;
+  vconf->ftp.remoteDir=(char *)l_opt[i++].var;
+  i++;
 #endif
-  i=i+11;
+  i=i+9;
   vconf->archive=(char *)l_opt[i].var;
   v_error(vconf, LOG_DEBUG, "Updated pointers to new allocated memory.");
 }

@@ -194,7 +194,7 @@ void write_image(struct vconfig *vconf) {
       }
       vconf->arch->filename=strcpy(realloc(vconf->arch->filename, strlen(ts)),ts);
       v_error(vconf, LOG_DEBUG, "Unlinked old arch-file, realocated new one (%s)", vconf->arch->filename);
-      free(ts);
+      free_ptr(ts);
       vconf->archivecount=vconf->archiveeach;
       vconf->arch=vconf->arch->next;
       v_error(vconf, LOG_DEBUG, "Changed ptr to next filename (%s)", vconf->arch->filename);

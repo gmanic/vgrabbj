@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
 
   vconf=v_init(vconf, argc, argv);
 
-  if (vconf->loop) 
+  if (vconf->loop && (!vconf->nofork) ) 
     daemonize(vconf, basename(argv[0]));
   else
     v_error(vconf, LOG_WARNING, "Reading image from %s", vconf->in);
