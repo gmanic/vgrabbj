@@ -9,6 +9,9 @@
 			writes data).
 			
 			IMPORTANT!! SWITCHED COMMANDLINE PARAMETER!!
+
+			MAY BREAK YOUR CONFIG!! READ BEFORE USE!!
+
 			If you use vgrabbj with commandline options
 			instead of the configuration file, beware that
 			the following switches have changed:
