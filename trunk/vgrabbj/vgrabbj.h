@@ -132,7 +132,8 @@ struct vconfig {
   struct video_picture vpic;
   struct video_capability vcap;
   struct FTP {
-    boolean Enable;
+    boolean enable;
+    boolean keepalive;
     char *remoteHost;
     char *remoteDir;
     char *remoteImageName;
