@@ -1,3 +1,62 @@
+2001-07-09  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.h: 	Changed default debug/log-level to 4.
+
+	* vgrabbj.c: 	Changed error handling. Now there are 6 log-levels
+			(silent to debug) with two types of critical errors
+			resulting in abortion of execution:
+			* critical errors, leading to immediate exit
+			  e.g. memory-failure
+			* near critical errors, leading to immediate exit
+			  in non-daemon mode (user is available to take care
+			  of the problem) and
+			  leading NOT to exit in daemon mode. vgrabbj still
+			  tries to get the action done and fails only if a
+			  maximum of 3600 errors is reached. Inbetween
+			  vgrabbj sleeps for a second, so this is roughly a
+			  one hour (!) try-period. After this, vgrabbj exits,
+			  no matter what (e.g. device access error).
+			  I did this mainly because I have only one video-
+			  device and didn't want to shut it down while
+			  testing. This way, it tries with appropriate sleeps
+			  and resets the error-counter after the current run.
+			Perhaps I'll make this errorcounter configurable one
+			day (let me know if you want).
+			The critical error-exits are obeyed, even if you made
+			vgrabbj totally silent.
+
+			Added video palettes YUYV, YUV420P to the try-palettes.
+			I hope this covers almost all devices out there.
+
+2001-07-08  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Added convertion routine from YUV 4-2-0-planar and YUYV
+			to RGB24 to accomodate (hopefully) all V4L devices, 
+			especially afer	recent discussion on linux-kernel list
+			that there (will/is/ should) not be any conversion in
+			kernel space. Only RGB24, RGB32 and YUV420 are tried,
+			if the device is not set to a recognized mode.
+		
+			Added BGR to RGB routine, in case color of output looks
+			odd.
+
+			Made library ttf optional. If it is not available, the
+			timestamp features are disabled.
+
+			Major cleanup of code - but still not perfect ;-).
+
+	* Makefile.am:  Added reconf and conversion files to distribution.
+
+			font.h is now (correctly) font.c.
+
+	* configure.in: Added config.h initialization and GPL notice.
+
+	* vgrabbj.h: 	Added .h file to clean .c file.
+
+	* other		Thanks to Damien, who helped a lot with the cleanup.
+
+			vgrabbj on irc -> irc.openprojects.net #vgrabbj :-)
+
 2001-06-16	0.6.4
 		* Fixed a bug regarding picture setting. This caused vgrabbj to
 		  pretend it'll work even though the device was not set to the
