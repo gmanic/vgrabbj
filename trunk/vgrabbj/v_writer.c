@@ -131,7 +131,7 @@ int write_ppm(struct vconfig *vconf, char *image, FILE *x)
 void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
   FILE *x;
 
-  if ( vconf->tmpout ) {
+  if ( vconf->usetmpout ) {
     while (! (x = fopen(vconf->tmpout, "w+") ) )
       v_error(vconf, LOG_ERR, "Could not open temporary outputfile %s", vconf->tmpout);
     v_error(vconf, LOG_DEBUG, "Opened temporary output-file %s", vconf->tmpout);
@@ -159,10 +159,14 @@ void write_image(struct vconfig *vconf, unsigned char *o_buffer) {
       break;
     }
   fclose(x);
-  if ( vconf->tmpout ) {
+  if ( vconf->usetmpout ) {
     v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);
-    system(vconf->cpyline);
-    v_error(vconf, LOG_DEBUG, "Temporary output %s copied to final destination %s", vconf->tmpout, vconf->out);
+    unlink(vconf->out);
+    if (-1 == link(vconf->tmpout, vconf->out)) {
+      v_error(vconf, LOG_ERR, "Couldn't link %s to %s: %s\n", vconf->tmpout, vconf->out, strerror(errno));
+    }
+    unlink(vconf->tmpout);
+    v_error(vconf, LOG_DEBUG, "Temporary output %s moved to final destination %s", vconf->tmpout, vconf->out);
   } else {
     v_error(vconf, LOG_DEBUG, "Outputfile %s closed", vconf->out);
   }

@@ -138,6 +138,7 @@ struct vconfig {
   char *out;
   char *tmpout;
   char *cpyline;
+  boolean usetmpout;
   boolean windowsize;
   boolean switch_bgr;
   boolean use_ts;
@@ -202,9 +203,7 @@ extern struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *
 
 extern void show_capabilities(char *in, char *pname);
 
-
 extern void ftp_upload(struct vconfig *vconf);
-
 
 extern void write_image(struct vconfig *vconf, unsigned char *o_buffer);
 

@@ -1,3 +1,35 @@
+2002-02-03  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	The usage of a temporary file to be copied to
+			the output file is now switchable. If you
+			don't want it, use the appropriate command-
+			line switch or conf-option. This may impair
+			the use of vgrabbj if used on a webserver
+			(webserver may access the file while vgrabbj
+			writes data).
+			
+			IMPORTANT!! SWITCHED COMMANDLINE PARAMETER!!
+			If you use vgrabbj with commandline options
+			instead of the configuration file, beware that
+			the following switches have changed:
+			-w (dont/set windowsize) is no -g
+			-W (image width) is now -w
+			This is due to compliance with POSIX.2 (-W).
+
+	* vgrabbj.c: 	Merged several patches (c) Michael Janssen,
+			Debian Package maintainer to streamline the
+			check for files and the video-device.
+			Temporary output file will now be properly
+			unlinked after each use (fixes debian bug
+			#127722). Shutdown of program streamlined.
+			Configuration adjusted - now all file-related
+			arguments are read first and checked once
+			only at the end. This avoids problems with
+			multiple definitions of e.g. the input-
+			device. If defined on the command-line as
+			last argument, only that device is checked.
+			(fixes debian bug #127659).
+
 2001-12-22  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.c: 	Various changes for release 0.8.2
