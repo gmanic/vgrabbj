@@ -187,9 +187,10 @@ struct vconfig {
   boolean windowsize;
   boolean switch_bgr;
   boolean use_ts;
-  boolean brightness;
+  boolean autobrightness;
   boolean init_done;
   boolean swaprl;
+  boolean swaptb;
   boolean nousemmap;
   int inputnorm;
   int channel;
@@ -209,6 +210,11 @@ struct vconfig {
   struct video_capability vcap;
   struct video_mmap vmap;
   struct video_mbuf vbuf;
+  int hue;
+  int brightness;
+  int contrast;
+  int colour;
+  int whiteness;
   char *map;
 #ifdef LIBFTP
   struct FTP {
@@ -292,6 +298,7 @@ extern unsigned char  *switch_color(struct vconfig *vconf);
 extern void            init_mmap(struct vconfig *vconf);
 extern void            free_mmap(struct vconfig *vconf);
 extern void            open_device(struct vconfig *vconf);
+extern int             set_picture_parms(struct vconfig *vconf);
 extern void            close_device(struct vconfig *vconf);
 extern void            cleanup(struct vconfig *vconf);
 extern int             signal_terminate;
@@ -305,6 +312,7 @@ extern FILE           *open_outfile(char *filename);
 extern char           *timestring(char *format);
 extern struct vconfig *parse_config(struct vconfig *vconf);
 extern unsigned char  *swap_left_right(char *buffer, int width, int height);
+extern unsigned char  *swap_top_bottom(char *buffer, int width, int height);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);

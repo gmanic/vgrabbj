@@ -1,3 +1,19 @@
+2003-09-10  Jens Gecius  <jens@gecius.de>
+	* various	Included a patch from Koos van den
+			Hout and Arthur van Leeuwen to
+			enable vgrabbj to flip top to
+			bottom. This enables upside-down
+			mounting, e.g. on a ceiling.
+	* various	Included a patch from David Austin
+			to enable vgrabbj to take detailed
+			control of the cams hardware 
+			settings (e.g. brightness-adjustment,
+			hue, etc.).
+			This one needs further testing and
+			adjustment to the options setup of
+			previous versions. As of now this
+			version might break your setup.
+
 2003-07-28  Jens Gecius  <jens@gecius.de>
 	* v_conf.c:	Fixed typo in help screen
 			(thanks to Tobias Wolter who filed

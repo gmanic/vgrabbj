@@ -82,6 +82,39 @@ void close_device(struct vconfig *vconf) {
     v_error(vconf, LOG_WARNING, "Device %s was already closed...", vconf->in);
 }
 
+int set_picture_parms(struct vconfig *vconf) {
+  if ((vconf->hue < 0) && (vconf->brightness < 0) &&
+      (vconf->colour < 0) && (vconf->contrast < 0) &&
+      (vconf->whiteness < 0)) {
+    return 0;
+  }
+
+  fprintf(stderr, "Setting picture params %i %i %i %i %i\n", 
+	  vconf->hue, vconf->brightness, vconf->colour,
+	  vconf->contrast, vconf->whiteness);
+  
+  if (ioctl(vconf->dev, VIDIOCGPICT, &(vconf->vpic)) == -1) {
+    perror ("PICTURE");
+    return (-1);
+  }
+  
+  if (vconf->hue > -1) 
+    vconf->vpic.hue = vconf->hue;
+  if (vconf->contrast > -1) 
+    vconf->vpic.contrast = vconf->contrast;
+  if (vconf->brightness > -1) 
+    vconf->vpic.brightness = vconf->brightness;
+  if (vconf->colour > -1) 
+    vconf->vpic.colour = vconf->colour;
+  if (vconf->whiteness > -1) 
+    vconf->vpic.whiteness = vconf->whiteness;
+  
+  if (ioctl(vconf->dev, VIDIOCSPICT, &(vconf->vpic)) == -1) {
+    perror ("PICTURE");
+    return (-1);
+  }
+  return 0;
+}
 
 /* Returns the actual byte-size of the image */
 
@@ -134,6 +167,33 @@ unsigned char *swap_left_right(char *buffer, int width, int height)
       buffer[(j*width*3)+(width-i)*3]   = a;
       buffer[(j*width*3)+(width-i)*3+1] = b;
       buffer[(j*width*3)+(width-i)*3+2] = c;
+    }
+  }
+  return buffer;
+}
+
+
+
+/* Swap Top to Bottom (like a mirror) */
+
+unsigned char *swap_top_bottom(char *buffer, int width, int height) 
+{
+  char a, b, c;
+  int i, j;
+  for (j=0;j < (height>>1);j++) {
+    for (i=0;i < width;i++) {
+      a = buffer[(j*width*3)+(i*3)];
+      b = buffer[(j*width*3)+(i*3)+1];
+      c = buffer[(j*width*3)+(i*3)+2];
+      
+      buffer[(j*width*3)+(i*3)]   = buffer[((height-j)*width*3)+(i*3)];
+      buffer[(j*width*3)+(i*3)+1] = buffer[((height-j)*width*3)+(i*3)+1];
+      buffer[(j*width*3)+(i*3)+2] = buffer[((height-j)*width*3)+(i*3)+2];
+      
+      buffer[((height-j)*width*3)+(i*3)]   = a;
+      buffer[((height-j)*width*3)+(i*3)+1] = b;
+      buffer[((height-j)*width*3)+(i*3)+2] = c;
+
     }
   }
   return buffer;

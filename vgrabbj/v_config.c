@@ -36,7 +36,7 @@ void usage (char *pname)
 	  " -c <filename>     parse <filename> as config file\n"
 	  " -l <seconds>      Daemonize & sleep <seconds> (min. 1!) between images\n"
 	  " -L <microseconds> Daemonize & sleep <microseconds> between images\n"
-	  " -b                Switch vgrabbj's brightness adjustment (default: off)\n"
+	  " -a                Switch vgrabbj's auto brightness adjustment (default: off)\n"
 	  "                   You might need to set -F 4, too, if it doesn't work\n"
 	  " -q <quality>      Quality setting (%d-%d, default: %d), JPEG only\n"
 	  " -i <sqcif|qsif|qcif|sif|cif|vga|svga|xga|sxga|uxga>\n"
@@ -89,6 +89,7 @@ void usage (char *pname)
 	  " -M <value>        Maximum number of images to keep in archive.\n"
 	  " -E <value>        Take a snapshot for the archive each <value> image.\n"
 	  " -R                Swap left/right like a mirror.\n"
+	  " -U                Swap top/bottom like a mirror.\n"
 	  " -G                Do not use mmap'ed memory - needed only for certain cams\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
@@ -162,7 +163,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->win.height = DEFAULT_HEIGHT;
   vconf->win.width  = DEFAULT_WIDTH;
   vconf->outformat  = DEFAULT_OUTFORMAT;
-  vconf->brightness = DEFAULT_BRIGHTNESS;
+  vconf->autobrightness = DEFAULT_BRIGHTNESS;
   vconf->switch_bgr = FALSE;
   vconf->windowsize = TRUE;
   vconf->loop       = 0;
@@ -176,6 +177,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->openonce   = TRUE;
   vconf->usetmpout  = TRUE;
   vconf->swaprl     = FALSE;
+  vconf->swaptb     = FALSE;
   vconf->nousemmap  = FALSE;
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
@@ -183,7 +185,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = &(int)vconf->debug;
   l_opt[idx++].var  = &(long int)vconf->loop;
   l_opt[idx++].var  = &(long int)vconf->loop;
-  l_opt[idx++].var  = &vconf->brightness;
+  l_opt[idx++].var  = &vconf->autobrightness;
   l_opt[idx++].var  = &(int)vconf->quality;
   idx              += 1; /* Image Size */
   l_opt[idx++].var  = &vconf->win.width;
@@ -233,6 +235,16 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = (char *)vconf->ftp.remoteDir;
 #endif
   idx              += 4;
+  vconf->hue = -1;
+  l_opt[idx++].var  = &(int)vconf->hue;
+  vconf->brightness = -1;
+  l_opt[idx++].var  = &(int)vconf->brightness;
+  vconf->contrast = -1;
+  l_opt[idx++].var  = &(int)vconf->contrast;
+  vconf->colour = -1;
+  l_opt[idx++].var  = &(int)vconf->colour;
+  vconf->whiteness = -1;
+  l_opt[idx++].var  = &(int)vconf->whiteness;
   vconf->archive    = NULL;
   l_opt[idx++].var  = (char *)vconf->archive;
   vconf->arch       = malloc(sizeof(struct s_arch));
@@ -244,6 +256,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = &vconf->archivemax;
   l_opt[idx++].var  = &vconf->swaprl;
   l_opt[idx++].var  = &vconf->nousemmap;
+  l_opt[idx++].var  = &vconf->swaptb;
   if ( idx != sizeof(l_opt)/sizeof(l_opt[0])-1 ) {
     v_error(vconf, LOG_CRIT, "Bug in l_opt - contact developer with full debug details.");
   }
@@ -403,9 +416,12 @@ struct vconfig *check_device(struct vconfig *vconf) {
   v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
 
   if ( (ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) || 
-       ((vconf->brightness) && (vconf->vpic.palette==VIDEO_PALETTE_RGB24)) ||
+       ((vconf->autobrightness) && 
+	(vconf->vpic.palette==VIDEO_PALETTE_RGB24)) ||
        (vconf->nousemmap) )
     vconf->usemmap=FALSE;
+
+  set_picture_parms(vconf);
 
   if (!vconf->openonce)
     close_device(vconf);
@@ -436,6 +452,7 @@ void v_update_ptr(struct vconfig *vconf) {
 
 void decode_options(struct vconfig *vconf, char *option, char *value, int o, int n) {
   int i;
+  
   for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
     if ( (l_opt[i].name && !strcasecmp(option, l_opt[i].name) && !o) ||  
 	 (l_opt[i].short_name && o==*l_opt[i].short_name) ) {

@@ -207,18 +207,21 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
     if (vconf->windowsize)
       while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
 	v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
+
+    set_picture_parms(vconf);
   }
-  
+
+
   /* Read image via read() */
 
   if (!vconf->usemmap) {
-    if (vconf->brightness)
+    if (vconf->autobrightness)
       v_error(vconf, LOG_INFO, "Forced to use brightness adj. - using read()");
     else
       v_error(vconf, LOG_INFO, "Could not get mmap-buffer - Falling back to read()");
     do {
       err_count=0;
-      if (vconf->brightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
+      if (vconf->autobrightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
 	v_error(vconf, LOG_INFO, "Doing brightness adjustment");
 	do {
 	  while (read(vconf->dev, vconf->buffer, size) < size)
@@ -358,6 +361,9 @@ int main(int argc, char *argv[])
     
     if (vconf->swaprl) 
       vconf->o_buffer=swap_left_right(vconf->o_buffer, vconf->win.width, vconf->win.height);
+
+    if (vconf->swaptb)
+      vconf->o_buffer=swap_top_bottom(vconf->o_buffer, vconf->win.width, vconf->win.height);
 
 #ifdef LIBTTF
     if (vconf->use_ts) 
