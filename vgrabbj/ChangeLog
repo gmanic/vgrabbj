@@ -1,3 +1,19 @@
+2001-07-22  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c:    Minor Changes, added YUV422 to known routines,
+			because with my Philips cam these two look
+			identical.
+			Because I switched back from the asm-code to
+			pure c-code (portability of the conversion
+			functions), and the conversion from YUV420 is
+			not exactly what it should look	like, no
+			release, yet.
+
+	* ccvt_c.c: 	Added YUYV (=YUV422?) and YUV420p to the
+			conversion routines (I'm getting there, soon
+			vgrabbj will be portable again).
+			But: YUV420i still gives me odd images...
+
 2001-07-21  Jens Gecius  <jens@gecius.de> (no release - CVS only)
 
 	* vgrabbj.c: 	* Added:
@@ -19,7 +35,15 @@
 			Buffers are now kept for the time vgrabbj runs.
 			Rearranged code to avoid forward function defs.
 			Put fork'ing into function (away from main()).
-			
+			Switched handling of device setup and image read.
+			Setup (and finding out which palette will work)
+			is now done only at startup. At every read the
+			the palette and imagesize is set (if allowed to),
+			in case some other program changed it (because
+			vgrabbj keeps the device opened only for during
+			read, while vgrabbj sleeps, you can access the
+			dev with any other program).
+
 	* vgrabbj.h: 	More code cleanup, put definitions in vgrabbj.h
 			where they belong
 
