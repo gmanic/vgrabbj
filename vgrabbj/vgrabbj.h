@@ -126,6 +126,16 @@
 #define MAX_LINE 1024
 
 /* Structure definitions */
+
+#ifdef LIBTTF
+struct ttneed {
+  TT_Engine engine;
+  TT_Face face;
+  TT_Face_Properties *properties;
+  TT_Instance instance;
+  boolean use;
+};
+#endif
   
 struct vconfig {
   long int loop;
@@ -137,7 +147,9 @@ struct vconfig {
   char *in;
   char *out;
   char *tmpout;
-  char *cpyline;
+  char *conf_file;
+  char *buffer;
+  char *o_buffer;
   boolean usetmpout;
   boolean windowsize;
   boolean switch_bgr;
@@ -154,6 +166,7 @@ struct vconfig {
   int align;
   int border;
   int blend;
+  struct ttneed *ttinit;
 #endif
   boolean openonce;
   struct video_window win;
@@ -174,16 +187,6 @@ struct vconfig {
 #endif
 };
 
-#ifdef LIBTTF
-struct ttneed {
-  TT_Engine engine;
-  TT_Face face;
-  TT_Face_Properties *properties;
-  TT_Instance instance;
-  boolean use;
-};
-#endif
-
 struct palette_list {
   int num;
   char *name;
@@ -195,11 +198,9 @@ struct palette_list {
 
 extern char *basename (const char *);
 
-extern struct vconfig *parse_config(struct vconfig *vconf, char *path);
+extern struct vconfig *v_init(struct vconfig *vconf, int reinit, int argc, char *argv[]);
 
-extern struct vconfig *init_defaults(struct vconfig *vconf);
-
-extern struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]);
+extern struct vconfig *v_reinit(struct vconfig *vconf);
 
 extern void show_capabilities(char *in, char *pname);
 
@@ -208,6 +209,8 @@ extern void ftp_upload(struct vconfig *vconf);
 extern void write_image(struct vconfig *vconf, unsigned char *o_buffer);
 
 extern void v_error(struct vconfig *vconf, int msg, char *fmt, ...);
+
+extern int img_size(struct vconfig *vconf, int palette);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
@@ -227,3 +230,23 @@ extern unsigned char *Render_String (TT_Glyph *gl, char *str, int len,
 				     int border);
 #endif
 
+static struct palette_list plist[] = {
+  { 0, NULL },
+  { VIDEO_PALETTE_GREY,   "GREY", 0, 1 },
+  { VIDEO_PALETTE_HI240,  "HI240", 0, 1 },
+  { VIDEO_PALETTE_RGB565, "RGB565", 0, 1 },
+  { VIDEO_PALETTE_RGB24,  "RGB24", 3, 1 },
+  { VIDEO_PALETTE_RGB32,  "RGB32", 4, 1 },
+  { VIDEO_PALETTE_RGB555, "RGB555", 0, 1 },
+  { VIDEO_PALETTE_YUV422, "YUV422", 2, 1 },
+  { VIDEO_PALETTE_YUYV,   "YUYV", 2, 1 },
+  { VIDEO_PALETTE_UYVY,   "UYVY", 0, 1 },
+  { VIDEO_PALETTE_YUV420, "YUV420", 3, 2 },
+  { VIDEO_PALETTE_YUV411, "YUV411", 0, 1 },
+  { VIDEO_PALETTE_RAW,    "RAW", 0, 1 },
+  { VIDEO_PALETTE_YUV422P,"YUV422P", 0, 1 },
+  { VIDEO_PALETTE_YUV411P,"YUV411P", 0, 1 },
+  { VIDEO_PALETTE_YUV420P,"YUV420P", 3, 2 },
+  { VIDEO_PALETTE_YUV410P,"YUV410P", 0, 1 },
+  { -1, NULL }
+};
