@@ -23,7 +23,7 @@ AC_INIT(vgrabbj.c)
 
 # For automake
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(vgrabbj,0.7.3)
+AM_INIT_AUTOMAKE(vgrabbj,0.7.4)
 AC_ARG_PROGRAM
 
 dnl Checks for programs.
