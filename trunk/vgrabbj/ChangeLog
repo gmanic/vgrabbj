@@ -1,3 +1,6 @@
+2003-10-06  Robert van der Meulen <rvdm@wiretrip.org>
+	* General:	Added support for passive ftp.
+ 
 2003-09-10  Jens Gecius  <jens@gecius.de>
 	* various	Included a patch from Koos van den
 			Hout and Arthur van Leeuwen to

@@ -227,6 +227,7 @@ struct vconfig {
     char *password;
     unsigned int state;
     unsigned int tryharder;
+    boolean passive;
   }ftp;
 #endif
 };

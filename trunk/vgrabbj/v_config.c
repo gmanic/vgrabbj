@@ -225,6 +225,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->ftp.username        = NULL;
   vconf->ftp.password        = NULL;
   vconf->ftp.tryharder       = 0;
+  vconf->ftp.passive	     = FALSE;
   l_opt[idx++].var  = &vconf->ftp.enable;
   l_opt[idx++].var  = (char *)vconf->ftp.remoteHost;
   l_opt[idx++].var  = (char *)vconf->ftp.remoteImageName;
@@ -233,6 +234,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = &vconf->ftp.keepalive;
   l_opt[idx++].var  = &(unsigned int)vconf->ftp.tryharder;
   l_opt[idx++].var  = (char *)vconf->ftp.remoteDir;
+  l_opt[idx++].var  = &vconf->ftp.passive;
 #endif
   idx              += 4;
   vconf->hue = -1;

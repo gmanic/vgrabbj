@@ -211,4 +211,6 @@ KeepAlive 	Off
 TryHarder	2
 ;	If the remote box is not as helpful as expected, possible:
 ;	not implemented, yet
+Passive		Off
+; 	When set to On, use passive ftp. Default: Off
 ;

@@ -66,6 +66,7 @@ static struct v_options l_opt[] = {
   {"KeepAlive",       NULL,none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {"TryHarder",       NULL,none, NULL, opt_int,     0,     0,   0, "2", NULL},
   {"RemoteDir",       NULL,none, NULL, opt_charptr, 0,     0, 255, "/", NULL},
+  {"Passive",         NULL,none, NULL, opt_bool,    MIN_BOOL,     MAX_BOOL,     0  },
 #endif
     /* and here's the commandline options which have no conf-file equivalent */
   {NULL,              "c", req,  NULL, opt_conf,    0,     0,   0, NULL, NULL},
