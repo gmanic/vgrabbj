@@ -47,6 +47,12 @@ If no options given, vgrabbj tries to open the default v4l-device
 \fI/dev/video\fP, grab an image and return it on \fI/dev/stdout\fP.
 So be aware.
 .SH OPTIONS
+.Sp
+All options are either numeric values, strings, or booleans. If it
+is a boolean switch (e.g. no value/string shown after the switch),
+it plainly switches the current setting of that particular option. 
+Remember, vgrabbj.conf is read first, so any option set to on or 
+off there will be toggled by the commandline switch.
 .TP
 \fB\-h\fP
 Show summary of options and version number.
@@ -60,7 +66,7 @@ Daemonize & loop with \fIseconds\fP intervals (min. 1).
 Daemonize & loop \fImicroseconds\fP intervals (min. 1). Same as \fB\-l\fP
 except you can control it more precisely.
 .TP
-\fB\-b\fP 
+\fB\-a\fP 
 Enable vgrabbj's brightness adjustment (default: disabled). To use \fBvgrabbj\fP's
 brightness adjustment, RGB24 support of the device is necessary. You may
 have to provide it to your device via the \fB-F\fP parameter (see below).
@@ -107,6 +113,17 @@ according to \fBstrftime\fP(2). This enables the creation of an archive
 of images. Currently, the output is only supported on the same
 filesystem as the original output.
 .TP
+\fB\-E\fP <\fIvalue\fP>
+Defines how many images shall be read until a copy for the archive
+is made. E.g. 1 means each image taken is also put in the archive.
+5 would mean every fifth image taken is put in the archive.
+.TP
+\fB\-M\fP <\fIvalue\fP>
+Sets the maximum number of images kept in the archive. If you defined
+5 seconds for daemon mode, archive every image, you collect 720 images
+per hour. If you set this switch to 720 you would keep an hour of images
+in the archive.
+.TP
 \fB\-d\fP <\fIdevice\fP> 
 Sets the input device to \fIdevice\fP (default: \fI/dev/video\fP)
 .TP
@@ -132,6 +149,10 @@ colors.
 .TP
 \fB\-R\fP
 Swaps left and right of the image like a mirror.
+.TP
+\fB\-U\fP
+Swaps top and bottom of the image like a mirror (e.g. for upside-down
+montage of the cam).
 .TP
 \fB\-G\fP
 Turns off use of mmap'ed memory. see \fIvgrabbj.conf\fP(5) for details.
@@ -188,12 +209,43 @@ are (copy from videodev.h):
 \fIvalue\fP images are grabbed and immediately discarded. Only the
 last image is written to the output. This might be helpful if your v4l-device
 needs to take a couple of images to auto-adjust to the current light.
+.TP
+\fB\-X\fP
+Does not fork daemon process and keeps vgrabbj in daemon mode in foreground,
+attached to the terminal. Useful for debugging purpose. Not available in
+config file.
+.SH HARDWARE CONTROL OPTIONS
+.Sp
+With the following options you can control the hardware settings of your
+cam - if it is supported by your cam. Be aware that these options might
+break your hardware, as there is no check on what values are available,
+allowed, and supported by your hardware.
+.TP
+\fB\-W\fP <\fIvalue\fP>
+Whiteness definition.
+.TP
+\fB\-r\fP <\fIvalue\fP>
+Color definition.
+.TP
+\fB\-x\fP <\fIvalue\fP>
+Contrast definition.
+.TP
+\fB\-b\fP <\fIvalue\fP>
+Brightness definition.
+.TP
+\fB\-u\fP <\fIvalue\fP>
+Hue definition.
 .SH TIMESTAMP OPTIONS
 .Sp
 The following options are available only if \fBvgrabbj\fP was compiled with
 the freetype library available. If you set any one of these options on the
 commandline timestamp will be enabled with default values for all other
 options.
+.TP
+\fB\-e\fP
+Switches timestamp to be used or not. Default is off, but may be overriden
+by config-file, so just try to enable this switch if there is no timestamp
+in the resulting image.
 .TP
 \fB\-t\fP <\fIfilename\fP> 
 The TrueType font to be used for the timestamp
@@ -207,7 +259,7 @@ Defines the timestamp. \fIformat-str\fP can be plain text or any
 strftime format and has to be enclosed with '""' (default: "%a, %e.
 %B %Y \- %T" \- see \fBstrftime\fP(3) for details)
 .TP
-\fB\-a\fP <\fIvalue\fP>
+\fB\-P\fP <\fIvalue\fP>
 Alignment of the timestamp in the image. Possible 
 \fIvalue\fP:
 .IP
@@ -226,16 +278,16 @@ Defines the blend between font background and image (1-100, default: 60).
 \fB\-B\fP <\fIvalue\fP>
 \fIvalue\fP pixels will be used as border around the timestamp string (1-255,
 default: 2).
-.TP
-\fB\-e\fP Enables timestamp with the defaults on.
 .SH FTP OPTIONS
 .P
 There are no options for ftp-upload on the command line. This is due to the need
 to provide a password which would be visible via the \fBps\fP(1) command. See
 \fBvgrabbj.conf\fP for details on how to set-up the ftp-upload option.
+Additionally, vgrabbj has to be compiled with libftp support.
 .SH BUGS
 .P
-No bugs are known at this time.
+%F in the archive time-string (year with century) causes memory corruption at a
+pentium-machine running vgrabbj (not validated). No further bugs are known at this time.
 .SH SEE ALSO
 \fBvgrabbj.conf\fP(4), \fBstrftime\fP(3), \fBps\fP(1)
 .SH AUTHOR

@@ -1,3 +1,13 @@
+2004-01-03  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.conf.5/vgrabbj.1: 
+			Added all missing options to the
+			manuals, corrected misspelled
+			options. Certain clarifications.
+	* vgrabbj.c:	Added option -X to let daemon
+			mode run in foreground (e.g. not
+			detaching from current terminal)
+
 2003-12-31  Jens Gecius  <jens@gecius.de>
 
 	* v_config.c: 	Changed pointer-update to be
