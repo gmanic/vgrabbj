@@ -40,7 +40,11 @@ void ftp_upload(struct vconfig *vconf){
       if(conn)
       	FtpClose(conn);
       if(FtpConnect( vconf->ftp.remoteHost, &conn)){
-      	FtpOptions(FTPLIB_CONNMODE, FTPLIB_PORT, conn);
+	if (vconf->ftp.passive) {
+      		FtpOptions(FTPLIB_CONNMODE, FTPLIB_PASSIVE, conn);
+	} else {
+      		FtpOptions(FTPLIB_CONNMODE, FTPLIB_PORT, conn);
+	}
         vconf->ftp.state = STATE_LOGIN;
         v_error(vconf, LOG_INFO, "ftp state 1: connection successfull");	
       } else {
