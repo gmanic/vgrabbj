@@ -103,11 +103,11 @@
 /* Structure definitions */
   
 struct vconfig {
-  unsigned long int loop;
-  unsigned int debug;
-  unsigned int err_count;
-  unsigned int quality;
-  unsigned int outformat;
+  long int loop;
+  int debug;
+  int err_count;
+  int quality;
+  int outformat;
   int dev;
   char *in;
   char *out;
