@@ -290,11 +290,23 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 
 unsigned char *conv_image(struct vconfig *vconf) {
 
+long i,j;
+
   switch (vconf->vpic.palette) {
   case VIDEO_PALETTE_RGB24:
     vconf->o_buffer=memcpy(vconf->o_buffer, vconf->buffer, 
 		    vconf->win.width * vconf->win.height * 3);
     v_error(vconf, LOG_DEBUG, "No conversion, we have RGB24");
+    break;
+  case VIDEO_PALETTE_GREY:
+    for(i=0 ;i<(vconf->win.width * vconf->win.height * 1) ;i++)
+    {
+	for(j=0 ;j<3 ;j++)
+	{
+	    vconf->o_buffer[(3*i)+j] = vconf->buffer[i];
+	}
+    }
+    v_error(vconf, LOG_DEBUG, "Got GREY, converting...");
     break;
   case VIDEO_PALETTE_RGB32:
     v_error(vconf, LOG_INFO, "Got RGB32, converting...");
@@ -320,6 +332,11 @@ unsigned char *conv_image(struct vconfig *vconf) {
     v_error(vconf, LOG_INFO, "Got YUYV, converting...");
       
     ccvt_yuyv_bgr24(vconf->win.width, vconf->win.height, vconf->buffer, vconf->o_buffer);
+    break;
+  case VIDEO_PALETTE_UYVY:
+    v_error(vconf, LOG_INFO, "Got UYVY, converting...");
+
+    ccvt_uyvy_bgr24(vconf->win.width, vconf->win.height, vconf->buffer, vconf->o_buffer);
     break;
   default:
     v_error(vconf, LOG_CRIT, "Should not happen - Unknown input image format");

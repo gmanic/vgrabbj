@@ -151,8 +151,8 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 {
 	int line, col, linewidth;
 	int y, yy;
-	int u=0, v=0;
-	int vr=0, ug=0, vg=0, ub=0;
+	int u, v;
+	int vr, ug, vg, ub;
 	int r, g, b;
 	unsigned char *py, *pu, *pv;
 
@@ -161,21 +161,17 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 	pu = srcu;
 	pv = srcv;
 
-	y = *py++;
+	y = *py;
 	yy = y << 8;
+	u = *pu - 128;
+	ug =   88 * u;
+	ub =  454 * u;
+	v = *pv - 128;
+	vg =  183 * v;
+	vr =  359 * v;
+
 	for (line = 0; line < height; line++) {
 		for (col = 0; col < width; col++) {
-			if ((col & 1) == 0)
-			{
-			  u = *pu - 128;
-			  ug =   88 * u;
-			  ub =  454 * u;
-			  v = *pv - 128;
-			  vg =  183 * v;
-			  vr =  359 * v;
-			  pu++; // increase u/v every second y
-			  pv++;
-			}
 			r = LIMIT(yy +      vr);
 			g = LIMIT(yy - ug - vg);
 			b = LIMIT(yy + ub     );
@@ -209,8 +205,18 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 			
 			y = *py++;
 			yy = y << 8;
+			if ( (col & 1) == 1) {
+			  pu++; // increase u/v every second y
+			  pv++;
+			}
+			u = *pu - 128;
+			ug =   88 * u;
+			ub =  454 * u;
+			v = *pv - 128;
+			vg =  183 * v;
+			vr =  359 * v;
 		} // ..for col 
-		if ( (line & 1) == 0 ) { // even line: rewind u/v
+		if ( line & 1 ) { // even line: rewind u/v
 		  pu -= linewidth;
 		  pv -= linewidth;
 		}
@@ -339,6 +345,103 @@ void ccvt_yuyv_bgr32(int width, int height, void *src, void *dst)
 }
 
 
+/* This is a really simplistic approach. Speedups are welcomed. */
+/* Derived this from the above yuyv converter                   */
+/* Format: UYVY UYVY UYVY UYVY...                               */
+static void ccvt_uyvy(int width, int height, unsigned char *src, unsigned char *dst, int push)
+{
+	int line, col, linewidth;
+	int y, yy;
+	int u, v;
+	int vr, ug, vg, ub;
+	int r, g, b;
+	unsigned char *py, *pu, *pv;
+
+	linewidth = width - (width >> 1);
+	py = src + 1;
+	pu = src;
+	pv = src + 2;
+
+	y = *py;
+	yy = y << 8;
+	u = *pu - 128;
+	ug =   88 * u;
+	ub =  454 * u;
+	v = *pv - 128;
+	vg =  183 * v;
+	vr =  359 * v;
+
+	for (line = 0; line < height; line++) {
+		for (col = 0; col < width; col++) {
+			r = LIMIT(yy +      vr);
+			g = LIMIT(yy - ug - vg);
+			b = LIMIT(yy + ub     );
+			switch(push) {
+			case PUSH_RGB24:
+				*dst++ = r;
+				*dst++ = g;
+				*dst++ = b;
+				break;
+
+			case PUSH_BGR24:
+				*dst++ = b;
+				*dst++ = g;
+				*dst++ = r;
+				break;
+			
+			case PUSH_RGB32:
+				*dst++ = r;
+				*dst++ = g;
+				*dst++ = b;
+				*dst++ = 0;
+				break;
+
+			case PUSH_BGR32:
+				*dst++ = b;
+				*dst++ = g;
+				*dst++ = r;
+				*dst++ = 0;
+				break;
+			}
+			
+			py += 2;
+			y = *py;
+			yy = y << 8;
+			if ( (col & 1) == 1) {
+			  pu += 4; // skip yvy every second y
+			  pv += 4; // skip yuy every second y
+			}
+			u = *pu - 128;
+			ug =   88 * u;
+			ub =  454 * u;
+			v = *pv - 128;
+			vg =  183 * v;
+			vr =  359 * v;
+		} // ..for col 
+	} /* ..for line */
+}
+
+void ccvt_uyvy_rgb24(int width, int height, void *src, void *dst)
+{
+	ccvt_uyvy(width, height, (unsigned char *)src, (unsigned char *)dst, PUSH_RGB24);
+}
+
+void ccvt_uyvy_bgr24(int width, int height, void *src, void *dst)
+{
+	ccvt_uyvy(width, height, (unsigned char *)src, (unsigned char *)dst, PUSH_BGR24);
+}
+
+void ccvt_uyvy_rgb32(int width, int height, void *src, void *dst)
+{
+	ccvt_uyvy(width, height, (unsigned char *)src, (unsigned char *)dst, PUSH_RGB32);
+}
+
+void ccvt_uyvy_bgr32(int width, int height, void *src, void *dst)
+{
+	ccvt_uyvy(width, height, (unsigned char *)src, (unsigned char *)dst, PUSH_BGR32);
+}
+
+
 void ccvt_420i_420p(int width, int height, void *src, void *dsty, void *dstu, void *dstv)
 {
 	short *s, *dy, *du, *dv;
@@ -399,3 +502,41 @@ void ccvt_420i_yuyv(int width, int height, void *src, void *dst)
 	} /* ..for line */
 }
 
+void ccvt_420i_uyvy(int width, int height, void *src, void *dst)
+{
+	int line, col, linewidth;
+	unsigned char *py, *pu, *pv, *d;
+
+	linewidth = width + (width >> 1);
+	py = (unsigned char *)src;
+	pu = src + 4;
+	pv = pu + linewidth;
+	d = (unsigned char *)dst;
+
+	for (line = 0; line < height; line++) {
+		for (col = 0; col < width; col += 4) {
+			/* four pixels in one go */
+			*d++ = *pu++;
+			*d++ = *py++;
+			*d++ = *pv++;
+			*d++ = *py++;
+			
+			*d++ = *pu++;
+			*d++ = *py++;
+			*d++ = *pv++;
+			*d++ = *py++;
+
+			py += 2;
+			pu += 4;
+			pv += 4;
+		} /* ..for col */
+		if (line & 1) { // odd line: go to next band
+			pu += linewidth;
+			pv += linewidth;
+		}
+		else { // rewind u/v pointers
+			pu -= linewidth;
+			pv -= linewidth;
+		}
+	} /* ..for line */
+}

@@ -23,7 +23,7 @@ AC_INIT(vgrabbj.c)
 
 # For automake
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(vgrabbj,0.9.7)
+AM_INIT_AUTOMAKE(vgrabbj,0.9.6)
 AC_ARG_PROGRAM
 
 dnl Options
@@ -50,9 +50,6 @@ changequote([,])dnl
 
 dnl Checks for libraries and appropriate headers.
 
-AC_CHECK_LIB(z, crc32,,
-	AC_MSG_ERROR([*** libz library not found! Please install the appropriate library ***]))
-
 AC_CHECK_LIB(jpeg, jpeg_set_defaults,,
 	AC_MSG_ERROR([*** jpeg library not found! Please install the appropriate library ***]))
 AC_CHECK_HEADERS(jpeglib.h,, AC_MSG_ERROR([*** jpeglib.h not found! Please install the appropriate header file ***]))
@@ -75,6 +72,9 @@ else
   echo "*** Timestamp disabled"
 fi
 
+AC_CHECK_LIB(z, crc32,,
+	AC_MSG_ERROR([*** libz library not found! Please install the appropriate library ***]))
+
 if test "$enable_ftp" != "no"; then
   AC_CHECK_LIB(ftp, FtpInit,,
 	AC_MSG_WARN([*** ftp library not found! Disabled ftp feature ***]))
@@ -83,6 +83,10 @@ if test "$enable_ftp" != "no"; then
 else
   echo "*** ftp disabled"
 fi
+
+AC_CHECK_LIB(z, crc32,,
+	AC_MSG_ERROR([*** libz library not found! Please install the appropriate library ***]))
+
 
 dnl Checks for other header files.
 AC_HEADER_STDC
@@ -95,6 +99,10 @@ dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_STRFTIME
 
-AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${sysconfdir}/vgrabbj.conf")
+if test \"x${prefix}\" = \"xNONE\"; then
+  AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${ac_default_prefix}/etc/vgrabbj.conf")
+else
+  AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${prefix}/etc/vgrabbj.conf")
+fi
 
 AC_OUTPUT(Makefile)
