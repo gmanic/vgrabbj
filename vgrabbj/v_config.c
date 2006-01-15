@@ -64,7 +64,7 @@ void usage (char *pname)
 	  " -p <format-str>   Definable timestamp format (see man strftime)\n"
 	  "                   (default: \"%s\")\n"
 	  "                   *MUST* be with \" and \" !\n"
-	  " -P <0|1|2|3|4|5>  Alignment of timestamp: 0=upper left, 1=upper right,\n"
+	  " -a <0|1|2|3|4|5>  Alignment of timestamp: 0=upper left, 1=upper right,\n"
 	  "                   2=lower left, 3=lower right, 4=upper center, 5=lower center\n"
 	  "                   you still have to enable the timestamp (default: %d) \n"
 	  " -m <blendvalue>   Blending of timestamp on original image (%d-%d, default: %d)\n"
@@ -96,7 +96,7 @@ void usage (char *pname)
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
 	  "\n"
-	  "The video stream has to be one of RGB24, RGB32, YUV420, YUV420P or YUYV.\n",
+	  "The video stream has to be one of RGB24, RGB32, YUV420, YUV420P, YUYV or UYVY.\n",
 	  basename(pname), VERSION, basename(pname), MIN_QUALITY, MAX_QUALITY, 
 	  DEFAULT_QUALITY, DEFAULT_WIDTH, DEFAULT_HEIGHT,
 	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV, 
@@ -373,7 +373,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
     v_error(vconf, LOG_CRIT, "Device doesn't support width/height");
   while (ioctl(vconf->dev, VIDIOCGWIN, &twin))
     v_error(vconf, LOG_ERR, "Problem getting window information");
-  vconf->win.flags=twin.flags;
+  vconf->win.flags=0;/*twin.flags;*/
   vconf->win.x=twin.x;
   vconf->win.y=twin.y;
   vconf->win.chromakey=twin.chromakey;
@@ -406,14 +406,17 @@ struct vconfig *check_device(struct vconfig *vconf) {
   case VIDEO_PALETTE_YUV420:
   case VIDEO_PALETTE_YUYV:
   case VIDEO_PALETTE_YUV422: /* equal to YUYV with my cam */
+  case VIDEO_PALETTE_GREY:
   case VIDEO_PALETTE_RGB32:
+  case VIDEO_PALETTE_UYVY:
     break;
   default:
     if ( (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB24, vconf->dev))  ||
 	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_RGB32, vconf->dev))  ||
 	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUYV, vconf->dev))   ||
 	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420, vconf->dev)) ||
-	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, vconf->dev)) )
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_YUV420P, vconf->dev))||
+	 (vconf->vpic.palette=try_palette(vconf, VIDEO_PALETTE_UYVY, vconf->dev)) )
       ;
     else
       v_error(vconf, LOG_CRIT, "Unable to set supported video-palette");

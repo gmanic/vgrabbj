@@ -48,6 +48,8 @@ extern "C" {
            YUYV YUYV YUYV ...   N lines
            The U/V data is subsampled by 2 in horizontal direction only.
 
+   uyvy = UYVY UYVY UYVY ...   N lines
+
    bgr24 = 3 bytes per pixel, in the order Blue Green Red (whoever came up
            with that idea...)
    rgb24 = 3 bytes per pixel, in the order Red Green Blue (which is sensible)
@@ -76,6 +78,12 @@ void ccvt_yuyv_bgr32(int width, int height, void *src, void *dst);
 void ccvt_yuyv_rgb24(int width, int height, void *src, void *dst);
 void ccvt_yuyv_bgr24(int width, int height, void *src, void *dst);
 
+/* 4:2:2 UYVY interlaced to RGB/BGR */
+void ccvt_uyvy_rgb32(int width, int height, void *src, void *dst);
+void ccvt_uyvy_bgr32(int width, int height, void *src, void *dst);
+void ccvt_uyvy_rgb24(int width, int height, void *src, void *dst);
+void ccvt_uyvy_bgr24(int width, int height, void *src, void *dst);
+
 /* 4:2:0 YUV planar to RGB/BGR     */
 //void ccvt_420p_rgb32(int width, int height, void *srcy, void *srcu, void *srcv, void *dst);
 //void ccvt_420p_bgr32(int width, int height, void *srcy, void *srcu, void *srcv, void *dst);
@@ -89,6 +97,7 @@ void ccvt_bgr24_420p(int width, int height, void *src, void *dsty, void *dstu, v
 /* Go from 420i to other yuv formats */
 void ccvt_420i_420p(int width, int height, void *src, void *dsty, void *dstu, void *dstv);
 void ccvt_420i_yuyv(int width, int height, void *src, void *dst);
+void ccvt_420i_uyvy(int width, int height, void *src, void *dst);
 
 #ifdef __cplusplus
 }

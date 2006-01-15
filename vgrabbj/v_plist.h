@@ -23,7 +23,7 @@
 
 static struct palette_list plist[] = {
   { 0, NULL },
-  { VIDEO_PALETTE_GREY,   "GREY",    0, 1 },
+  { VIDEO_PALETTE_GREY,   "GREY",    1, 1 },
   { VIDEO_PALETTE_HI240,  "HI240",   0, 1 },
   { VIDEO_PALETTE_RGB565, "RGB565",  0, 1 },
   { VIDEO_PALETTE_RGB24,  "RGB24",   3, 1 },
@@ -31,7 +31,7 @@ static struct palette_list plist[] = {
   { VIDEO_PALETTE_RGB555, "RGB555",  0, 1 },
   { VIDEO_PALETTE_YUV422, "YUV422",  2, 1 },
   { VIDEO_PALETTE_YUYV,   "YUYV",    2, 1 },
-  { VIDEO_PALETTE_UYVY,   "UYVY",    0, 1 },
+  { VIDEO_PALETTE_UYVY,   "UYVY",    2, 1 },
   { VIDEO_PALETTE_YUV420, "YUV420",  3, 2 },
   { VIDEO_PALETTE_YUV411, "YUV411",  0, 1 },
   { VIDEO_PALETTE_RAW,    "RAW",     0, 1 },
