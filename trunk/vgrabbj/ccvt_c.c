@@ -2,7 +2,7 @@
    Colour conversion routines (RGB <-> YUV) in plain C
    (C) 2000 Nemosoft Unv.    nemosoft@smcc.demon.nl
    (C) 2001 added 420p, LIMIT(x) jens@gecius.de
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -55,14 +55,14 @@ static void ccvt_420i(int width, int height, unsigned char *src, unsigned char *
 	vr =  359 * v;
 
 	/* The biggest problem is the interlaced data, and the fact that odd
-	   and even lines have V and U data, resp. 
+	   and even lines have V and U data, resp.
 	 */
 	for (line = 0; line < height; line++) {
 		for (col = 0; col < width; col++) {
 			r = LIMIT(yy +      vr);
 			g = LIMIT(yy - ug - vg);
 			b = LIMIT(yy + ub     );
-			
+
 			switch(push) {
 			case PUSH_RGB24:
 				*dst++ = r;
@@ -75,7 +75,7 @@ static void ccvt_420i(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = g;
 				*dst++ = r;
 				break;
-			
+
 			case PUSH_RGB32:
 				*dst++ = r;
 				*dst++ = g;
@@ -90,7 +90,7 @@ static void ccvt_420i(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = 0;
 				break;
 			}
-			
+
 			y = *py++;
 			yy = y << 8;
 			if ((col & 3) == 3)
@@ -187,7 +187,7 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = g;
 				*dst++ = r;
 				break;
-			
+
 			case PUSH_RGB32:
 				*dst++ = r;
 				*dst++ = g;
@@ -202,7 +202,7 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = 0;
 				break;
 			}
-			
+
 			y = *py++;
 			yy = y << 8;
 			if ( (col & 1) == 1) {
@@ -215,7 +215,7 @@ static void ccvt_420p(int width, int height, unsigned char *src, unsigned char *
 			v = *pv - 128;
 			vg =  183 * v;
 			vr =  359 * v;
-		} // ..for col 
+		} // ..for col
 		if ( line & 1 ) { // even line: rewind u/v
 		  pu -= linewidth;
 		  pv -= linewidth;
@@ -290,7 +290,7 @@ static void ccvt_yuyv(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = g;
 				*dst++ = r;
 				break;
-			
+
 			case PUSH_RGB32:
 				*dst++ = r;
 				*dst++ = g;
@@ -305,7 +305,7 @@ static void ccvt_yuyv(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = 0;
 				break;
 			}
-			
+
 			py += 2;
 			y = *py;
 			yy = y << 8;
@@ -319,7 +319,7 @@ static void ccvt_yuyv(int width, int height, unsigned char *src, unsigned char *
 			v = *pv - 128;
 			vg =  183 * v;
 			vr =  359 * v;
-		} // ..for col 
+		} // ..for col
 	} /* ..for line */
 }
 
@@ -386,7 +386,7 @@ static void ccvt_uyvy(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = g;
 				*dst++ = r;
 				break;
-			
+
 			case PUSH_RGB32:
 				*dst++ = r;
 				*dst++ = g;
@@ -401,7 +401,7 @@ static void ccvt_uyvy(int width, int height, unsigned char *src, unsigned char *
 				*dst++ = 0;
 				break;
 			}
-			
+
 			py += 2;
 			y = *py;
 			yy = y << 8;
@@ -415,7 +415,7 @@ static void ccvt_uyvy(int width, int height, unsigned char *src, unsigned char *
 			v = *pv - 128;
 			vg =  183 * v;
 			vr =  359 * v;
-		} // ..for col 
+		} // ..for col
 	} /* ..for line */
 }
 
@@ -480,7 +480,7 @@ void ccvt_420i_yuyv(int width, int height, void *src, void *dst)
 			*d++ = *pu++;
 			*d++ = *py++;
 			*d++ = *pv++;
-			
+
 			*d++ = *py++;
 			*d++ = *pu++;
 			*d++ = *py++;
@@ -520,7 +520,7 @@ void ccvt_420i_uyvy(int width, int height, void *src, void *dst)
 			*d++ = *py++;
 			*d++ = *pv++;
 			*d++ = *py++;
-			
+
 			*d++ = *pu++;
 			*d++ = *py++;
 			*d++ = *pv++;

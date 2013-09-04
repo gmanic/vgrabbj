@@ -1,25 +1,25 @@
 /* Simple Video4Linux image grabber. Made for my Philips Vesta Pro
- * 
+ *
  * Definition of options
  *
  * Copyright (C) 2002 Jens Gecius, Hannover, Germany
  * eMail: devel@gecius.de
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at you option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
- * USA  
- */  
+ * USA
+ */
 
 #include "v_utils.h"
 
@@ -32,9 +32,9 @@ void init_mmap(struct vconfig *vconf) {
       v_error(vconf, LOG_CRIT, "Could not get mmap-area of size %d", vconf->vbuf.size);
     if ( v4l1_ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0 )
       v_error(vconf, LOG_CRIT, "Could not initialize mmap-vars");
-    
+
     v_error(vconf, LOG_DEBUG, "Size allocated for framebuffer: %d", vconf->vbuf.size);
-    
+
     if (!vconf->map)
       v_error(vconf, LOG_CRIT, "mmap'ed area not allocated");
   }
@@ -83,7 +83,7 @@ void close_device(struct vconfig *vconf) {
     v_error(vconf, LOG_WARNING, "Device %s was already closed...", vconf->in);
 }
 
-/* following code thanks to David Austin */ 
+/* following code thanks to David Austin */
 
 int set_picture_parms(struct vconfig *vconf) {
   if ((vconf->hue < 0) && (vconf->brightness < 0) &&
@@ -92,26 +92,26 @@ int set_picture_parms(struct vconfig *vconf) {
     return 0;
   }
 
-  fprintf(stderr, "Setting picture params %i %i %i %i %i\n", 
+  fprintf(stderr, "Setting picture params %i %i %i %i %i\n",
 	  vconf->hue, vconf->brightness, vconf->colour,
 	  vconf->contrast, vconf->whiteness);
-  
+
   if (v4l1_ioctl(vconf->dev, VIDIOCGPICT, &(vconf->vpic)) == -1) {
     perror ("PICTURE");
     return (-1);
   }
-  
-  if (vconf->hue > -1) 
+
+  if (vconf->hue > -1)
     vconf->vpic.hue = vconf->hue;
-  if (vconf->contrast > -1) 
+  if (vconf->contrast > -1)
     vconf->vpic.contrast = vconf->contrast;
-  if (vconf->brightness > -1) 
+  if (vconf->brightness > -1)
     vconf->vpic.brightness = vconf->brightness;
-  if (vconf->colour > -1) 
+  if (vconf->colour > -1)
     vconf->vpic.colour = vconf->colour;
-  if (vconf->whiteness > -1) 
+  if (vconf->whiteness > -1)
     vconf->vpic.whiteness = vconf->whiteness;
-  
+
   if (v4l1_ioctl(vconf->dev, VIDIOCSPICT, &(vconf->vpic)) == -1) {
     perror ("PICTURE");
     return (-1);
@@ -145,7 +145,7 @@ char *switch_color(struct vconfig *vconf) {
 
 char *conv_rgb32_rgb24(struct vconfig *vconf) {
   unsigned long int y;
-  for (y = 0; y < (vconf->win.width * vconf->win.height); y++) 
+  for (y = 0; y < (vconf->win.width * vconf->win.height); y++)
     memcpy(vconf->o_buffer+(y*3), vconf->buffer+(y*4), 3);
   return vconf->o_buffer;
 }
@@ -153,7 +153,7 @@ char *conv_rgb32_rgb24(struct vconfig *vconf) {
 
 /* Swap Left to Right (like a mirror) */
 
-char *swap_left_right(char *buffer, int width, int height) 
+char *swap_left_right(char *buffer, int width, int height)
 {
   char a, b, c;
   int i, j;
@@ -162,11 +162,11 @@ char *swap_left_right(char *buffer, int width, int height)
       a = buffer[(j*width*3)+(i*3)];
       b = buffer[(j*width*3)+(i*3)+1];
       c = buffer[(j*width*3)+(i*3)+2];
-      
+
       buffer[(j*width*3)+(i*3)]   = buffer[(j*width*3)+(width-i)*3];
       buffer[(j*width*3)+(i*3)+1] = buffer[(j*width*3)+(width-i)*3+1];
       buffer[(j*width*3)+(i*3)+2] = buffer[(j*width*3)+(width-i)*3+2];
-      
+
       buffer[(j*width*3)+(width-i)*3]   = a;
       buffer[(j*width*3)+(width-i)*3+1] = b;
       buffer[(j*width*3)+(width-i)*3+2] = c;
@@ -178,7 +178,7 @@ char *swap_left_right(char *buffer, int width, int height)
 /* Swap Top to Bottom (like a mirror) */
 /* Thanks to Koos van den Hout and Arthur van Leeuwen */
 
-char *swap_top_bottom(char *buffer, int width, int height) 
+char *swap_top_bottom(char *buffer, int width, int height)
 {
   char a, b, c;
   int i, j;
@@ -187,11 +187,11 @@ char *swap_top_bottom(char *buffer, int width, int height)
       a = buffer[(j*width*3)+(i*3)];
       b = buffer[(j*width*3)+(i*3)+1];
       c = buffer[(j*width*3)+(i*3)+2];
-      
+
       buffer[(j*width*3)+(i*3)]   = buffer[((height-j)*width*3)+(i*3)];
       buffer[(j*width*3)+(i*3)+1] = buffer[((height-j)*width*3)+(i*3)+1];
       buffer[(j*width*3)+(i*3)+2] = buffer[((height-j)*width*3)+(i*3)+2];
-      
+
       buffer[((height-j)*width*3)+(i*3)]   = a;
       buffer[((height-j)*width*3)+(i*3)+1] = b;
       buffer[((height-j)*width*3)+(i*3)+2] = c;
@@ -205,7 +205,7 @@ char *swap_top_bottom(char *buffer, int width, int height)
 
 /* Adjustment of brightness of picture  */
 
-int brightness_adj(struct vconfig *vconf, int *brightness) 
+int brightness_adj(struct vconfig *vconf, int *brightness)
 {
   long i, tot = 0;
   long size = vconf->win.width * vconf->win.height;
@@ -248,14 +248,14 @@ void *free_ptr(void *buf) {
 
 /* Daemonize vgrabbj only if in daemon-mode */
 
-int daemonize(struct vconfig *vconf, char *progname) 
+int daemonize(struct vconfig *vconf, char *progname)
 {
   openlog(progname, LOG_DEBUG, LOG_DAEMON);
   v_error(vconf, LOG_WARNING, "Forking for daemon mode");
-    
-  switch( fork() ) 
+
+  switch( fork() )
     {
-    case 0: // Child 
+    case 0: // Child
       v_error(vconf, LOG_DEBUG, "I'm the child process and are going to read images...");
       closelog();
       vconf->init_done=TRUE;
@@ -272,7 +272,7 @@ int daemonize(struct vconfig *vconf, char *progname)
     }
   openlog(progname, LOG_PID, LOG_DAEMON);
   v_error(vconf, LOG_WARNING, "%s started, reading from %s", progname, vconf->in);
-  
+
   return(1);
 }
 

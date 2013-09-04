@@ -295,7 +295,7 @@ Render_String (TT_Glyph *gl, char *str, int len, TT_Raster_Map *bit,
 		z = y + gmetrics.bbox.yMin;
 		if (min_y > z)
 			min_y = z;
-	
+
 		z = y + gmetrics.bbox.yMax;
 		if (max_y < z)
 			max_y = z;

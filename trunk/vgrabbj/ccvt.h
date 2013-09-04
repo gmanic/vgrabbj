@@ -1,6 +1,6 @@
-/* 
+/*
    (C) 2000 Nemosoft Unv.    nemosoft@smcc.demon.nl
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -32,14 +32,14 @@ extern "C" {
    420i = "4:2:0 interlaced"
            YYYY UU YYYY UU   even lines
            YYYY VV YYYY VV   odd lines
-           U/V data is subsampled by 2 both in horizontal 
+           U/V data is subsampled by 2 both in horizontal
            and vertical directions, and intermixed with the Y values.
-   
+
    420p = "4:2:0 planar"
            YYYYYYYY      N lines
            UUUU          N/2 lines
            VVVV          N/2 lines
-           U/V is again subsampled, but all the Ys, Us and Vs are placed 
+           U/V is again subsampled, but all the Ys, Us and Vs are placed
            together in separate buffers. The buffers may be placed in
            one piece of contiguous memory though, with Y buffer first,
            followed by U, followed by V.
@@ -53,7 +53,7 @@ extern "C" {
    bgr24 = 3 bytes per pixel, in the order Blue Green Red (whoever came up
            with that idea...)
    rgb24 = 3 bytes per pixel, in the order Red Green Blue (which is sensible)
-   rgb32 = 4 bytes per pixel, in the order Red Green Blue Alpha, with 
+   rgb32 = 4 bytes per pixel, in the order Red Green Blue Alpha, with
            Alpha really being a filler byte (0)
    bgr32 = last but not least, 4 bytes per pixel, in the order Blue Green Red
            Alpha, Alpha again a filler byte (0)

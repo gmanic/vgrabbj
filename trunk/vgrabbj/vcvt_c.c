@@ -1,8 +1,8 @@
 /*
-   Colour conversion routines (RGB <-> YUV) in plain C, with viewport 
+   Colour conversion routines (RGB <-> YUV) in plain C, with viewport
    extension.
    (C) 2001 Nemosoft Unv.    nemosoft@smcc.demon.nl
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -23,14 +23,14 @@
    files for more information.
 
    If you are always converting images where the image- and viewport size
-   is the same, you can hack out the 'plus' variable and delete the 
+   is the same, you can hack out the 'plus' variable and delete the
    offset calculation at the bottom of every for(line) {} loop. Otherwise,
    just call the functions with plus = width.
-   
+
    NB: for these function, the YUV420 format is defined as:
    even lines:  YYYY UU YYYY UU YYYY ..
    odd lines:   YYYY VV YYYY VV YYYY ..
-*/   
+*/
 
 #include "vcvt.h"
 
@@ -47,11 +47,11 @@
   \param plus Width of viewport, in pixels
   \param src beginning of YUV data
   \param dst beginning of RGB data, \b including the initial offset into the viewport
-  \param push The requested RGB format 
+  \param push The requested RGB format
 
   \e push can be any of PUSH_RGB24, PUSH_BGR24, PUSH_RGB32 or PUSH_BGR32
-  
- This is a really simplistic approach. Speedups are welcomed. 
+
+ This is a really simplistic approach. Speedups are welcomed.
 */
 static void vcvt_420i(int width, int height, int plus, unsigned char *src, unsigned char *dst, int push)
 {
@@ -66,7 +66,7 @@ static void vcvt_420i(int width, int height, int plus, unsigned char *src, unsig
 	sv = su + linewidth;
 
 	/* The biggest problem is the interlaced data, and the fact that odd
-	   add even lines have V and U data, resp. 
+	   add even lines have V and U data, resp.
 	 */
 	for (line = 0; line < height; line++) {
 		for (col = 0; col < width; col++) {
@@ -100,7 +100,7 @@ static void vcvt_420i(int width, int height, int plus, unsigned char *src, unsig
 			if (g > 255) g = 255;
 			if (b <   0) b =   0;
 			if (b > 255) b = 255;
-			
+
 			switch(push) {
 			case PUSH_RGB24:
 				*dst++ = r;
@@ -113,7 +113,7 @@ static void vcvt_420i(int width, int height, int plus, unsigned char *src, unsig
 				*dst++ = g;
 				*dst++ = r;
 				break;
-			
+
 			case PUSH_RGB32:
 				*dst++ = r;
 				*dst++ = g;
@@ -169,7 +169,7 @@ void vcvt_420i_bgr32(int width, int height, int plus, void *src, void *dst)
 }
 
 
-/** \brief Convert from interlaces YUV 420 to planar format 
+/** \brief Convert from interlaces YUV 420 to planar format
 */
 void vcvt_420i_420p(int width, int height, int plus, void *src, void *dsty, void *dstu, void *dstv)
 {
@@ -213,7 +213,7 @@ void vcvt_420i_yuyv(int width, int height, int plus, void *src, void *dst)
 			*d++ = *su;
 			*d++ = *sy++;
 			*d++ = *sv;
-			
+
 			*d++ = *sy++;
 			*d++ = *su++;
 			*d++ = *sy++;

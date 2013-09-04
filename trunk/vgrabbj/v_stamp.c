@@ -1,25 +1,25 @@
 /* Simple Video4Linux image grabber. Made for my Philips Vesta Pro
- * 
+ *
  * Definition of options
  *
  * Copyright (C) 2002 Jens Gecius, Hannover, Germany
  * eMail: devel@gecius.de
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at you option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
- * USA  
- */  
+ * USA
+ */
 
 #include "vgrabbj.h"
 
@@ -27,7 +27,7 @@
 
 /* Open Face via routine found in font.c  */
 
-struct ttneed *OpenFace(struct vconfig *vconf) 
+struct ttneed *OpenFace(struct vconfig *vconf)
 {
   int i, j;
 
@@ -42,7 +42,7 @@ struct ttneed *OpenFace(struct vconfig *vconf)
 		 vconf->ttinit->properties, &vconf->ttinit->instance, vconf->font_size)) {
     v_error(vconf, LOG_WARNING, "Font not found: %s, timestamp disabled", vconf->font);
     return(NULL);
-  } 
+  }
   v_error(vconf, LOG_DEBUG, "Font-Engine initialized");
 
   return(vconf->ttinit);
@@ -79,24 +79,24 @@ char *inserttext(struct ttneed *ttinit, unsigned char *buffer, struct vconfig *v
   v_error(vconf, LOG_DEBUG, "Returned from Raster_Small_Init");
 
   Render_String(glyphs, ts_buff, ts_len, &bit, &sbit, vconf->border);
-  
+
   free_ptr(ts_buff);
 
   v_error(vconf, LOG_DEBUG, "Returned from Render_String");
 
-  if (bit.bitmap) 
+  if (bit.bitmap)
     {
       int x, y, psize, i, x_off, y_off;
       unsigned char *p;
 
       v_error(vconf, LOG_DEBUG, "Now performing calculation of position...");
 
-      if (bit.rows>vconf->win.height) 
+      if (bit.rows>vconf->win.height)
 	bit.rows=vconf->win.height;
-      if (bit.width>vconf->win.width) 
+      if (bit.width>vconf->win.width)
 	bit.width=vconf->win.width;
       psize = 3;
-      switch (vconf->align) 
+      switch (vconf->align)
 	{
 	case 1:
 	  x_off = (vconf->win.width - bit.width) * psize;
