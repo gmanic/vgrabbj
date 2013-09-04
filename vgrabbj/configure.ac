@@ -2,6 +2,8 @@
 dnl Copyright (C) 2000, 2001, 2002 Jens Gecius, Hannover, Germany
 dnl eMail: devel@gecius.de
  
+dnl Copyright (C) 2013 Ludovic Rousseau <ludovic.rousseau@free.fr>
+
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
 dnl the Free Software Foundation; either version 2 of the License, or
