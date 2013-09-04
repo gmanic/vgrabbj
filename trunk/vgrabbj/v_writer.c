@@ -34,7 +34,8 @@
 static int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x) 
 {
   char *line;
-  int n, y=0, i, line_width;
+  int n, i, line_width;
+  unsigned int y;
   
   struct jpeg_compress_struct cjpeg;
   struct jpeg_error_mgr jerr;
@@ -81,7 +82,7 @@ static int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x)
 
 static int write_png(struct vconfig *vconf, char *image, FILE *x) 
 {
-  register int y;
+  unsigned int y;
   png_bytep rowpointers[vconf->win.height];
   png_infop info_ptr;
   png_structp png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
