@@ -237,7 +237,7 @@ struct vconfig {
 
 struct palette_list {
   int num;
-  char *name;
+  const char *name;
   int mul;
   int div;
 };
