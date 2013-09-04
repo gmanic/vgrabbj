@@ -44,7 +44,7 @@ which are present in the default config file keep their values.
 Finally, the commandline is evaluated. If an option is presented 
 more than once, the last in the commandline is taken.
 If no options given, vgrabbj tries to open the default v4l-device
-\fI/dev/video\fP, grab an image and return it on \fI/dev/stdout\fP.
+\fI/dev/video0\fP, grab an image and return it on \fI/dev/stdout\fP.
 So be aware.
 .SH OPTIONS
 All options are either numeric values, strings, or booleans. If it
@@ -124,7 +124,7 @@ per hour. If you set this switch to 720 you would keep an hour of images
 in the archive.
 .TP
 \fB\-d\fP <\fIdevice\fP> 
-Sets the input device to \fIdevice\fP (default: \fI/dev/video\fP)
+Sets the input device to \fIdevice\fP (default: \fI/dev/video0\fP)
 .TP
 \fB\-s\fP <\fIdevice\fP>
 This flag causes vgrabbj to print the v4l capabilities of <\fIdevice\fP>

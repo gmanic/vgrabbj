@@ -122,7 +122,7 @@ OutputFile	/dev/stdout
 ;       man 3 strftime for details.
 ;	Be aware: this option might fill your harddrive because there is
 ;	no upper limit for the archive, yet!!
-VideoDevice	/dev/video
+VideoDevice	/dev/video0
 ;	Where to get the data from. This device must be read/writeable by the
 ;	user running vgrabbj
 OpenOnce	On

@@ -116,7 +116,7 @@
 #define MIN_ARCHIVE 0
 #define MAX_ARCHIVE 65535
 
-#define DEFAULT_VIDEO_DEV "/dev/video"
+#define DEFAULT_VIDEO_DEV "/dev/video0"
 #define DEFAULT_OUTPUT "/dev/stdout"
 #define DEFAULT_OUTFORMAT 1		// 1=jpeg, 2=png, 3=ppm
 #define MIN_FORMAT 1
