@@ -288,7 +288,7 @@ static char *read_image(struct vconfig *vconf, int size) {
 }
 
 
-static unsigned char *conv_image(struct vconfig *vconf) {
+static char *conv_image(struct vconfig *vconf) {
 
 long i,j;
 
