@@ -371,7 +371,14 @@ struct vconfig *check_device(struct vconfig *vconf) {
   if ( (vconf->vcap.maxwidth < vconf->win.width) ||
        (vconf->vcap.minwidth > vconf->win.width) ||
        (vconf->vcap.maxheight < vconf->win.height) ||
-       (vconf->vcap.minheight > vconf->win.height) )
+       (vconf->vcap.minheight > vconf->win.height) ) {
+      v_error(vconf, LOG_NOTICE,
+          "Device %d <= width <= %d, %d <= height <= %d, desired image size = %dx%d\n",
+          vconf->vcap.minwidth, vconf->vcap.maxwidth,
+          vconf->vcap.minheight, vconf->vcap.maxheight,
+          vconf->win.width, vconf->win.height);
+      v_error(vconf, LOG_CRIT, "Device doesn't support width/height");
+  }
     v_error(vconf, LOG_CRIT, "Device doesn't support width/height");
   while (ioctl(vconf->dev, VIDIOCGWIN, &twin))
     v_error(vconf, LOG_ERR, "Problem getting window information");
