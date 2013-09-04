@@ -307,23 +307,23 @@ char *strip_white(char *value) {
 }
 
 
-long int check_minmax(struct vconfig *vconf, char *value, long int tmp, int n, struct v_options l_opt) {
-  if (l_opt.max_value || tmp < 0)
-    if ( (l_opt.min_value > tmp) || (tmp > l_opt.max_value) )
+long int check_minmax(struct vconfig *vconf, char *value, long int tmp, int n, struct v_options ll_opt) {
+  if (ll_opt.max_value || tmp < 0)
+    if ( (ll_opt.min_value > tmp) || (tmp > ll_opt.max_value) )
       v_error(vconf, LOG_CRIT, "Wrong value \"%s\" for %s (line %d, %s, min %d, max %d)",
-	      value, l_opt.name, n, n?vconf->conf_file:"command-line", l_opt.min_value,
-	      l_opt.max_value);
-  v_error(vconf, LOG_DEBUG, "Set option %s to value %d (value: %s)", l_opt.name, tmp, value);
+	      value, ll_opt.name, n, n?vconf->conf_file:"command-line", ll_opt.min_value,
+	      ll_opt.max_value);
+  v_error(vconf, LOG_DEBUG, "Set option %s to value %d (value: %s)", ll_opt.name, tmp, value);
   return tmp;
 }
 
 
-char *check_maxlen(struct vconfig *vconf, char *value, struct v_options l_opt, int n) {
+char *check_maxlen(struct vconfig *vconf, char *value, struct v_options ll_opt, int n) {
   //  value=strip_white(value);
-  if ( (l_opt.max_length) && (strlen((value)) > l_opt.max_length) )
+  if ( (ll_opt.max_length) && (strlen((value)) > ll_opt.max_length) )
     v_error(vconf, LOG_CRIT, "Value \"%s\" too long (max. %d, line %d, %s)", value,
-	    l_opt.max_length, n, n?vconf->conf_file:"command-line");
-  v_error(vconf, LOG_DEBUG, "Set option %s to value \"%s\"", l_opt.name, value);
+	    ll_opt.max_length, n, n?vconf->conf_file:"command-line");
+  v_error(vconf, LOG_DEBUG, "Set option %s to value \"%s\"", ll_opt.name, value);
   return value;
 }
 
