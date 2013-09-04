@@ -368,10 +368,10 @@ static struct vconfig *check_device(struct vconfig *vconf) {
   
   while (v4l1_ioctl(vconf->dev, VIDIOCGCAP, &vconf->vcap) < 0)
     v_error(vconf, LOG_ERR, "Problem getting video capabilities");
-  if ( (vconf->vcap.maxwidth < vconf->win.width) ||
-       (vconf->vcap.minwidth > vconf->win.width) ||
-       (vconf->vcap.maxheight < vconf->win.height) ||
-       (vconf->vcap.minheight > vconf->win.height) ) {
+  if ( (vconf->vcap.maxwidth < (int)vconf->win.width) ||
+       (vconf->vcap.minwidth > (int)vconf->win.width) ||
+       (vconf->vcap.maxheight < (int)vconf->win.height) ||
+       (vconf->vcap.minheight > (int)vconf->win.height) ) {
       v_error(vconf, LOG_NOTICE,
           "Device %d <= width <= %d, %d <= height <= %d, desired image size = %dx%d\n",
           vconf->vcap.minwidth, vconf->vcap.maxwidth,
