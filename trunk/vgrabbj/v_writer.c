@@ -56,7 +56,7 @@ static int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x)
   
   jpeg_stdio_dest (&cjpeg, x);
   jpeg_start_compress (&cjpeg, TRUE);
-  row_ptr[0]=line;
+  row_ptr[0]=(JSAMPROW)line;
   line_width=vconf->win.width * 3;
   n=0;
   
@@ -107,7 +107,7 @@ static int write_png(struct vconfig *vconf, char *image, FILE *x)
   png_write_info (png_ptr, info_ptr);
   for (y = 0; y < vconf->win.height; y++) 
     {
-      rowpointers[y] = image + y*vconf->win.width*3;
+      rowpointers[y] = (png_bytep)(image + y*vconf->win.width*3);
     }
   png_write_image(png_ptr, rowpointers);
   png_write_end (png_ptr, info_ptr);
