@@ -497,7 +497,7 @@ static void decode_options(struct vconfig *vconf, char *option, char *value, int
 					      n, l_opt[i]) ? TRUE : FALSE;
 	break;
       case opt_charptr:
-	l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
+	l_opt[i].var=check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
 					      l_opt[i], n);
 	break;
       case opt_format:
