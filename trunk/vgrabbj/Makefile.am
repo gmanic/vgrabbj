@@ -28,8 +28,6 @@ EXTRA_DIST = vgrabbj.conf.default $(man_MANS) \
 
 man_MANS = vgrabbj.1 vgrabbj.conf.5
 
-DEFAULT_CONFIG_FILE = $(sysconfdir)/vgrabbj.conf
-
 install-data-local: #install-sysconfDATA
 	@if test -f $(DESTDIR)$(sysconfdir)/vgrabbj.conf ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/vgrabbj.conf" ; \
