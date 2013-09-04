@@ -468,7 +468,8 @@ void ccvt_420i_yuyv(int width, int height, void *src, void *dst)
 
 	linewidth = width + (width >> 1);
 	py = (unsigned char *)src;
-	pu = src + 4;
+	pu = src;
+	pu += 4;
 	pv = pu + linewidth;
 	d = (unsigned char *)dst;
 
@@ -507,7 +508,8 @@ void ccvt_420i_uyvy(int width, int height, void *src, void *dst)
 
 	linewidth = width + (width >> 1);
 	py = (unsigned char *)src;
-	pu = src + 4;
+	pu = src;
+    pu += 4;
 	pv = pu + linewidth;
 	d = (unsigned char *)dst;
 
