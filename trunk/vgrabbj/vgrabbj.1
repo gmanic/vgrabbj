@@ -47,7 +47,6 @@ If no options given, vgrabbj tries to open the default v4l-device
 \fI/dev/video\fP, grab an image and return it on \fI/dev/stdout\fP.
 So be aware.
 .SH OPTIONS
-.Sp
 All options are either numeric values, strings, or booleans. If it
 is a boolean switch (e.g. no value/string shown after the switch),
 it plainly switches the current setting of that particular option. 
@@ -168,7 +167,7 @@ syslog. Be aware, that loglevel 7 will also write your ftp-password
 Disable the use of the temporary outputfile and write directly to the
 output-file specified with \fB-f\fP. Output to \fI/dev/stdout\fP is always
 written directly without the use of a temporary file.
-.Sp
+.sp
 If a \fIfilename\fP different from \fI/dev/stdout\fP was given with the \fB-f\fP
 parameter, \fBvgrabbj\fP defaults to use a temporary file called \fIfilename\fP.tmp
 to write the image. This file is then renamed to \fIfilename\fP to shorten the
@@ -215,7 +214,7 @@ Does not fork daemon process and keeps vgrabbj in daemon mode in foreground,
 attached to the terminal. Useful for debugging purpose. Not available in
 config file.
 .SH HARDWARE CONTROL OPTIONS
-.Sp
+.sp
 With the following options you can control the hardware settings of your
 cam - if it is supported by your cam. Be aware that these options might
 break your hardware, as there is no check on what values are available,
@@ -236,7 +235,7 @@ Brightness definition.
 \fB\-u\fP <\fIvalue\fP>
 Hue definition.
 .SH TIMESTAMP OPTIONS
-.Sp
+.sp
 The following options are available only if \fBvgrabbj\fP was compiled with
 the freetype library available. If you set any one of these options on the
 commandline timestamp will be enabled with default values for all other
