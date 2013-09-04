@@ -29,5 +29,4 @@
 
 /* Globals */
 
-extern int signal_terminate;
 
