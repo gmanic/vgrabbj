@@ -23,7 +23,7 @@
 
 /* Includes */
 
-static struct v_options l_opt[] = {
+struct v_options l_opt[] = {
   /* Here's the whole definition of options of vgrabbj with needed information: (it fits MY screen ;-)
    *
    * arg_type: 1=int, 2=longint, 3=bool, 4=char, 0=unspecified
