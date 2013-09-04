@@ -105,6 +105,7 @@ AC_FUNC_STRFTIME
 
 PKG_CHECK_MODULES([LIBV4L1], [libv4l1])
 
+AC_DEFINE([SYSCONF_DIR], [], [default configuration file])
 if test \"x${prefix}\" = \"xNONE\"; then
   AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${ac_default_prefix}/etc/vgrabbj.conf")
 else
