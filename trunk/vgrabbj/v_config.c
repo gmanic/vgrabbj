@@ -184,6 +184,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
   vconf->o_buffer   = NULL;
+  vconf->map        = NULL;
   l_opt[idx++].var  = &vconf->debug;
   l_opt[idx++].var  = &vconf->loop;
   l_opt[idx++].var  = &vconf->loop;
