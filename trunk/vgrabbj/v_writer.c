@@ -31,7 +31,7 @@
 /* Write image as jpeg to FILE
 */
 
-int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x) 
+static int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x) 
 {
   char *line;
   int n, y=0, i, line_width;
@@ -79,7 +79,7 @@ int write_jpeg(struct vconfig *vconf, char *buffer, FILE *x)
 
 /* Write image as png to FILE  */
 
-int write_png(struct vconfig *vconf, char *image, FILE *x) 
+static int write_png(struct vconfig *vconf, char *image, FILE *x) 
 {
   register int y;
   png_bytep rowpointers[vconf->win.height];
@@ -117,7 +117,7 @@ int write_png(struct vconfig *vconf, char *image, FILE *x)
 
 /* Write image as ppm to FILE  */
 
-int write_ppm(struct vconfig *vconf, char *image, FILE *x) 
+static int write_ppm(struct vconfig *vconf, char *image, FILE *x) 
 {
 
   fprintf(x,"P6\n%d %d\n255\n",vconf->win.width,vconf->win.height);

@@ -187,7 +187,7 @@ void show_capabilities(char *in, char *pname)
 
 /* Read the image from device, adjust brightness, if wanted, for RGB24 */
 
-unsigned char *read_image(struct vconfig *vconf, int size) {
+static unsigned char *read_image(struct vconfig *vconf, int size) {
   int f, newbright;
   int err_count;
   int discard=vconf->discard;
@@ -288,7 +288,7 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 }
 
 
-unsigned char *conv_image(struct vconfig *vconf) {
+static unsigned char *conv_image(struct vconfig *vconf) {
 
 long i,j;
 
