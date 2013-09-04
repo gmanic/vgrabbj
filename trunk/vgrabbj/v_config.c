@@ -183,22 +183,22 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->tmpout     = NULL;
   vconf->buffer     = NULL;
   vconf->o_buffer   = NULL;
-  l_opt[idx++].var  = &(int)vconf->debug;
-  l_opt[idx++].var  = &(long int)vconf->loop;
-  l_opt[idx++].var  = &(long int)vconf->loop;
+  l_opt[idx++].var  = &vconf->debug;
+  l_opt[idx++].var  = &vconf->loop;
+  l_opt[idx++].var  = &vconf->loop;
   l_opt[idx++].var  = &vconf->autobrightness;
-  l_opt[idx++].var  = &(int)vconf->quality;
+  l_opt[idx++].var  = &vconf->quality;
   idx              += 1; /* Image Size */
   l_opt[idx++].var  = &vconf->win.width;
   l_opt[idx++].var  = &vconf->win.height;
-  l_opt[idx++].var  = &(int)vconf->outformat;
+  l_opt[idx++].var  = &vconf->outformat;
   l_opt[idx++].var  = (char *)vconf->out;
   l_opt[idx++].var  = (char *)vconf->in;
   l_opt[idx++].var  = &vconf->openonce;
   l_opt[idx++].var  = &vconf->switch_bgr;
   l_opt[idx++].var  = &vconf->windowsize;
-  l_opt[idx++].var  = &(int)vconf->discard;
-  l_opt[idx++].var  = &(int)vconf->forcepal;
+  l_opt[idx++].var  = &vconf->discard;
+  l_opt[idx++].var  = &vconf->forcepal;
   l_opt[idx++].var  = &vconf->usetmpout;
   l_opt[idx++].var  = &vconf->use_ts;
 #ifdef LIBTTF
@@ -211,10 +211,10 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   vconf->blend      = DEFAULT_BLEND;
   l_opt[idx++].var  = (char *)vconf->font;
   l_opt[idx++].var  = (char *)vconf->timestamp;
-  l_opt[idx++].var  = &(int)vconf->font_size;
-  l_opt[idx++].var  = &(int)vconf->align;
-  l_opt[idx++].var  = &(int)vconf->blend;
-  l_opt[idx++].var  = &(int)vconf->border;
+  l_opt[idx++].var  = &vconf->font_size;
+  l_opt[idx++].var  = &vconf->align;
+  l_opt[idx++].var  = &vconf->blend;
+  l_opt[idx++].var  = &vconf->border;
 #endif
 #ifdef LIBFTP
   vconf->ftp.enable          = FALSE;
@@ -233,21 +233,21 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = (char *)vconf->ftp.username;
   l_opt[idx++].var  = (char *)vconf->ftp.password;
   l_opt[idx++].var  = &vconf->ftp.keepalive;
-  l_opt[idx++].var  = &(unsigned int)vconf->ftp.tryharder;
+  l_opt[idx++].var  = &vconf->ftp.tryharder;
   l_opt[idx++].var  = (char *)vconf->ftp.remoteDir;
   l_opt[idx++].var  = &vconf->ftp.passive;
 #endif
   idx              += 4;
   vconf->hue = -1;
-  l_opt[idx++].var  = &(int)vconf->hue;
+  l_opt[idx++].var  = &vconf->hue;
   vconf->brightness = -1;
-  l_opt[idx++].var  = &(int)vconf->brightness;
+  l_opt[idx++].var  = &vconf->brightness;
   vconf->contrast = -1;
-  l_opt[idx++].var  = &(int)vconf->contrast;
+  l_opt[idx++].var  = &vconf->contrast;
   vconf->colour = -1;
-  l_opt[idx++].var  = &(int)vconf->colour;
+  l_opt[idx++].var  = &vconf->colour;
   vconf->whiteness = -1;
-  l_opt[idx++].var  = &(int)vconf->whiteness;
+  l_opt[idx++].var  = &vconf->whiteness;
   vconf->archive    = NULL;
   l_opt[idx++].var  = (char *)vconf->archive;
   vconf->arch       = malloc(sizeof(struct s_arch));
@@ -489,7 +489,7 @@ void decode_options(struct vconfig *vconf, char *option, char *value, int o, int
 					      n, l_opt[i]) ? TRUE : FALSE;
 	break;
       case opt_charptr:
-	(int *)l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
+	l_opt[i].var=(int)check_maxlen(vconf, get_str(value, (char *)l_opt[i].var),
 					      l_opt[i], n);
 	break;
       case opt_format:
