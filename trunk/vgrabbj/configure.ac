@@ -21,7 +21,7 @@ dnl USA
 
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([vgrabbj], [0.9.6])
+AC_INIT([vgrabbj], [0.9.7])
 AC_CONFIG_SRCDIR([vgrabbj.c])
 
 # For automake
