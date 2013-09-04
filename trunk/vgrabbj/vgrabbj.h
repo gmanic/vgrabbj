@@ -282,7 +282,7 @@ extern struct vconfig *v_reinit(struct vconfig *vconf);
 extern void            show_capabilities(char *in, char *pname);
 extern void            ftp_upload(struct vconfig *vconf);
 extern void            write_image(struct vconfig *vconf);
-extern void            v_error(struct vconfig *vconf, int msg, char *fmt, ...);
+extern void            v_error(struct vconfig *vconf, int msg, const char *fmt, ...);
 extern int             img_size(struct vconfig *vconf, int palette);
 extern void           *free_ptr(void *buf);
 extern int             get_height(char *value);

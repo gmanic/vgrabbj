@@ -67,7 +67,7 @@ void cleanup(struct vconfig *vconf) {
 
 
 
-void v_error(struct vconfig *vconf, int msg, char *fmt, ...)
+void v_error(struct vconfig *vconf, int msg, const char *fmt, ...)
 {
   va_list arg_ptr;
   static char buf[MAX_ERRORMSG_LENGTH];
