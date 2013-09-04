@@ -250,7 +250,7 @@ struct v_options {
   int var_type;
   int min_value;
   int max_value;
-  int max_length;
+  size_t max_length;
   const char *standard;
   struct v_options *next;
 };
