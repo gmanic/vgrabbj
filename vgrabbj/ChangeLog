@@ -1,3 +1,9 @@
+2013-09-04  Ludovic Rousseau <ludovic.rousseau@free.fr>
+
+	* release 0.9.7
+	* integrate the Debian changes upstream
+	* fix compiler warnings
+
 2004-01-03  Jens Gecius  <jens@gecius.de>
 
 	* vgrabbj.conf.5/vgrabbj.1: 
