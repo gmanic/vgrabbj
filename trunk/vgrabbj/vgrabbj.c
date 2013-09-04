@@ -101,12 +101,12 @@ void v_error(struct vconfig *vconf, int msg, const char *fmt, ...)
     strcat(buf, "\n");
     va_end(arg_ptr);
     if (vconf->loop && vconf->init_done) {
-      syslog(msg, buf);
+      syslog(msg, "%s", buf);
       if (msg == 3) {
 	sleep(1);
       }
     } else {
-      fprintf(stderr, buf);
+      fprintf(stderr, "%s", buf);
       fflush(stderr);
     }
     
