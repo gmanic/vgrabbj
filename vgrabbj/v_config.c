@@ -1,23 +1,23 @@
 /* Simple Video4Linux image grabber. Made for my Philips Vesta Pro
- * 
+ *
  * Copyright (C) 2001, 2002 Jens Gecius, Hannover, Germany
  * eMail: devel@gecius.de
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at you option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
- * USA  
- */  
+ * USA
+ */
 
 /* Functions to parse the (optional) config file, or command */
 /* line options, print out help information                  */
@@ -27,7 +27,7 @@
 
 /* Usage information  */
 
-static void usage (char *pname) 
+static void usage (char *pname)
 {
   fprintf(stderr,
 	  "%s, Version %s\n"
@@ -97,13 +97,13 @@ static void usage (char *pname)
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
 	  "\n"
 	  "The video stream has to be one of RGB24, RGB32, YUV420, YUV420P, YUYV or UYVY.\n",
-	  basename(pname), VERSION, basename(pname), MIN_QUALITY, MAX_QUALITY, 
+	  basename(pname), VERSION, basename(pname), MIN_QUALITY, MAX_QUALITY,
 	  DEFAULT_QUALITY, DEFAULT_WIDTH, DEFAULT_HEIGHT,
-	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV, 
+	  DEFAULT_OUTPUT, DEFAULT_VIDEO_DEV,
 #ifdef LIBTTF
 	  DEFAULT_FONT, MIN_FONTSIZE, MAX_FONTSIZE, DEFAULT_FONTSIZE, DEFAULT_TIMESTAMP,
 	  DEFAULT_ALIGN, MIN_BLEND, MAX_BLEND, DEFAULT_BLEND, MIN_BLEND, MAX_BLEND,
-	  MIN_BORDER, MAX_BORDER, DEFAULT_BORDER, 
+	  MIN_BORDER, MAX_BORDER, DEFAULT_BORDER,
 #endif
 	  MIN_DEBUG, MAX_DEBUG, LOGLEVEL, DEFAULT_OUTPUT, basename(pname));
   exit (1);
@@ -118,7 +118,7 @@ void debug_vconf(struct vconfig *vconf) {
 	  "vconf->ftp.password       :%s*\n", vconf->in, vconf->out, vconf->timestamp,
 	  vconf->font, vconf->ftp.remoteHost, vconf->ftp.remoteDir,
 	  vconf->ftp.remoteImageName, vconf->ftp.username, vconf->ftp.password);
-}  
+}
 #endif
 
 /*
@@ -268,7 +268,7 @@ static struct vconfig *init_defaults(struct vconfig *vconf) {
     v_error(vconf, LOG_CRIT, "Bug in l_opt - contact developer with full debug details.");
   }
   return vconf;
-}  
+}
 
 
 static void check_files(struct vconfig *vconf) {
@@ -283,7 +283,7 @@ static void check_files(struct vconfig *vconf) {
   } else {
     v4l1_close(dev);
   }
-  
+
   if ( !(x=fopen(vconf->out, "w+"))) {
     v_error(vconf, LOG_CRIT, "Can't open \"%s\" as OutputFile", vconf->out);
   } else {
@@ -298,7 +298,7 @@ static void check_files(struct vconfig *vconf) {
     }
   }
 #endif
-  
+
 }
 
 #ifdef LIBFTP
@@ -365,7 +365,7 @@ static struct vconfig *check_device(struct vconfig *vconf) {
   open_device(vconf);
 
   v_error(vconf, LOG_INFO, "Checking settings of device %s", vconf->in);
-  
+
   while (v4l1_ioctl(vconf->dev, VIDIOCGCAP, &vconf->vcap) < 0)
     v_error(vconf, LOG_ERR, "Problem getting video capabilities");
   if ( (vconf->vcap.maxwidth < (int)vconf->win.width) ||
@@ -407,7 +407,7 @@ static struct vconfig *check_device(struct vconfig *vconf) {
   if (vconf->forcepal)
     if ( (vconf->vpic.palette=try_palette(vconf, vconf->forcepal, vconf->dev)) )
       v_error(vconf, LOG_INFO, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
-  
+
   switch(vconf->vpic.palette) {
   case VIDEO_PALETTE_RGB24:
   case VIDEO_PALETTE_YUV420P:
@@ -430,11 +430,11 @@ static struct vconfig *check_device(struct vconfig *vconf) {
       v_error(vconf, LOG_CRIT, "Unable to set supported video-palette");
     break;
   }
-    
+
   v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
 
-  if ( (v4l1_ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) || 
-       ((vconf->autobrightness) && 
+  if ( (v4l1_ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) ||
+       ((vconf->autobrightness) &&
 	(vconf->vpic.palette==VIDEO_PALETTE_RGB24)) ||
        (vconf->nousemmap) )
     vconf->usemmap=FALSE;
@@ -477,9 +477,9 @@ void v_update_ptr(struct vconfig *vconf) {
 
 static void decode_options(struct vconfig *vconf, char *option, char *value, int o, int n) {
   int i;
-  
+
   for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
-    if ( (l_opt[i].name && !strcasecmp(option, l_opt[i].name) && !o) ||  
+    if ( (l_opt[i].name && !strcasecmp(option, l_opt[i].name) && !o) ||
 	 (l_opt[i].short_name && o==*l_opt[i].short_name) ) {
       switch (l_opt[i].var_type) {
       case opt_int:
@@ -492,7 +492,7 @@ static void decode_options(struct vconfig *vconf, char *option, char *value, int
 	*(long *)l_opt[i].var=check_minmax(vconf, value, get_int(value), n, l_opt[i])*1000000;
 	break;
       case opt_bool:
-	*(boolean *)l_opt[i].var=check_minmax(vconf, value, 
+	*(boolean *)l_opt[i].var=check_minmax(vconf, value,
 					      n?get_bool(value):!*(boolean *)l_opt[i].var,
 					      n, l_opt[i]) ? TRUE : FALSE;
 	break;
@@ -534,7 +534,7 @@ static void decode_options(struct vconfig *vconf, char *option, char *value, int
 	v_error(vconf, LOG_WARNING, "Unknown option %s (line %d), shouldn't happen", value, n);
 	break;
       }
-    }      
+    }
   }
 }
 
@@ -609,7 +609,7 @@ static struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *
   int n;
   //, i;
   char *opt_str;
-  
+
   opt_str=build_opt(l_opt);
 
   while ( (n = getopt (argc, argv, opt_str) ) !=EOF ) {
@@ -617,7 +617,7 @@ static struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *
   }
   free_ptr(opt_str);
   v_update_ptr(vconf);
-  
+
   v_error(vconf, LOG_INFO, "Done parsing commandline");
 
   return vconf;
@@ -654,7 +654,7 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
   else {
     vconf->usetmpout=FALSE;
   }
-  
+
   check_files(vconf);
 
 #ifdef LIBFTP
@@ -664,7 +664,7 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
   vconf=check_device(vconf);
 
   /* re/initialize appropriate memory */
-  
+
   if (vconf->init_done)
     v_error(vconf, LOG_DEBUG, "Reinitializing memory");
   else
@@ -675,17 +675,17 @@ struct vconfig *v_init(struct vconfig *vconf, int argc, char *argv[]) {
 
   vconf->buffer=malloc(img_size(vconf, vconf->vpic.palette));  /* depending on palette */
   vconf->o_buffer=malloc(img_size(vconf, VIDEO_PALETTE_RGB24)); /* RGB24 (3 byte/pixel) */
-  if (!vconf->buffer || !vconf->o_buffer) 
+  if (!vconf->buffer || !vconf->o_buffer)
     v_error(vconf, LOG_CRIT, "Out of memory! Exiting...");
 
   if (vconf->archive && vconf->archivemax) {
     vconf->arch->next=init_archive(vconf, vconf->arch->next, vconf->archivemax-1);
     vconf->archivecount=vconf->archiveeach;
   }
-  
+
   v_error(vconf, LOG_DEBUG, "Memory initialized, size: %d (in), %d (out)",
 	  img_size(vconf, vconf->vpic.palette), img_size(vconf, VIDEO_PALETTE_RGB24));
-  
+
   vconf->vmap.height=vconf->win.height;
   vconf->vmap.width=vconf->win.width;
   vconf->vmap.frame=0;

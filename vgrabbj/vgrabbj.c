@@ -1,23 +1,23 @@
 /* Simple Video4Linux image grabber. Made for my Philips Vesta Pro
- * 
+ *
  * Copyright (C) 2000, 2001, 2002 Jens Gecius, Hannover, Germany
  * eMail: devel@gecius.de
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at you option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
- * USA  
- */  
+ * USA
+ */
 
 #include <vgrabbj.h>
 #include <v_plist.h>
@@ -55,7 +55,7 @@ void cleanup(struct vconfig *vconf) {
   v_error(vconf, LOG_DEBUG, "vars freed");
 
   vconf=free_ptr(vconf);
-			 
+
   if ( tmp ) {
      closelog();
     _exit(1);
@@ -83,7 +83,7 @@ void v_error(struct vconfig *vconf, int msg, const char *fmt, ...)
      7     debug information (LOG_DEBUG)
 
      Every log-message with a loglevel equal-smaller than LOGLEVEL-Level (supplied
-     via command line, otherwise default=4) will be 
+     via command line, otherwise default=4) will be
          a) displayed on screen (stderr) if non-daemon
          b) written to syslog if daemon
 
@@ -95,7 +95,7 @@ void v_error(struct vconfig *vconf, int msg, const char *fmt, ...)
   */
 
   if ( msg <= vconf->debug ) {
-   
+
     va_start(arg_ptr, fmt);
     vsprintf(buf, fmt, arg_ptr);
     strcat(buf, "\n");
@@ -109,7 +109,7 @@ void v_error(struct vconfig *vconf, int msg, const char *fmt, ...)
       fprintf(stderr, "%s", buf);
       fflush(stderr);
     }
-    
+
   }
 
   /* Decision about exiting is independent of log or not to log */
@@ -128,7 +128,7 @@ void v_error(struct vconfig *vconf, int msg, const char *fmt, ...)
 
 /* Get information from v4l device and show them  */
 
-void show_capabilities(char *in, char *pname) 
+void show_capabilities(char *in, char *pname)
 {
   struct video_capability cap;
   struct video_window win;
@@ -229,10 +229,10 @@ static char *read_image(struct vconfig *vconf, int size) {
 	  f = brightness_adj(vconf, &newbright);
 	  if (f) {
 	    vconf->vpic.brightness += (newbright << 8);
-	    if (v4l1_ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic)==-1) 
+	    if (v4l1_ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic)==-1)
 	      v_error(vconf, LOG_WARNING, "Problem setting brightness");
 	    err_count++;
-	  
+
 	    if (err_count>100) {
 	      v_error(vconf, LOG_WARNING, "Brightness not optimal");
 	      break;
@@ -248,7 +248,7 @@ static char *read_image(struct vconfig *vconf, int size) {
 
     /* We're reading the image via a mmap'd area of the driver */
 
-  } else { 
+  } else {
     v_error(vconf, LOG_DEBUG, "Using mmap for image grabbing");
     if (!vconf->openonce)
       init_mmap(vconf);
@@ -273,17 +273,17 @@ static char *read_image(struct vconfig *vconf, int size) {
 
       if (discard)
 	v_error(vconf, LOG_DEBUG, "%d frames to discard", discard);
-      
+
     } while (discard--);
     if (!vconf->openonce)
       free_mmap(vconf);
   }
-  
+
   v_error(vconf, LOG_DEBUG, "Image successfully read");
 
   if (!vconf->openonce)
     close_device(vconf);
-  
+
   return vconf->buffer;
 }
 
@@ -294,7 +294,7 @@ static char *conv_image(struct vconfig *vconf) {
 
   switch (vconf->vpic.palette) {
   case VIDEO_PALETTE_RGB24:
-    vconf->o_buffer=memcpy(vconf->o_buffer, vconf->buffer, 
+    vconf->o_buffer=memcpy(vconf->o_buffer, vconf->buffer,
 		    vconf->win.width * vconf->win.height * 3);
     v_error(vconf, LOG_DEBUG, "No conversion, we have RGB24");
     break;
@@ -310,12 +310,12 @@ static char *conv_image(struct vconfig *vconf) {
     break;
   case VIDEO_PALETTE_RGB32:
     v_error(vconf, LOG_INFO, "Got RGB32, converting...");
-   
+
     vconf->o_buffer=conv_rgb32_rgb24(vconf);
     break;
   case VIDEO_PALETTE_YUV420P:
     v_error(vconf, LOG_INFO, "Got YUV420p, converting...");
-   
+
     ccvt_420p_bgr24(vconf->win.width, vconf->win.height, vconf->buffer,
 		    vconf->buffer + (vconf->win.width * vconf->win.height),
 		    vconf->buffer + (vconf->win.width * vconf->win.height)+
@@ -330,7 +330,7 @@ static char *conv_image(struct vconfig *vconf) {
   case VIDEO_PALETTE_YUYV:
   case VIDEO_PALETTE_YUV422:
     v_error(vconf, LOG_INFO, "Got YUYV, converting...");
-      
+
     ccvt_yuyv_bgr24(vconf->win.width, vconf->win.height, vconf->buffer, vconf->o_buffer);
     break;
   case VIDEO_PALETTE_UYVY:
@@ -345,18 +345,18 @@ static char *conv_image(struct vconfig *vconf) {
 
   if (vconf->vpic.palette!=VIDEO_PALETTE_RGB24)
     v_error(vconf, LOG_DEBUG, "converted to RGB24");
-     
+
   if (vconf->switch_bgr) {
     vconf->o_buffer=switch_color(vconf);
     v_error(vconf, LOG_DEBUG, "Switched from BGR to RGB - or vice versa");
   }
   return vconf->o_buffer;
 }
-		
+
 
 /* Main loop  */
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
   struct vconfig *vconf=NULL;
 
@@ -366,32 +366,32 @@ int main(int argc, char *argv[])
 
   vconf=v_init(vconf, argc, argv);
 
-  if (vconf->loop && (!vconf->nofork) ) 
+  if (vconf->loop && (!vconf->nofork) )
     daemonize(vconf, basename(argv[0]));
   else
     v_error(vconf, LOG_WARNING, "Reading image from %s", vconf->in);
 
-  // now start the loop (if daemon), read image and convert it, if necessary 
+  // now start the loop (if daemon), read image and convert it, if necessary
   do {
     vconf->buffer=read_image(vconf, img_size(vconf, vconf->vpic.palette));
     vconf->o_buffer = conv_image(vconf);
-    
-    if (vconf->swaprl) 
+
+    if (vconf->swaprl)
       vconf->o_buffer=swap_left_right(vconf->o_buffer, vconf->win.width, vconf->win.height);
 
     if (vconf->swaptb)
       vconf->o_buffer=swap_top_bottom(vconf->o_buffer, vconf->win.width, vconf->win.height);
 
 #ifdef LIBTTF
-    if (vconf->use_ts) 
+    if (vconf->use_ts)
       vconf->o_buffer=inserttext(vconf->ttinit, vconf->o_buffer, vconf);
 #endif
-    
+
     write_image(vconf);
-    
+
     vconf->err_count=0;
     usleep(vconf->loop);
-    
+
     // We got a signal, we do have to...
     switch (signal_terminate) {
     case 0:
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
       break;
     }
   } while (vconf->loop);
-  
+
   cleanup(vconf);
   exit(0);
 }
