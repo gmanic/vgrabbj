@@ -22,7 +22,7 @@
 /* Includes */
 
 static struct palette_list plist[] = {
-  { 0, NULL },
+  { 0, NULL, 0, 0 },
   { VIDEO_PALETTE_GREY,   "GREY",    1, 1 },
   { VIDEO_PALETTE_HI240,  "HI240",   0, 1 },
   { VIDEO_PALETTE_RGB565, "RGB565",  0, 1 },
@@ -39,7 +39,7 @@ static struct palette_list plist[] = {
   { VIDEO_PALETTE_YUV411P,"YUV411P", 0, 1 },
   { VIDEO_PALETTE_YUV420P,"YUV420P", 3, 2 },
   { VIDEO_PALETTE_YUV410P,"YUV410P", 0, 1 },
-  { -1, NULL }
+  { -1, NULL, 0, 0 }
 };
 
 
