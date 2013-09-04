@@ -23,7 +23,8 @@ vgrabbj_CFLAGS = @LIBV4L1_CFLAGS@
 vgrabbj_LDADD = @LIBV4L1_LIBS@
 
 #sysconf_DATA = vgrabbj.conf.default
-EXTRA_DIST = vgrabbj.conf.default $(man_MANS)
+EXTRA_DIST = vgrabbj.conf.default $(man_MANS) \
+	examples/webcam.sh examples/vgrabbj.conf.dexxa
 
 man_MANS = vgrabbj.1 vgrabbj.conf.5
 
