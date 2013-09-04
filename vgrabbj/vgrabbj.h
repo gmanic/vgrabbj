@@ -50,6 +50,7 @@
 #include <sys/mman.h>
 
 #include <libv4l1.h>
+#include <libv4l1-videodev.h>
 
 #if defined(HAVE_LIBTTF)
 #if defined(HAVE_FREETYPE_FREETYPE_H)
