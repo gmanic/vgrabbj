@@ -192,7 +192,7 @@ void write_image(struct vconfig *vconf) {
 	if (unlink(vconf->arch->filename))
 	  v_error(vconf, LOG_ERR, "Couldn't delete %s: %s", vconf->arch->filename, strerror(errno));
       }
-      vconf->arch->filename=strcpy(realloc(vconf->arch->filename, strlen(ts)),ts);
+      vconf->arch->filename=strcpy(realloc(vconf->arch->filename, strlen(ts)+1),ts);
       v_error(vconf, LOG_DEBUG, "Unlinked old arch-file, realocated new one (%s)", vconf->arch->filename);
       free_ptr(ts);
       vconf->archivecount=vconf->archiveeach;
