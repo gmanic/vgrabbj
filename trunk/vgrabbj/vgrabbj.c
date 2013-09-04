@@ -290,7 +290,7 @@ static char *read_image(struct vconfig *vconf, int size) {
 
 static char *conv_image(struct vconfig *vconf) {
 
-long i,j;
+  unsigned long i,j;
 
   switch (vconf->vpic.palette) {
   case VIDEO_PALETTE_RGB24:
