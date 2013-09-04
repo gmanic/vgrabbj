@@ -27,7 +27,8 @@
 
 void init_mmap(struct vconfig *vconf) {
   if (vconf->usemmap) {
-    if ( (vconf->map = v4l1_mmap(0, vconf->vbuf.size, PROT_READ, MAP_SHARED, vconf->dev, 0)) < 0 )
+    vconf->map = v4l1_mmap(0, vconf->vbuf.size, PROT_READ, MAP_SHARED, vconf->dev, 0);
+    if ( MAP_FAILED == vconf->map )
       v_error(vconf, LOG_CRIT, "Could not get mmap-area of size %d", vconf->vbuf.size);
     if ( v4l1_ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0 )
       v_error(vconf, LOG_CRIT, "Could not initialize mmap-vars");
