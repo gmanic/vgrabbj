@@ -297,8 +297,8 @@ extern int             daemonize(struct vconfig *vconf, char *progname);
 extern void            sighup(int sig);
 extern void            sigterm(int sig);
 extern int             brightness_adj(struct vconfig *vconf, int *brightness);
-extern unsigned char  *conv_rgb32_rgb24(struct vconfig *vconf);
-extern unsigned char  *switch_color(struct vconfig *vconf);
+extern char            *conv_rgb32_rgb24(struct vconfig *vconf);
+extern char            *switch_color(struct vconfig *vconf);
 extern void            init_mmap(struct vconfig *vconf);
 extern void            free_mmap(struct vconfig *vconf);
 extern void            open_device(struct vconfig *vconf);
@@ -315,8 +315,8 @@ extern char           *check_maxlen(struct vconfig *vconf, char *value, struct v
 extern FILE           *open_outfile(char *filename);
 extern char           *timestring(char *format);
 extern struct vconfig *parse_config(struct vconfig *vconf);
-extern unsigned char  *swap_left_right(char *buffer, int width, int height);
-extern unsigned char  *swap_top_bottom(char *buffer, int width, int height);
+extern char           *swap_left_right(char *buffer, int width, int height);
+extern char           *swap_top_bottom(char *buffer, int width, int height);
 
 #ifdef LIBTTF
 extern void      Face_Done   (TT_Instance inst, TT_Face face);
