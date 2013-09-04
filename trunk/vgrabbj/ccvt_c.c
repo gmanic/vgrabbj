@@ -253,14 +253,13 @@ void ccvt_420p_bgr32(int width, int height, void *src, void *srcu, void *srcv, v
 /* Format: YUYV YUYV YUYV YUYV...                               */
 static void ccvt_yuyv(int width, int height, unsigned char *src, unsigned char *dst, int push)
 {
-	int line, col, linewidth;
+	int line, col;
 	int y, yy;
 	int u, v;
 	int vr, ug, vg, ub;
 	int r, g, b;
 	unsigned char *py, *pu, *pv;
 
-	linewidth = width - (width >> 1);
 	py = src;
 	pu = src + 1;
 	pv = src + 3;
@@ -350,14 +349,13 @@ void ccvt_yuyv_bgr32(int width, int height, void *src, void *dst)
 /* Format: UYVY UYVY UYVY UYVY...                               */
 static void ccvt_uyvy(int width, int height, unsigned char *src, unsigned char *dst, int push)
 {
-	int line, col, linewidth;
+	int line, col;
 	int y, yy;
 	int u, v;
 	int vr, ug, vg, ub;
 	int r, g, b;
 	unsigned char *py, *pu, *pv;
 
-	linewidth = width - (width >> 1);
 	py = src + 1;
 	pu = src;
 	pv = src + 2;
