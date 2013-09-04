@@ -589,13 +589,13 @@ struct vconfig *parse_config(struct vconfig *vconf){
   return(vconf);
 }
 
-static char *build_opt(struct v_options l_opt[]) {
+static char *build_opt(struct v_options ll_opt[]) {
   int i, n=0;
   char string[255];
-  for (i=0; l_opt[i].name || l_opt[i].short_name; i++ ) {
-    if (l_opt[i].short_name) {
-      string[n++]=*l_opt[i].short_name;
-      if (l_opt[i].has_arg==req)
+  for (i=0; ll_opt[i].name || ll_opt[i].short_name; i++ ) {
+    if (ll_opt[i].short_name) {
+      string[n++]=*ll_opt[i].short_name;
+      if (ll_opt[i].has_arg==req)
 	string[n++]=':';
     }
   }
