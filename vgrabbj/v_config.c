@@ -27,7 +27,7 @@
 
 /* Usage information  */
 
-void usage (char *pname) 
+static void usage (char *pname) 
 {
   fprintf(stderr,
 	  "%s, Version %s\n"
@@ -153,7 +153,7 @@ struct v_options *init_conf_list(struct v_options *conf)
     Some development, not release-ready...
 */
 
-struct vconfig *init_defaults(struct vconfig *vconf) {
+static struct vconfig *init_defaults(struct vconfig *vconf) {
   int idx = 0;
   /* Set defaults */
   memset(vconf, 0, sizeof(*vconf));
@@ -271,7 +271,7 @@ struct vconfig *init_defaults(struct vconfig *vconf) {
 }  
 
 
-void check_files(struct vconfig *vconf) {
+static void check_files(struct vconfig *vconf) {
 /* This function is for checking to make sure that all the file
  * information in vconf is right.  It's called after all configs are
  * done. Input from Michael Janssen.
@@ -302,7 +302,7 @@ void check_files(struct vconfig *vconf) {
 }
 
 #ifdef LIBFTP
-void check_ftpconf(struct vconfig *vconf)
+static void check_ftpconf(struct vconfig *vconf)
 {
   /* This function checks for proper settings if ftp-enable is set to on
      In case any essential setting is not set to a proper value, ftp-enable
@@ -322,7 +322,7 @@ void check_ftpconf(struct vconfig *vconf)
 
 /* Initialize/Reinitialize pointers for archive-filenames */
 
-struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int count)
+static struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int count)
 {
   archive=realloc(archive, sizeof(struct s_arch));
   archive->filename=NULL;
@@ -338,7 +338,7 @@ struct s_arch *init_archive(struct vconfig *vconf, struct s_arch *archive, int c
 
 /* Check if palette is supported by v4l device */
 
-int try_palette(struct vconfig *vconf, int palette, int dev)
+static int try_palette(struct vconfig *vconf, int palette, int dev)
 {
   v_error(vconf, LOG_INFO, "Trying palette %s", plist[palette].name);
   vconf->vpic.palette=palette;
@@ -358,7 +358,7 @@ int try_palette(struct vconfig *vconf, int palette, int dev)
 
 /* Check and set v4l device */
 
-struct vconfig *check_device(struct vconfig *vconf) {
+static struct vconfig *check_device(struct vconfig *vconf) {
 
   struct video_window twin;
 
@@ -475,7 +475,7 @@ void v_update_ptr(struct vconfig *vconf) {
 
 /* Decode options */
 
-void decode_options(struct vconfig *vconf, char *option, char *value, int o, int n) {
+static void decode_options(struct vconfig *vconf, char *option, char *value, int o, int n) {
   int i;
   
   for (i=0;l_opt[i].name || l_opt[i].short_name; i++) {
@@ -589,7 +589,7 @@ struct vconfig *parse_config(struct vconfig *vconf){
   return(vconf);
 }
 
-char *build_opt(struct v_options l_opt[]) {
+static char *build_opt(struct v_options l_opt[]) {
   int i, n=0;
   char string[255];
   for (i=0; l_opt[i].name || l_opt[i].short_name; i++ ) {
@@ -605,7 +605,7 @@ char *build_opt(struct v_options l_opt[]) {
 
 /* Parse the commandline */
 
-struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
+static struct vconfig *parse_commandline(struct vconfig *vconf, int argc, char *argv[]) {
   int n;
   //, i;
   char *opt_str;
