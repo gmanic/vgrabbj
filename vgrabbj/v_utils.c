@@ -218,9 +218,7 @@ int brightness_adj(struct vconfig *vconf, int *brightness)
 /* Event handler for SIGKILL */
 /* to properly clean up on externally requested termination */
 
-void sigterm();
-
-void sigterm() {
+void sigterm(int sig) {
   signal(SIGTERM,sigterm); /* reset signal */
   syslog(LOG_WARNING, "Caught sigterm, cleaning up...");
   signal_terminate=SIGTERM;
@@ -230,9 +228,7 @@ void sigterm() {
 /* Event handler for SIGHUP */
 /* to re-read the configuration file */
 
-void sighup();
-
-void sighup() {
+void sighup(int sig) {
   signal(SIGHUP,sighup); /* reset signal */
   syslog(LOG_WARNING, "Caught sighup, re-reading config-file...");
   signal_terminate=SIGHUP;
