@@ -19,12 +19,12 @@ dnl USA
 
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT
+AC_INIT([vgrabbj], [0.9.6])
 AC_CONFIG_SRCDIR([vgrabbj.c])
 
 # For automake
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE(vgrabbj,0.9.6)
+AM_INIT_AUTOMAKE
 AC_ARG_PROGRAM
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
