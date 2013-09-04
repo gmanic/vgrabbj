@@ -135,19 +135,19 @@ void show_capabilities(char *in, char *pname)
   struct video_picture pic;
   int dev;
 
-  if ( (dev = open(in, O_RDONLY)) < 0 ) {
+  if ( (dev = v4l1_open(in, O_RDONLY)) < 0 ) {
     fprintf(stderr, "Can't open device %s\n", in);
     exit(1);
   }
-  if (ioctl(dev, VIDIOCGCAP, &cap) < 0) {
+  if (v4l1_ioctl(dev, VIDIOCGCAP, &cap) < 0) {
     fprintf(stderr, "Can't get capabilities of device %s\n", in);
     exit(1);
   }
-  if (ioctl(dev, VIDIOCGPICT, &pic) < 0) {
+  if (v4l1_ioctl(dev, VIDIOCGPICT, &pic) < 0) {
     fprintf(stderr, "Can't get picture properties of device %s\n", in);
     exit(1);
   }
-  if (ioctl(dev, VIDIOCGWIN, &win) < 0) {
+  if (v4l1_ioctl(dev, VIDIOCGWIN, &win) < 0) {
     fprintf(stderr, "Can't get overlay values of device %s\n", in);
     exit(1);
   }
@@ -178,7 +178,7 @@ void show_capabilities(char *in, char *pname)
 	  pic.brightness, pic.hue, pic.colour, pic.contrast,
 	  pic.whiteness, pic.depth, plist[pic.palette].name, pic.palette,
 	  win.width, win.height, win.chromakey);
-  dev=close(dev);
+  dev=v4l1_close(dev);
   if (dev)
     fprintf(stderr, "Error occured while closing %s\n", in);
   exit(0);
@@ -201,11 +201,11 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 
     /* and Re-initialize the palette, in case someone changed it meanwhile */
 
-    while (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0 )
+    while (v4l1_ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic) < 0 )
       v_error(vconf, LOG_ERR, "Device %s couldn't be reset to known palette %s",
 	      vconf->in, vconf->vpic.palette);
     if (vconf->windowsize)
-      while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
+      while (v4l1_ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
 	v_error(vconf, LOG_ERR, "Problem setting window size"); // exit
 
     set_picture_parms(vconf);
@@ -224,12 +224,12 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
       if (vconf->autobrightness && vconf->vpic.palette==VIDEO_PALETTE_RGB24) {
 	v_error(vconf, LOG_INFO, "Doing brightness adjustment");
 	do {
-	  while (read(vconf->dev, vconf->buffer, size) < size)
+	  while (v4l1_read(vconf->dev, vconf->buffer, size) < size)
 	    v_error(vconf, LOG_ERR, "Error reading from %s", vconf->in);
 	  f = brightness_adj(vconf, &newbright);
 	  if (f) {
 	    vconf->vpic.brightness += (newbright << 8);
-	    if (ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic)==-1) 
+	    if (v4l1_ioctl(vconf->dev, VIDIOCSPICT, &vconf->vpic)==-1) 
 	      v_error(vconf, LOG_WARNING, "Problem setting brightness");
 	    err_count++;
 	  
@@ -242,7 +242,7 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 	v_error(vconf, LOG_INFO, "Brightness adjusted");
       } else {
 	v_error(vconf, LOG_DEBUG, "Using normal read for image grabbing");
-	read(vconf->dev, vconf->buffer, size);
+	v4l1_read(vconf->dev, vconf->buffer, size);
       }
     } while (discard--);
 
@@ -259,7 +259,7 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 	  v_error(vconf, LOG_ERR, "Could not grab frame (100 tries)");
 	  break;
 	}
-      } while (ioctl(vconf->dev, VIDIOCMCAPTURE, &vconf->vmap) < 0);
+      } while (v4l1_ioctl(vconf->dev, VIDIOCMCAPTURE, &vconf->vmap) < 0);
 
       err_count=0;
       do {
@@ -267,7 +267,7 @@ unsigned char *read_image(struct vconfig *vconf, int size) {
 	  v_error(vconf, LOG_ERR, "Could not sync with frame (100 tries)");
 	  break;
 	}
-      } while (ioctl(vconf->dev, VIDIOCSYNC, &vconf->vmap.frame) < 0);
+      } while (v4l1_ioctl(vconf->dev, VIDIOCSYNC, &vconf->vmap.frame) < 0);
 
       vconf->buffer=memcpy(vconf->buffer, vconf->map+vconf->vbuf.offsets[vconf->vmap.frame], size);
 

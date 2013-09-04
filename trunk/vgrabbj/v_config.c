@@ -156,6 +156,7 @@ struct v_options *init_conf_list(struct v_options *conf)
 struct vconfig *init_defaults(struct vconfig *vconf) {
   int idx = 0;
   /* Set defaults */
+  memset(vconf, 0, sizeof(*vconf));
   vconf->debug      = LOGLEVEL;
   vconf->quality    = DEFAULT_QUALITY;
   vconf->in         = strcpy(malloc(strlen(DEFAULT_VIDEO_DEV)+1),DEFAULT_VIDEO_DEV);
@@ -276,10 +277,10 @@ void check_files(struct vconfig *vconf) {
  */
   int dev;
   FILE *x;
-  if ( (dev=open(vconf->in, O_RDONLY)) < 0) {
+  if ( (dev=v4l1_open(vconf->in, O_RDONLY)) < 0) {
     v_error(vconf, LOG_CRIT, "Can't open \"%s\" as VideoDevice!", vconf->in);
   } else {
-    close(dev);
+    v4l1_close(dev);
   }
   
   if ( !(x=fopen(vconf->out, "w+"))) {
@@ -341,11 +342,11 @@ int try_palette(struct vconfig *vconf, int palette, int dev)
   v_error(vconf, LOG_INFO, "Trying palette %s", plist[palette].name);
   vconf->vpic.palette=palette;
 
-  if (ioctl(dev, VIDIOCSPICT, &vconf->vpic) < 0) {
+  if (v4l1_ioctl(dev, VIDIOCSPICT, &vconf->vpic) < 0) {
     v_error(vconf, LOG_WARNING, "Unable to set palette");
     return 0;
   }
-  if (ioctl(dev, VIDIOCGPICT, &vconf->vpic) < 0) {
+  if (v4l1_ioctl(dev, VIDIOCGPICT, &vconf->vpic) < 0) {
     v_error(vconf, LOG_WARNING, "Unable to get palette info");
     return 0;
   }
@@ -425,7 +426,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
     
   v_error(vconf, LOG_DEBUG, "Set palette successfully to %s", plist[vconf->vpic.palette].name);
 
-  if ( (ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) || 
+  if ( (v4l1_ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0) || 
        ((vconf->autobrightness) && 
 	(vconf->vpic.palette==VIDEO_PALETTE_RGB24)) ||
        (vconf->nousemmap) )
