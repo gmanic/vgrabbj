@@ -130,7 +130,7 @@ int img_size(struct vconfig *vconf, int palette) {
 
 char *switch_color(struct vconfig *vconf) {
   char a;
-  long int y;
+  unsigned long int y;
   v_error(vconf, LOG_DEBUG, "width: %d, heigth: %d", vconf->win.width, vconf->win.height);
   for (y = 0; y < (vconf->win.width * vconf->win.height); y++) {
     memcpy(&a, vconf->o_buffer+(y*3),1);
@@ -144,7 +144,7 @@ char *switch_color(struct vconfig *vconf) {
 /* Strips last byte of RGB32 to convert to RGB24 - breaks picture if alpha is used! */
 
 char *conv_rgb32_rgb24(struct vconfig *vconf) {
-  long int y;
+  unsigned long int y;
   for (y = 0; y < (vconf->win.width * vconf->win.height); y++) 
     memcpy(vconf->o_buffer+(y*3), vconf->buffer+(y*4), 3);
   return vconf->o_buffer;
