@@ -109,7 +109,7 @@ AC_DEFINE([SYSCONF_DIR], [], [default configuration file])
 if test \"x${prefix}\" = \"xNONE\"; then
   AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${ac_default_prefix}/etc/vgrabbj.conf")
 else
-  AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${prefix}/etc/vgrabbj.conf")
+  AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${sysconfdir}/vgrabbj.conf")
 fi
 
 AC_CONFIG_FILES([Makefile])
