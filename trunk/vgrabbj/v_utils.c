@@ -127,7 +127,7 @@ int img_size(struct vconfig *vconf, int palette) {
 
 /* Turns RGB into BGR (or vice versa) */
 
-unsigned char *switch_color(struct vconfig *vconf) {
+char *switch_color(struct vconfig *vconf) {
   char a;
   long int y;
   v_error(vconf, LOG_DEBUG, "width: %d, heigth: %d", vconf->win.width, vconf->win.height);
@@ -142,7 +142,7 @@ unsigned char *switch_color(struct vconfig *vconf) {
 
 /* Strips last byte of RGB32 to convert to RGB24 - breaks picture if alpha is used! */
 
-unsigned char *conv_rgb32_rgb24(struct vconfig *vconf) {
+char *conv_rgb32_rgb24(struct vconfig *vconf) {
   long int y;
   for (y = 0; y < (vconf->win.width * vconf->win.height); y++) 
     memcpy(vconf->o_buffer+(y*3), vconf->buffer+(y*4), 3);
@@ -152,7 +152,7 @@ unsigned char *conv_rgb32_rgb24(struct vconfig *vconf) {
 
 /* Swap Left to Right (like a mirror) */
 
-unsigned char *swap_left_right(char *buffer, int width, int height) 
+char *swap_left_right(char *buffer, int width, int height) 
 {
   char a, b, c;
   int i, j;
@@ -177,7 +177,7 @@ unsigned char *swap_left_right(char *buffer, int width, int height)
 /* Swap Top to Bottom (like a mirror) */
 /* Thanks to Koos van den Hout and Arthur van Leeuwen */
 
-unsigned char *swap_top_bottom(char *buffer, int width, int height) 
+char *swap_top_bottom(char *buffer, int width, int height) 
 {
   char a, b, c;
   int i, j;
