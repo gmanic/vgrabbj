@@ -1,0 +1,59 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename vgrabbj.info
+@settitle vgrabbj manual
+@setchapternewpage odd
+@c %**end of header
+
+@ifinfo
+This file documents the v4l image grabber vgrabbj.
+
+Copyright 2001 Jens Gecius
+
+Permission is granted to copy and use under Gnu Public License.
+@end ifinfo
+
+@c  This title page illustrates only one of the
+@c  two methods of forming a title page.
+
+@titlepage
+@title vgrabbj
+@subtitle v4l image grabbing
+@author Jens Gecius
+
+@c  The following two commands
+@c  start the copyright page.
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2001 Jens Gecius
+
+Published by Jens Gecius
+
+Permission is granted to copy and use under Gnu Public License.
+@end titlepage
+
+@node Top, Overview, , (dir)
+@top
+@ifinfo
+This document describes the functionalities of vgrabbj, 
+an image grabber for a video for linux (v4l) device which can
+be switched to rgb24 output.
+
+This document applies to version 0.6.1
+@end ifinfo
+
+@menu
+* Copying::          Your rights and freedoms.
+* Overview::         What is vgrabbj, Limitations
+* First Chapter::    Getting started
+* Second Chapter::   Grabbing a single image
+* Third Chapter::    Using daemon mode
+* Fourth Chapter::   Timestamp of the image
+* Fifth Chapter::    ftp-upload
+* Sixth Chapter::    Examples
+@end menu
+
+@node    First Chapter, Second Chapter, top,      top
+@comment node-name,     next,           previous, up
+@chapter First Chapter
+@cindex Index entry for First Chapter

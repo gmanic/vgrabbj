@@ -1,0 +1,714 @@
+2013-09-04  Ludovic Rousseau <ludovic.rousseau@free.fr>
+
+	* release 0.9.7
+	* integrate the Debian changes upstream
+	* fix compiler warnings
+
+2004-01-03  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.conf.5/vgrabbj.1: 
+			Added all missing options to the
+			manuals, corrected misspelled
+			options. Certain clarifications.
+	* vgrabbj.c:	Added option -X to let daemon
+			mode run in foreground (e.g. not
+			detaching from current terminal)
+
+2003-12-31  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Changed pointer-update to be
+			correct in any case. Fixed error
+			in archiving functionality.
+
+2003-10-06  Robert van der Meulen <rvdm@wiretrip.org>
+	* General:	Added support for passive ftp.
+ 
+2003-09-10  Jens Gecius  <jens@gecius.de>
+	* various	Included a patch from Koos van den
+			Hout and Arthur van Leeuwen to
+			enable vgrabbj to flip top to
+			bottom. This enables upside-down
+			mounting, e.g. on a ceiling.
+	* various	Included a patch from David Austin
+			to enable vgrabbj to take detailed
+			control of the cams hardware 
+			settings (e.g. brightness-adjustment,
+			hue, etc.).
+			This one needs further testing and
+			adjustment to the options setup of
+			previous versions. As of now this
+			version might break your setup.
+
+2003-07-28  Jens Gecius  <jens@gecius.de>
+	* v_conf.c:	Fixed typo in help screen
+			(thanks to Tobias Wolter who filed
+			this bug to DBTS)
+			Fixed bug causing segfault if not
+			all optional libraries are present
+			(thanks to Pascal Brisset for the
+			patch! Sorry it took so long to
+			apply it)
+
+2002-10-15  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.h: 	Added option nousemmap needed for
+			certain cams not switchable to
+			palette RGB24 but unable to use
+			mmap'ed memory.
+
+	* v_options.h:	Fixed a small bug for ForcePalette.
+			Improved img_size calculation.
+
+2002-10-14  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed nasty bug causing boolean
+			commandline options not being parsed
+			correctly.
+			Added switch SwapRL (-R) to mirror
+			the resulting image left-right.
+
+2002-04-12  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed bug for commandline switches
+			on boolean values (segfault)
+			Fixed possible wrong treatment of
+			empty lines in conf
+
+2002-04-02  Jens Gecius  <jens@gecius.de>
+
+	* 		Final touch up, release 0.9.0
+			with archive functionallity.
+
+2002-03-29  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c:	rewrote/enhanced archive handling
+			archivemax/archiveeach to manage
+			archived pictures added.
+
+2002-03-27  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	(after release) Fixed bug in ttf
+			init. Changed internals slightly.
+
+	* General: 	Update manuals, uploaded man's to
+			cvs, increased version no. to 0.8.9,
+			release.
+
+2002-03-26  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c:	Added Archive option to create an
+			archive of images.
+			Warning: no upper limit for archive
+			implemented, yet. This option might
+			fill your harddrive!!
+			Currently works only if archive is
+			on the same filesystem as the temp-
+			output (same restriction for output
+			and tmpout - they have to be on the
+			same filesystem)
+	
+	* v_config.c: 	Fixed severe bugs in ftp-code:
+			1. remoteDir was not read from conf
+			2. if remoteDir not set screwy things
+			might have happened...
+
+2002-02-24  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Fixed missing explanation of parameter
+			-c on the commandline for the -h
+			commanline parameter.
+
+			Enhanced manual.
+
+2002-02-18  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Finished rewrite of conf-parser. 
+			(Almost) identical routines are now 
+			used for command-line and conf-file.
+			Further information is given in case
+			of wrong options.
+			Cleanup of code (partially), blow-up
+			on some other areas (especially the
+			conf-var has to be cleaned up now...)
+			Well, ongoing progress, short of
+			release 0.8.8 (testing).
+			OpenOnce defaults ot On now (to avoid
+			memory fragmentation and usb-messages
+			in syslog). Use Off only if you need
+			to access the device inbetween vgrabbj
+			taking frames.
+
+2002-02-16  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Further rewrite of conf-parser (not
+			finished - sigh)
+			Definitions of options and certain
+			detailed definitones moved to structs
+			(former: in code)
+			Timestamp string does not need to be in
+			paranthesis (conf-file) any more (but
+			can - it will be filtered!)
+
+2002-02-12  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Changed handling of open-device in case
+			of openonce (it is really opened only once
+			now), avoiding lot's of kernel-uhci-msgs
+			on my box. Hope you guys benefit, too.
+			Again, I strongly recommend to use OpenOnce
+
+2002-02-11  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	More split-up of source to make it more
+			readable. Re-organization of mmap (now
+			close to device open to prevent memory
+			fragmentation. If the device is not
+			otherwise needed, I strongly advise to 
+			use OpenOnce yes (now default).
+			Changed handling of Timestamp, Font-eninge
+			is loaded/initialized once only at startup
+			and if config is re-read.
+
+2002-02-10  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Added DaemonSeconds as alternative to Daemon
+			in conf - value given is taken as seconds
+			instead of milliseconds (see conf).
+
+	* vgrabbj.c: 	Added some exit routine to mmap'ed capture
+			to avoid endless loops (2).
+
+2002-02-09  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c:	Added a parameter to discard frames before
+			the actual picture is taken. Might be
+			necessary, if your cam needs a little time
+			for adjustment of the current brightness.
+
+2002-02-08  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c:	Fixed a #define bug in checkfiles (if you
+			do not have TTF on your system it's
+			relevant, otherwise not)
+			
+	* configure.in:	Certain systems seem to have the freetype
+			header (v1) in a different directory than
+			debian does. Added appropriate check.
+
+2002-02-06  Jens Gecius  <jens@gecius.de>
+
+	* v_config.c: 	Closed a memory hole generated by the
+			config-re-read code.
+			Changed the default of SetImageSize in
+			the .conf to On (Off should be the special
+			case for certain cams, not vice versa).
+
+2002-02-05  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Rearranged the initializing of vgrabbj to
+			accomodate a new function: the conf-file
+			will be re-read if you send a SIGHUP signal
+			to the daemon!
+			Moved more stuff to v_config, which has 
+			nothing to do with the actual grabbing.
+			Adjusted the changed commandline parameters
+			in the help output (thanks to Michael)			
+			Reorganized memory management (hopefully
+			without memory-leak - let me know if it
+			causes problems - I'm currently trying to
+			run it as long as possible here - 
+			unfortunately my usb-drivers are a little
+			irrational...
+
+2002-02-03  Jens Gecius  <jens@gecius.de>
+
+			(released 0.8.3)
+	
+	* v_config.c: 	The usage of a temporary file to be copied to
+			the output file is now switchable. If you
+			don't want it, use the appropriate command-
+			line switch or conf-option. This may impair
+			the use of vgrabbj if used on a webserver
+			(webserver may access the file while vgrabbj
+			writes data).
+			
+			IMPORTANT!! SWITCHED COMMANDLINE PARAMETER!!
+
+			MAY BREAK YOUR CONFIG!! READ BEFORE USE!!
+
+			If you use vgrabbj with commandline options
+			instead of the configuration file, beware that
+			the following switches have changed:
+			-w (dont/set windowsize) is no -g
+			-W (image width) is now -w
+			This is due to compliance with POSIX.2 (-W).
+
+	* vgrabbj.c: 	Merged several patches (c) Michael Janssen,
+			Debian Package maintainer to streamline the
+			check for files and the video-device.
+			Temporary output file will now be properly
+			unlinked after each use (fixes debian bug
+			#127722). Shutdown of program streamlined.
+			Configuration adjusted - now all file-related
+			arguments are read first and checked once
+			only at the end. This avoids problems with
+			multiple definitions of e.g. the input-
+			device. If defined on the command-line as
+			last argument, only that device is checked.
+			(fixes debian bug #127659).
+
+2001-12-22  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c: 	Various changes for release 0.8.2
+			(no new features, make everything work).
+
+2001-12-05  Jens Gecius  <jens@gecius.de>
+
+	* v_writer.c: 	Changed back to system() for the call of
+			/bin/cp, but I'm not satisfied with the
+			situation due to the problems associated with
+			system() (see man-page). Have to find a better
+			solution.
+			Added a new value for vconf to have the cmd-
+			line for the copy action handy when needed
+			(performance).
+
+2001-12-04  Jens Gecius  <jens@gecius.de>
+
+	* v_writer.c: 	In case output is set to something different
+			than /dev/stdout (default), the output is
+			written to a temp-file (name: <outputfile>.tmp)
+			and then copied to the final destination
+			<outputfile>. This should fix concurrent
+			access problems (includes associated changes
+			in other source files).
+
+	* v_ftp.c: 	Changed function to close ftp-connection and
+			added a sanity-check in an attempt to fix a
+			reported error.
+			Added #defines to enable successful compile if
+			ftp is disabled.
+
+	* configure.in: Changed error-message in ./configure to a
+			warning message for the libraries ftplib and
+			freetype - fixes longtime problem of not 
+			compiling if one of these libs is not present.
+			Added options to configure to intentionally
+			disable timestamp and/or ftp code.
+			
+	Again: NO extensive tests have been performed!
+
+2001-11-12  Jens Gecius  <jens@gecius.de> = after release
+
+	* vgrabbj.c	Nasty little typos for the new individual
+			imagesize setting and swapped height/width
+			for size svga.
+	
+	* v_writer.c	New to the package, this file contains all
+			functions related to the output of the image
+			data
+			Added an output option for ppm (plain linear
+			RGB). You may need to switch R/G (via -S)
+			because vgrabbj can not determine what mode
+			your videodevice uses.
+			(appropriate changes to all other files)
+	* all		Removed ftplib.* from package and constructed
+			dependency on the ftplib on your system. If
+			don't have it, ftp is disabled (like ttf, see
+			below)
+			More stringent check for available libraries
+			AND headers. If one of both is not available,
+			timestamp and/or ftp will be disabled.
+
+2001-11-12  Jens Gecius  <jens@gecius.de>
+
+			Release of 0.8.0 with ftp-code, config-file,
+			enhanced imagesize (even individual settings),
+			bugfixes.
+			Be aware: no extensive tests (it runs here -
+			without ftp)!
+
+2001-11-11  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c:    Fixed a bug in png write, leading to corrupt
+			data in vconf and possible segfaults
+			Added xga, sxga, uxga as valid options for
+			image size on command line
+			Added ftp-code from Robert Wessels; be careful
+			I have NOT tested this new part of vgrabbj!!
+			Maybe I switch the ftplib.c someday to ftplib
+			provided by that package
+			Added individual imagesize (-W and -H on 
+			commandline); be careful! These values are not
+			checked for valid values! You may damage your
+			hardware with wrong values (and a poor driver)
+			Added openonce to avoid vgrabbj opens and closes
+			the videodevice everytime an image is acquired;
+			this renders the videodevice unuseable for other
+			applications while vgrabbj sits idling in daemon
+			mode. It also does not affect non-daemon mode.
+			Changed handling of parameter -h in case a 
+			config file is available.
+			Handling of the config file is as follows:
+			1. check for -h as first (!) parameter -> show usage
+			2. parse configfile, if available
+			3. parse commandline
+			WARNING: the code is not very extensively tested!
+
+	* v_config.c:   Added xga, sxga, uxga as valid options for
+			image size in config file
+			Added ftp-code from Robert Wessels
+			Added individual imagesize settings (see above)
+			Added openonce (see above)
+	
+	* (configure)	Various changes to reflect the addition of a
+			config file
+
+	* AUTHORS, README, TODO etc.
+			Updated due to changes (see above)
+
+2001-07-23  Jens Gecius  <jens@gecius.de>
+
+			Release of 0.7.4 without any asm code (should
+			keep everybody happy for porting), use of mmap,
+			etc. See below for details.
+
+2001-07-22  Jens Gecius  <jens@gecius.de>
+
+	* vgrabbj.c:    Minor Changes, added YUV422 to known routines,
+			because with my Philips cam this one looks
+			identical to YUV422.
+			Reminder: brightness adjust by vgrabbj is OFF
+			by default now and -b switches it, BUT you 
+			have to have RGB24 selected as input palette!
+			Because I switched back from the asm-code to
+			pure c-code (portability of the conversion
+			functions), and the conversion from YUV420 is
+			not exactly what it should look	like, I use a
+			different approach: do two conversion, which
+			work - at least here at my box. Let me know if
+			something goes wrong, I'll try to fix it then.
+
+	* ccvt_c.c: 	Added YUYV (=YUV422?) and YUV420p to the
+			conversion routines (I'm getting there, soon
+			vgrabbj will be portable again).
+			But: YUV420i still gives me odd images...
+
+2001-07-21  Jens Gecius  <jens@gecius.de> (no release - CVS only)
+
+	* vgrabbj.c: 	* Added:
+			Added mmap image grabbing as default, if mmap
+			fails, vgrabbj falls back to read().
+			Added parameter -F to force a specific palette.
+			But be aware, if it is not one of vgrabbj's
+			supported palettes (RGB32, RGB24, YUYV, YUV420,
+			YUV420P) it will fallback to one of those (if
+			supported by the device). Good to check devices
+			capabilities.
+			* Bugs fixed:
+			Fixed a bug for RGB32-RGB24 conversion (it used
+			to strip 1/4th of the image).
+			* Misc:
+			Brightness CHANGED! Default is now FALSE and
+			-b switches the default.
+			Code cleanup, better checking for v4l device.
+			Buffers are now kept for the time vgrabbj runs.
+			Rearranged code to avoid forward function defs.
+			Put fork'ing into function (away from main()).
+			Switched handling of device setup and image read.
+			Setup (and finding out which palette will work)
+			is now done only at startup. At every read the
+			the palette and imagesize is set (if allowed to),
+			in case some other program changed it (because
+			vgrabbj keeps the device opened only for during
+			read, while vgrabbj sleeps, you can access the
+			dev with any other program).
+
+	* vgrabbj.h: 	More code cleanup, put definitions in vgrabbj.h
+			where they belong
+
+2001-07-18  Jens Gecius  <jens@gecius.de> (no release - CVS only)
+
+	* vgrabbj.c: 	Fixed handling of parameter -w, which was kind of
+			ignored. Now it is properly handled and vgrabbj
+			doesn't exit right away if it was set.
+			Update hereto can be found at
+			http://vgrabbj.gecius.de/vgrabbj/windowsize.diff
+			please apply by entering the following command:
+			cd <vgrabbj-source-dir>
+			patch -p1 < windowsize.diff
+			(ignore the missing header warning)
+			compile as usual. Now it should work
+
+	* configure.in: Added certain headers to check for compilation.
+
+	* <general>	Missed to point out that 0.7.x works on i386 only.
+			This is due to the conversion routines, which I
+			only have in asm so far. I hope to find some more
+			complete set in C, soon.
+	
+2001-07-14  Jens Gecius  <jens@gecius.de> (0.7.3)
+
+	* vgrabbj.c:	Finally fixed the memory leak while using timestamp.
+			Implemented a SIGTERM handler (very simple).
+			vgrabbj will always finish the current image (if any)
+			and then exit gracefully.
+			Renamed DEBUG to LOGLEVEL and implemented DEBUGGING,
+			which has to be set manually to use mtrace(). Off
+			by default, of course. Usually, you shouldn't worry
+			about this.
+
+2001-07-12  Jens Gecius  <jens@gecius.de> (0.7.2)
+
+	* vgrabbj.c: 	Fixed missing free() for the temp-buffer. This led to
+			the box running out of memory and hence kill vgrabbj
+			(only daemon mode).
+			Fixed interchanged factors in conv_rgb32_rgb24 leading
+			to a seg-fault. 
+
+2001-07-09  Jens Gecius  <jens@gecius.de> (0.7.1)
+
+	* vgrabbj.h: 	Changed default debug/log-level to 4.
+
+	* vgrabbj.c: 	Changed error handling. Now there are 6 log-levels
+			(silent to debug) with two types of critical errors
+			resulting in abortion of execution:
+			* critical errors, leading to immediate exit
+			  e.g. memory-failure
+			* near critical errors, leading to immediate exit
+			  in non-daemon mode (user is available to take care
+			  of the problem) and
+			  leading NOT to exit in daemon mode. vgrabbj still
+			  tries to get the action done and fails only if a
+			  maximum of 3600 errors is reached. Inbetween
+			  vgrabbj sleeps for a second, so this is roughly a
+			  one hour (!) try-period. After this, vgrabbj exits,
+			  no matter what (e.g. device access error).
+			  I did this mainly because I have only one video-
+			  device and didn't want to shut it down while
+			  testing. This way, it tries with appropriate sleeps
+			  and resets the error-counter after the current run.
+			Perhaps I'll make this errorcounter configurable one
+			day (let me know if you want).
+			The critical error-exits are obeyed, even if you made
+			vgrabbj totally silent.
+
+			Added video palettes YUYV, YUV420P to the try-palettes.
+			I hope this covers almost all devices out there.
+
+2001-07-08  Jens Gecius  <jens@gecius.de> (0.7.0  -  not very useful, though)
+
+	* vgrabbj.c: 	Added convertion routine from YUV 4-2-0-planar and YUYV
+			to RGB24 to accomodate (hopefully) all V4L devices, 
+			especially afer	recent discussion on linux-kernel list
+			that there (will/is/ should) not be any conversion in
+			kernel space. Only RGB24, RGB32 and YUV420 are tried,
+			if the device is not set to a recognized mode.
+		
+			Added BGR to RGB routine, in case color of output looks
+			odd.
+
+			Made library ttf optional. If it is not available, the
+			timestamp features are disabled.
+
+			Major cleanup of code - but still not perfect ;-).
+
+	* Makefile.am:  Added reconf and conversion files to distribution.
+
+			font.h is now (correctly) font.c.
+
+	* configure.in: Added config.h initialization and GPL notice.
+
+	* vgrabbj.h: 	Added .h file to clean .c file.
+
+	* other		Thanks to Damien, who helped a lot with the cleanup.
+
+			vgrabbj on irc -> irc.openprojects.net #vgrabbj :-)
+
+2001-06-16	0.6.4
+		* Fixed a bug regarding picture setting. This caused vgrabbj to
+		  pretend it'll work even though the device was not set to the
+		  correct RGB24 mode. Result was a 'hanging' vgrabbj process.
+		  This should help on several devices reported not to work.
+		  Even if vgrabbj is unable to set the device to RGB24 it should
+		  at least report this. There will be no switch to avoid this
+		  setting because RGB24 is necessary for proper operation.		  
+	
+2001-03-27	0.6.3
+		* Added parameter -w to disable vgrabbj's setting of the V4L
+		  image size. This is needed for certain cams which do not
+		  allow programs to set it. They have to be set at module load
+		  time. Reported by St0rm and nate - thanks.
+
+2001-03-26	0.6.2
+		* Fixed a bug which may or may not occur due to uninitialized
+		  variables for a system call (VIDIOCSWIN). Now, the current
+		  values are read from the device first and taken for the
+		  SET-call.
+
+2001-02-11	0.6.1
+		* Way too many problems with the new autoconf/make dist.
+		  I really have to work on quality control here...
+		  Sorry folks!
+	
+2001-02-10	0.6.0
+		* More GNU'ification - now using ./ocnfigure to check for
+		  required libs and headers. I hope I didn't forget any.
+		* timestamp now widely configurable. Chose the following
+		  options:
+		  Position (one of upper/lower left/right or center
+		  FontSize (between 1 and 100, but only 8-25 makes sense :-)
+		  Border (how many pixels should be blended besides the text)
+		  Blend (0-100) how much of the original image shall be
+		   viewable under the timestamp
+		* also rewrote the code (more to come) to modularize it more.
+		  right now there's just to much code in main{}...
+
+2001-01-29	0.5.2
+		* Updated Address of Free Software Foundation, Inc., in
+		  several files. No technical changes.
+
+2001-01-06	0.5.1
+		* Unfortunately, the timestamper-code was enable by default
+		  and there was no chance to stop it without changing the 
+		  source. Fixed.
+		  Drawback:
+		  If you want the timestamper enabled, you have to tell
+		  vgrabbj on the command-line!
+
+2000-12-16	0.5.0
+		* And another one: freetype was initialized multiple times,
+		  posing the risk of segmentation fault. fixed. Code should
+		  be pretty clean now (?)
+		* Changed sort of CHANGES (newest now on top)
+
+2000-12-12	0.4.4
+		* Thanks to Zsolt I fount a little bug - Freetype font was
+		  closed even though it even might not have been open.
+
+2000-09-18	0.4.3a
+		* 0.4.2 only a sleep was inserted to accomodate unloaded
+		  modules at that time. This didn't really work, so ensure
+		  all modules are loaded BEFORE you start vgrabbj.
+		* 0.4.3a is a REAL alpha. Be prepared that it may mess up
+		  your machine - up to total frozen state!!
+		  Even though I run this version here on my machine, it
+		  may mess up yours!
+		* changed the handling of startup for timestamp. Now the
+		  Font-Engine is started during commandline evaluation.
+		* Font-Engine is never shut down via TT_Done_Engine - I
+		  only get segmentation faults with that function :-(.
+		  But it doesn't really matter:
+		  If run in daemon mode, you need the engine anyway,
+		  If run standalone, it should be freed when the program
+		  terminates...
+		  This should solve a bug reported with a totally frozen
+		  machine, I hope.
+		* Same applies for "Face_Open" from the included font.c...
+		* Added a lot of simple debug-code. Enable this via Makefile
+		  DEBUG=1 (and recompile)
+
+2000-07-05	0.4.1
+		* added five seconds delay if started as daemon to accomodate
+		  time to load up the driver during boot of the machine.
+		  This is not really needed if vgrabbj is started after the
+		  appropriate driver modules have been loaded or the drivers
+		  are compiled into the kernel. Maybe this fixes another bug
+		  reported (where no picture-output took place at all).
+
+2000-05-22	0.4.1
+		* added ability to size image to sqcif, qsif, qcif, sif, cif,
+		  vga. Still only rgb24
+		* removed wrong syslog-reporting in rare condition when not
+		  running as daemon
+
+		  
+2000-05-02	0.4.0 (finally released 2000-05-11 after 9 days continous run)
+		* Argument check realized, I hope it works but I also KNOW
+		  that not every error in the command line is found.
+		* filenames, numeric options are definetly checked for
+		  existence and sense, respectively; if a value makes no sense
+		  at all (e.g. quality=-1, sleeptime=-1) or a filename/device
+		  is not accessible vgrabbj ends with a rc!=0
+		* realized real daemon mode (fork, child process)
+		* removed option -n (not necessary in daemon mode)
+		  
+2000-04-30	0.3.4
+		* Found a missing fclose()... Hope this solves the problem.
+		  I returned back to the 0.3.1 source.
+
+2000-04-29	0.3.0
+		* Implemented PNG output format.
+		* Added timestamp (try it by just saying "-e" on the
+		  commandline). This is fully configurable to your system
+		  needs (except the timestamp is always in the upper right
+		  of the image). Thanks to rasca for the font.c code and
+		  the example in w3cam
+		* Fixed a bug in errorhandling while opening input device.
+		  It didn't even try to open the input-device again if an
+		  error was encountered...
+		* In loop-mode all err/messages are now directed to syslog.
+		  You'll get a whole bunch of msg if an error is encountered,
+		  but so what...
+		* Increased the usleep time to a quarter second. Gives much
+		  less msg to syslog serves my needs better :-)
+		Still missing: argument check
+
+		0.3.1
+		* Added -b to disable vgrabbj's own attempt to adjust the
+		  brightness of the picture. Thanks to Ari Pollak
+
+		0.3.2
+		* If you encounter a problem regarding freetype and have a
+		  recent lib installed, please change the following:
+		  #include <freetype.h>
+		  to
+		  #include <freetype/freetype.h>
+		  (Thanks to Ari Pollak)
+		* Serious Bug regarding the loop-mode again. Because I changed
+		  the logic vgrabbj had serious problems opening the device
+		  after about 1:30h. I changed the logic back and hope it'll
+		  work. (currently test-run at my machine)
+		  Therefore, not yet released.
+		  
+	    	0.3.3 (released)
+		* Still the same problem - after 1.5h access to /dev/video is
+		  no longer possible.
+		  Now I change the code so /dev/video will be kept open ALL
+		  the time vgrabbj is running. I hope this helps...
+		  I guess it is/was a big logical bug somewhere inside.
+		  /dev/video is open all the time now, this speeds operation
+		  a little bit, but on the other hand no other application
+		  can use /dev/video while vgrabb is running.
+		  The code is a mess right now and I will further investigate
+		  the problem.
+2000-04-26	0.2.0 (first development release)
+		* OK, redesigned the structure of the source to better
+		  accomodate possible failures during loop-running (it
+		  shouldn't just shut down while experiencing some problems).
+		  It's not optimal because it just keeps trying to do the
+		  things - but included a couple of small usleeps()
+		* Added option -s <device>. Get all information about the
+		  video-device
+		* Still missing: errorhandler, syslogger, argumentcheck
+
+2000-04-23	0.0.1
+		First version. Just tested with Philips Vesta Pro Input
+		and output to a predefined jpg file. Never got released...
+		
+		0.1.0
+		Finally, I made some enhancements, based on the vidcat
+		utility. Now you can
+		- change the quality
+		- run a forever loop with optional (sleep) between reads
+		- define an output filename (still only jpg)
+		- define an input video stream
+		- get the help screen
+		Be aware, this is still kind of alpha code because, again,
+		I'm not a programmer...
+		First release.
+		
+		0.1.1
+		Wow, what a memory leak. If used in loop-mode, you loose about
+		(width*height*3) bytes of memory with each image drawn...
+		To clean this, I had to find another memory related bug...

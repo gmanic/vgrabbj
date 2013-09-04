@@ -1,0 +1,314 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH VGRABBJ.CONF 5 "February  24, 2002"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+\fBvgrabbj.conf\fP \- configuration file for vgrabbj
+.SH OVERVIEW
+vgrabbj purpose is to read data from a v4l-device and put it in a file,
+formatted as jpeg, png, or pnm. Except for the ftp-options described
+below everything can also handled on the commandline.
+Here the configuration statements are described.
+.P
+Syntax is <keyword> <value>. Comments start with a ';' or '#'. Those
+lines are ignored by vgrabbj. Case of the keywords and named options
+doesn't matter except for the timestamp option as well as any filename.
+.P
+The configuration file is parsed line by line. If any keyword appears
+twice or more often, the last one is the one used.
+.P
+On startup, the pre-defined configuration file /etc/vgrabbj.conf is
+read. Then, commandline parameters are evaluated one by one, the last is
+the most significant, if one option is provide twice or more often.
+Same applies for the commandline parameter \-c <config-file>.
+.SH GENERAL OPTIONS
+.TP
+\fBDaemonSeconds\fP \fIseconds\fP
+Daemonize & loop with \fIseconds\fP intervals (min. 1).
+.TP
+\fBDaemon\fP \fImicroseconds\fP 
+Daemonize & loop \fImicroseconds\fP intervals (min. 1). Same as \fB\-l\fP
+except you can control it more precisely.
+.TP
+\fBAutoBrightness\fP \fIOn\fP|\fIOff\fP
+Defines if vgrabbj's brightness adjustment is used. This option works only
+if the device supports data fetch via read and RGB24 videopalette. See 
+\fBForcePalette\fP on how-to set RGB24. Some device do not support RGB24,
+hence, \fBBrightness\fP is ignored.
+.TP
+\fBImageQuality\fP \fIquality\fP
+Sets the quality of a jpeg output to \fIquality\fP (1-100, default: 75).
+.TP
+\fBImageSize\fP \fIimagesize\fP
+Sets the imagesize of input device, where \fIimagesize\fP is one of: 
+.IP
+.nf
+.ta
+ sqcif= 128x96,     qsif = 160x120, 
+ qcif = 176x144,    sif  = 320x240, 
+ cif  = 352x288,    vga  = 640x480, 
+ svga = 800x600,    xga  = 1024x768, 
+ sxga = 1280x1024,  uxga = 1600x1200, 
+.fi
+.IP
+(default: cif)
+.TP
+\fBImageWidth\fP \fIwidth\fP
+Sets the width of the image to \fIwidth\fP. Needs \fB\-H\fP.
+The v4l-device has to support the image width you set with
+this option.
+.TP
+\fBImageHeight\fP \fIheight\fP
+Sets the height of the image to \fIheight\fP. Needs \fB\-w\fP.
+The v4l-device has to support the image height you set with
+this option.
+.TP 
+\fBOutputFormat\fP \fIformat\fP
+Sets the output to \fIformat\fP (either \fBjpeg\fP, \fBpng\fP, or 
+\fBpnm\fP, default: jpeg). Alternative, you may provide jpg for
+jpeg.
+.TP
+\fBOutputFile\fP <\fIfilename\fP>
+Output is written to \fIfilename\fP (default: \fI/dev/stdout\fP)
+.TP
+\fBArchive\fP <\fIpath/filename\fP>
+Additional output is written to \fIpath/filename\fP (default: \fInot set\fP),
+whereas the path-filename can include any strftime component. The path-
+filename must not be on a different filesystem as the output defined above.
+Additionally, you need to take care of the number of files stored. There is
+no upper ceiling for archiving.
+.TP
+\fBVideoDevice\fP <\fIdevice\fP> 
+Sets the input device to \fIdevice\fP (default: \fI/dev/video\fP)
+.TP
+\fBOpenOnce\fP \fIOn\fP|\fIOff\fP
+Defines if \fBvgrabbj\fP opens the device only while image data is grabbed
+(\fIOff\fP) or keeps it opened while it is running (\fIOn\fP). 
+Setting it to \fIOff\fP is helpful if you need access to the device besides
+vgrabbj. This use is discouraged though, due to possible problems with memory
+fragmentation. Default is \fIOn\fP.
+.TP
+\fBSetImageSize\fP \fIOn\fP|\fIOff\fP
+Defines if the image size (see \fB\-i\fP, \fB\-H\fP, and \fB\-w\fP) of the
+device is set by vgrabbj. Necessary for certain v4l-devices which do not
+support to be set to a particular image size (e.g. IBM-usb-cam, QuickCam).
+For these devices you have to specify the size at module load time.
+Default is \fIOn\fP.
+.TP
+\fBSwitchColor\fP \fIOn\fP|\fIOff\fP
+Switches colormap from BGR to RGB (or vice versa) if set to \fIOn\fP. Default
+is \fIOff\fP. Use if you have odd colors.
+.TP
+\fBSwapRL\fP \fIOn\fP|\fIOff\fP
+Swaps left and right of the image like a mirror. Default: Off.
+is \fIOff\fP.
+.TP
+\fBSwapTB\fP \fIOn\fP|\fIOff\fP
+Swaps top and bottom of the image like a mirror. Default: Off.
+is \fIOff\fP.
+.TP
+\fBNoUseMmap\fP \fIOn\fP|\fIOff\fP
+Turns off the use of mmap'ed (better) memory allocation for grabbing frames.
+Some (very rare) cams cannot use mmap'ed memory and have to use read. If you
+want to switch easily, use this switch. If you don't know what I'm talking
+about, leafe it like it is: Default is \fIOff\fP.
+.TP
+\fBDebugLevel\fP \fIvalue\fP
+Sets the loglevel of vgrabbj. Valid for \fIvalue\fP are 0, 2, 3, 4, 6, 7
+(default: 4). 0 means no messages at all, 7 is debug. Don't use 7 if
+you are running vgrabbj in daemon mode, it'll surely fill your syslog.
+Be aware, that loglevel 7 will also post you ftp-password (if defined)
+in the logfile!
+.TP
+\fBUseTmpOut\fP \fIOn\fP|\fIOff\fP
+Sets the use of the temporary outputfile. Default is \fIOn\fP. Ignored in case
+the default output (\fI/dev/stdout\fP) is used. If set to \fIOff\fP, the data
+is written directly to the file defined by \fBOutputFile\fP. 
+.sp
+If \fIfilename\fP is different from \fI/dev/stdout\fP (given via \fB-f\fP
+parameter or \fIOutputFile\fP, vgrabbj defaults to use a temporary file called
+\fIfilename\fP.tmp to write the image. This file is then renamed to
+\fIfilename\fP to shorten the time period corrupt data may be read from
+\fIfilename\fP.
+.TP
+\fBForcePalette\fP \fIpalette\fP
+Force the usage of the specified \fIpalette\fP. If \fIpalette\fP is not
+supported by either \fBvgrabbj\fP or the v4l-device, fallback to a palette
+supported by both is provided. If no common denominator is available, vgrabbj
+exits. Supported palettes are marked with * below. Possible values are (copy
+from videodev.h):
+.IP
+.nf
+.ta
+ 1  VIDEO_PALETTE_GREY      Linear greyscale
+ 2  VIDEO_PALETTE_HI240     High 240 cube (BT848)
+ 3  VIDEO_PALETTE_RGB565    565 16 bit RGB
+ 4 *VIDEO_PALETTE_RGB24     24bit RGB
+ 5 *VIDEO_PALETTE_RGB32     32bit RGB
+ 6  VIDEO_PALETTE_RGB555    555 15bit RGB
+ 7 *VIDEO_PALETTE_YUV422    YUV422 capture
+ 8 *VIDEO_PALETTE_YUYV
+ 9 *VIDEO_PALETTE_UYVY
+ 10*VIDEO_PALETTE_YUV420
+ 10 VIDEO_PALETTE_YUV411    YUV411 capture
+ 11 VIDEO_PALETTE_RAW       RAW capture (BT848)
+ 12 VIDEO_PALETTE_YUV422P   YUV 4:2:2 Planar
+ 13 VIDEO_PALETTE_YUV411P   YUV 4:1:1 Planar
+ 14*VIDEO_PALETTE_YUV420P   YUV 4:2:0 Planar
+ 15 VIDEO_PALETTE_YUV410P   YUV 4:1:0 Planar
+ 16 VIDEO_PALETTE_PLANAR
+ 17 VIDEO_PALETTE_COMPONENT
+.fi
+.IP
+(no default, depends on v4l-device).
+.TP
+\fBDiscardFrames\fP \fIvalue\fP
+\fIvalue\fP images are grabbed and immediately discarded. Only the
+last image is written to the output. This might be helpful if your v4l-device
+needs to take a couple of images to auto-adjust to the current light.
+.SH ARCHIVE OPTIONS
+The following options are useful if you want to keep a certain amount
+of images in an archive. Currently, the archive is only supported if kept
+on the same filesystem as the images taken.
+.TP
+\fBArchive\fP <\fIarchive-filename-pattern\fP>
+The \fIarchive-filename-pattern\fP is evaluated as a timestring, hence
+the same applies as to \fBTimeStamp\fP (see below, default: /tmp/arch/cam-%Y-%d-%m-%H-%M-%S.jpg)
+.TP
+\fBArchiveEach\fP <\fIvalue\fP>
+Defines how many images have to be taken before a copy is made for the
+archive. E.g. if defined 1, each image is put in the archive; if defined 5
+every fifth image is put in the archive.
+.TP
+\fBArchiveMax\fP <\fIvalue\fP>
+Sets the maximum number of images to be put in the archive.
+.SH TIMESTAMP OPTIONS
+The following options are available only if vgrabbj was compiled with
+the freetype library available. The timestamp will only be enabled if
+all values evaluated (inlcuding defaults) lead to a valid configuration
+and UseTimestamp is set to On.
+.TP
+\fBUseTimestamp\fP \fIOn\fP|\fIOff\fP
+This is the essential setting to enable timestamps
+if defined in the config file. Without this being set
+to On, it just won't work (although, if there are options
+set to have an invalid configuration, it won't work either).
+This is different to the handling on the commandline.
+.TP
+\fBFontFile\fP \fIfilename\fP
+The TrueType font to be used for the timestamp
+(default \fI/usr/X11R6/lib/X11/fonts/TrueType/Arialn.ttf\fP).
+.TP
+\fBFontSize\fP \fIsize\fP
+Set the fontsize to \fIsize\fP for timestamp (3-100, default: 12).
+.TP
+\fBTimeStamp\fP \fIformat-str\fP
+Defines the timestamp. \fIformat-str\fP can be plain text or any
+strftime format. Any '""' at the beginning or the end will be eliminated
+for compatibility reasons, i.e. they are not necessary (default: "%a, %e.
+%B %Y \- %T" \- see \fBstrftime\fP(3) for details).
+.TP
+\fBPosition\fP \fIvalue\fP
+Alignment of the timestamp in the image. Possible 
+\fIvalue\fP:
+.IP
+.nf
+.ta
+ul = upper left,    ur = upper right,
+ll = lower left,    lr = lower right,
+uc = upper center,  lc = lower center
+.fi
+.IP
+(default: upper right). You can use either the short or the long version.
+.TP
+\fBBlend\fP \fIvalue\fP
+Defines the blend between font background and image (1-100, default: 60).
+.TP
+\fBBorderSize\fP \fIvalue\fP
+\fIvalue\fP pixels will be used as border around the timestamp string (1-255,
+default: 2).
+.SH FTP OPTIONS
+.P
+There are no options for ftp-upload on the command line. This is due to the need
+to provide a password which would be visible via the \fBps\fP(1) command.
+.TP
+\fBEnableFtp\fP \fIOn\fP|\fIOff\fP
+Ftp-Connection will only be opened if set to \fIOn\fP. Be aware that this
+might bring up a dial-up connection. See also \fBKeepAlive\fP. (default: Off)
+.TP
+\fBRemoteHost\fP \fIhostname\fP
+Host to which a ftp-connection will be established everytime an image has
+been written (see also: \fBDaemon\fP, \fBDaemonSeconds\fP, \fBKeepAlive\fP,
+default: camimage.jpg).
+.TP
+\fBRemoteDir\fP \fIpath\fP
+The \fIpath\fP consists of the full path on the remote host defined by
+\fBRemoteHost\fP (default: /).
+.TP
+\fBRemoteImageName\fP \fIfilename\fP
+The \fIfilename\fP consists of the full path and filename on the remote host
+defined by \fBRemoteHost\fP (default: foo.bar.com).
+.TP
+\fBUsername\fP \fIusername\fP
+The name of the user to log on the remote ftp-server (default: foo).
+.TP
+\fBPassword\fP \fIpassword\fP
+The password of the user to log on the remote ftp-server (default: bar). Be
+aware, that the password is kept unencrypted in memory, it might be read by
+others.
+.TP
+\fBKeepAlive\fP \fIOn\fP|\fIOff\fP
+If set to \fIOn\fP, the connection will be kept. This will cause a dial-up
+line to be up all the time, which in turn may cost a lot of money! If set
+to \fIOff\fP, the connection will be established after an image was written
+to the \fBOutputFile\fP. After transmission, the ftp-connection will be ended.
+This may also result in phone charges, for which Author takes no responsibility. See License.
+.TP
+\fBPassive\fP \fIOn\fP|\fIOff\fP
+If set to \fIOn\fP, passive ftp will be used. This can help connecting to
+ftp servers from the inside of a NAT-ed network.
+.TP
+\fBTryHarder\fP \fIOn\fP|\fIOff\fP
+Not implemented, yet.
+.SH HARDWARE SETTINGS
+With the following options you may alter the settings of your hardware (the cam), if
+supported by the cam. Be aware, this might break your hardware, as there are no checks
+if the values supplied are valid, allowed, or supported!
+.TP
+\fB\-W\fP <\fIvalue\fP>
+Whiteness definition.
+.TP
+\fB\-r\fP <\fIvalue\fP>
+Color definition.
+.TP
+\fB\-x\fP <\fIvalue\fP>
+Contrast definition.
+.TP
+\fB\-b\fP <\fIvalue\fP>
+Brightness definition.
+.TP
+\fB\-u\fP <\fIvalue\fP>
+Hue definition.
+.SH BUGS
+.P
+At my own machine running vgrabbj, the %F in a Archive-Filename causes memory corruption.
+This is not validated by any other machine. No further bugs are known at this time.
+.SH SEE ALSO
+\fBvgrabbj\fP(1), \fBstrftime\fP(3), \fBps\fP(1)
+.SH AUTHOR
+This manual page was originally written by Michael Janssen 
+<janssen@cns.uni.edu>, for the Debian GNU/Linux system and enhanced by 
+Jens Gecius <devel@gecius.de>.
