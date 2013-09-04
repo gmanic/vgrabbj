@@ -137,7 +137,7 @@ in the logfile!
 Sets the use of the temporary outputfile. Default is \fIOn\fP. Ignored in case
 the default output (\fI/dev/stdout\fP) is used. If set to \fIOff\fP, the data
 is written directly to the file defined by \fBOutputFile\fP. 
-.Sp
+.sp
 If \fIfilename\fP is different from \fI/dev/stdout\fP (given via \fB-f\fP
 parameter or \fIOutputFile\fP, vgrabbj defaults to use a temporary file called
 \fIfilename\fP.tmp to write the image. This file is then renamed to
@@ -180,7 +180,6 @@ from videodev.h):
 last image is written to the output. This might be helpful if your v4l-device
 needs to take a couple of images to auto-adjust to the current light.
 .SH ARCHIVE OPTIONS
-.Sp
 The following options are useful if you want to keep a certain amount
 of images in an archive. Currently, the archive is only supported if kept
 on the same filesystem as the images taken.
@@ -197,7 +196,6 @@ every fifth image is put in the archive.
 \fBArchiveMax\fP <\fIvalue\fP>
 Sets the maximum number of images to be put in the archive.
 .SH TIMESTAMP OPTIONS
-.Sp
 The following options are available only if vgrabbj was compiled with
 the freetype library available. The timestamp will only be enabled if
 all values evaluated (inlcuding defaults) lead to a valid configuration
@@ -286,7 +284,6 @@ ftp servers from the inside of a NAT-ed network.
 \fBTryHarder\fP \fIOn\fP|\fIOff\fP
 Not implemented, yet.
 .SH HARDWARE SETTINGS
-.Sp
 With the following options you may alter the settings of your hardware (the cam), if
 supported by the cam. Be aware, this might break your hardware, as there are no checks
 if the values supplied are valid, allowed, or supported!
