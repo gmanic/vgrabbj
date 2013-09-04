@@ -1,0 +1,32 @@
+; This is an example config file for the vgrabbj video grabber
+;
+; These defaults work good on a Dexxa/Logitech camera, and were
+; contributed by Amaya Rodrigo sastre
+; Explanations of all of these options are explained in the default config
+; file at /etc/vgrabbj.conf
+Brightness 	On
+DebugLevel	2
+ImageQuality 50	
+SetImageSize	Off
+ImageSize	cif
+SwitchColor	Off
+OutputFormat	jpg
+OutputFile	/var/www/webcam.jpg
+VideoDevice	/dev/video
+OpenOnce	Off
+Daemon		0
+UseTimeStamp	On
+FontFile	/usr/share/fonts/truetype/arial.ttf 
+TimeStamp	"%A, %e. %B %Y - %T"
+FontSize	12
+Position	upperright
+Blend		60
+BorderSize	2
+EnableFtp	No
+RemoteHost	ftp.foo.bar
+RemoteDir	/
+RemoteImageName	camimage.jpg
+Username	foo
+Password	bar
+KeepAlive 	Off
+TryHarder	2
