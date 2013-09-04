@@ -366,7 +366,7 @@ struct vconfig *check_device(struct vconfig *vconf) {
 
   v_error(vconf, LOG_INFO, "Checking settings of device %s", vconf->in);
   
-  while (ioctl(vconf->dev, VIDIOCGCAP, &vconf->vcap) < 0)
+  while (v4l1_ioctl(vconf->dev, VIDIOCGCAP, &vconf->vcap) < 0)
     v_error(vconf, LOG_ERR, "Problem getting video capabilities");
   if ( (vconf->vcap.maxwidth < vconf->win.width) ||
        (vconf->vcap.minwidth > vconf->win.width) ||
@@ -379,19 +379,18 @@ struct vconfig *check_device(struct vconfig *vconf) {
           vconf->win.width, vconf->win.height);
       v_error(vconf, LOG_CRIT, "Device doesn't support width/height");
   }
-    v_error(vconf, LOG_CRIT, "Device doesn't support width/height");
-  while (ioctl(vconf->dev, VIDIOCGWIN, &twin))
+  while (v4l1_ioctl(vconf->dev, VIDIOCGWIN, &twin))
     v_error(vconf, LOG_ERR, "Problem getting window information");
   vconf->win.flags=0;/*twin.flags;*/
   vconf->win.x=twin.x;
   vconf->win.y=twin.y;
   vconf->win.chromakey=twin.chromakey;
   if (vconf->windowsize)
-    while (ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
+    while (v4l1_ioctl(vconf->dev, VIDIOCSWIN, &vconf->win) )
       v_error(vconf, LOG_ERR, "Problem setting window size");
-  while (ioctl(vconf->dev, VIDIOCGWIN, &vconf->win) <0)
+  while (v4l1_ioctl(vconf->dev, VIDIOCGWIN, &vconf->win) <0)
     v_error(vconf, LOG_ERR, "Problem getting window size");
-  while (ioctl(vconf->dev, VIDIOCGPICT, &vconf->vpic) < 0)
+  while (v4l1_ioctl(vconf->dev, VIDIOCGPICT, &vconf->vpic) < 0)
     v_error(vconf, LOG_ERR, "Problem getting picture properties");
 
   /* HERE we actually TRY to get a palette the device delivers.
