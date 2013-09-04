@@ -42,13 +42,14 @@
 #include <time.h>
 #include <pwd.h>
 #include <linux/types.h>
-#include <linux/videodev.h>
 #include <jpeglib.h>
 #include <png.h>
 #include <ccvt.h>
 #include <signal.h>
 #include <mcheck.h>
 #include <sys/mman.h>
+
+#include <libv4l1.h>
 
 #if defined(HAVE_LIBTTF)
 #if defined(HAVE_FREETYPE_FREETYPE_H)

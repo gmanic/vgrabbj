@@ -27,9 +27,9 @@
 
 void init_mmap(struct vconfig *vconf) {
   if (vconf->usemmap) {
-    if ( (vconf->map = mmap(0, vconf->vbuf.size, PROT_READ, MAP_SHARED, vconf->dev, 0)) < 0 )
+    if ( (vconf->map = v4l1_mmap(0, vconf->vbuf.size, PROT_READ, MAP_SHARED, vconf->dev, 0)) < 0 )
       v_error(vconf, LOG_CRIT, "Could not get mmap-area of size %d", vconf->vbuf.size);
-    if ( ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0 )
+    if ( v4l1_ioctl(vconf->dev, VIDIOCGMBUF, &vconf->vbuf) < 0 )
       v_error(vconf, LOG_CRIT, "Could not initialize mmap-vars");
     
     v_error(vconf, LOG_DEBUG, "Size allocated for framebuffer: %d", vconf->vbuf.size);
@@ -44,7 +44,7 @@ void init_mmap(struct vconfig *vconf) {
 
 void free_mmap(struct vconfig *vconf) {
   if (vconf->map) {
-    if (!munmap(vconf->map, vconf->vbuf.size)) {
+    if (!v4l1_munmap(vconf->map, vconf->vbuf.size)) {
       v_error(vconf, LOG_DEBUG, "mmap'ed area 'freed'");
       vconf->map=NULL;
     }
@@ -60,7 +60,7 @@ void free_mmap(struct vconfig *vconf) {
 
 void open_device(struct vconfig *vconf) {
   int err_count=0;
-  while ( ((vconf->dev=open(vconf->in, O_RDONLY)) < 0) && (!(err_count++>200)) )
+  while ( ((vconf->dev=v4l1_open(vconf->in, O_RDONLY)) < 0) && (!(err_count++>200)) )
     usleep(25000);
   if (err_count>200)
     v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
@@ -73,7 +73,7 @@ void open_device(struct vconfig *vconf) {
 
 void close_device(struct vconfig *vconf) {
   if(vconf->dev) {
-    if ( (vconf->dev=close(vconf->dev)) )
+    if ( (vconf->dev=v4l1_close(vconf->dev)) )
       v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in);
     else
       v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
@@ -95,7 +95,7 @@ int set_picture_parms(struct vconfig *vconf) {
 	  vconf->hue, vconf->brightness, vconf->colour,
 	  vconf->contrast, vconf->whiteness);
   
-  if (ioctl(vconf->dev, VIDIOCGPICT, &(vconf->vpic)) == -1) {
+  if (v4l1_ioctl(vconf->dev, VIDIOCGPICT, &(vconf->vpic)) == -1) {
     perror ("PICTURE");
     return (-1);
   }
@@ -111,7 +111,7 @@ int set_picture_parms(struct vconfig *vconf) {
   if (vconf->whiteness > -1) 
     vconf->vpic.whiteness = vconf->whiteness;
   
-  if (ioctl(vconf->dev, VIDIOCSPICT, &(vconf->vpic)) == -1) {
+  if (v4l1_ioctl(vconf->dev, VIDIOCSPICT, &(vconf->vpic)) == -1) {
     perror ("PICTURE");
     return (-1);
   }

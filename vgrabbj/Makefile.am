@@ -19,6 +19,8 @@
 
 bin_PROGRAMS = vgrabbj
 vgrabbj_SOURCES = vgrabbj.c vgrabbj.h v_config.c v_config.h font.c ccvt_c.c ccvt.h v_ftp.c v_ftp.h v_writer.c v_writer.h v_utils.c v_utils.h v_stamp.c v_stamp.h v_plist.h v_options.h
+vgrabbj_CFLAGS = @LIBV4L1_CFLAGS@
+vgrabbj_LDADD = @LIBV4L1_LIBS@
 
 #sysconf_DATA = vgrabbj.conf.default
 EXTRA_DIST = vgrabbj.conf.default $(man_MANS)
