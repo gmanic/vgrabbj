@@ -64,7 +64,7 @@ static void usage (char *pname)
 	  " -p <format-str>   Definable timestamp format (see man strftime)\n"
 	  "                   (default: \"%s\")\n"
 	  "                   *MUST* be with \" and \" !\n"
-	  " -a <0|1|2|3|4|5>  Alignment of timestamp: 0=upper left, 1=upper right,\n"
+	  " -P <0|1|2|3|4|5>  Alignment of timestamp: 0=upper left, 1=upper right,\n"
 	  "                   2=lower left, 3=lower right, 4=upper center, 5=lower center\n"
 	  "                   you still have to enable the timestamp (default: %d) \n"
 	  " -m <blendvalue>   Blending of timestamp on original image (%d-%d, default: %d)\n"
