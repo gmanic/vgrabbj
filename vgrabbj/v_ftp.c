@@ -90,6 +90,11 @@ void ftp_upload(struct vconfig *vconf){
       ftp_upload(vconf);
       break;
     case STATE_RENAME:
+      if(FtpDelete(vconf->ftp.remoteImageName, conn)){
+	  v_error(vconf, LOG_INFO, "ftp state 5: delete previous image completed");
+      } else {
+	  v_error(vconf, LOG_WARNING, "ftp state 5: delete previous image failed");
+      }
       if(FtpRename("vgrabbj.tmp", vconf->ftp.remoteImageName, conn)){
         vconf->ftp.state = STATE_FINISH;
         v_error(vconf, LOG_INFO, "ftp state 5: rename image successfull");
