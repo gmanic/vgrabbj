@@ -142,6 +142,9 @@ FILE *open_outfile(char *filename) {
 
 void write_image(struct vconfig *vconf) {
   FILE *x;
+  char *commands;
+  char *cmd_file;
+  int err;
 
   //  v_error(vconf, LOG_DEBUG, "vconf->out = %s", vconf->out);
 
@@ -165,6 +168,34 @@ void write_image(struct vconfig *vconf) {
 	break;
       }
     fclose(x);
+
+    if (vconf->commands) {
+	  cmd_file=strstr(vconf->commands,"%s");
+	  if (cmd_file != NULL) {
+		  char * out = vconf->usetmpout ? vconf->tmpout : vconf->out;
+		  commands = malloc(strlen(vconf->commands)+strlen(out)+1);
+		  if (commands) {
+			  strcpy(commands,vconf->commands);
+			  strcpy(strstr(commands,"%s"),out);
+			  strcpy((char *)commands+strlen(commands),(char *)cmd_file+1);
+			  sprintf(commands,vconf->commands,out);
+			  v_error(vconf, LOG_DEBUG, "User command expanded to (%s)", commands);
+		  }
+		  else {
+		v_error(vconf, LOG_ERR, "Memory error: User command (%s) not run", vconf->commands);
+		  }
+	  }
+	  else {
+		commands = vconf->commands;
+	  }
+	  err = system(commands);
+          v_error(vconf, err ? LOG_WARNING : LOG_DEBUG, "User command (%s) exit with error %i", commands, err);
+	  if (commands && (commands != vconf->commands)) {
+		  free(commands);
+		  commands = NULL;
+	  }
+    }
+
     if ( vconf->usetmpout ) {
       /* Handle rename to final output */
       v_error(vconf, LOG_DEBUG, "Temporary outputfile %s closed", vconf->tmpout);

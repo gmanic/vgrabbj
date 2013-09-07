@@ -219,6 +219,7 @@ struct vconfig {
   int whiteness;
   char *map;
   boolean nofork;
+  char *commands;
 #ifdef LIBFTP
   struct FTP {
     boolean enable;

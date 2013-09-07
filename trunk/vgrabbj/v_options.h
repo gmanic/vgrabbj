@@ -87,5 +87,6 @@ struct v_options l_opt[] = {
   {"NoUseMmap",       "G", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {"SwapTB",          "U", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
   {NULL,              "X", none, NULL, opt_bool,    0,     1,   0, "Off", NULL},
+  {"Exec",            "Z", req,  NULL, opt_charptr, 0,     0, 255,    "", NULL},
   {NULL, NULL, none, NULL, 0, 0, 0, 0, NULL, NULL}
 };

@@ -173,6 +173,12 @@ parameter, \fBvgrabbj\fP defaults to use a temporary file called \fIfilename\fP.
 to write the image. This file is then renamed to \fIfilename\fP to shorten the
 time period corrupt data may be read from \fIfilename\fP.
 .TP
+\fB-Z\fP \fI'commands'\fP
+Ask vgrabbj to launch an external program. May be used to pass the picture
+through ImageMagick or others filters. The first '%s' instance in the command
+line will be replaced with filename. If \fBUseTmpOut\fP is \fIOn\fP,    
+\fI'commands'\fP will be run before the file is renamed.
+.TP
 \fB\-F\fP <\fIpalette\fP>
 Force the usage of the specified \fIpalette\fP. If \fIpalette\fP is not
 supported by either \fBvgrabbj\fP or the v4l-device, fallback to a palette supported
