@@ -92,6 +92,8 @@ static void usage (char *pname)
 	  " -U                Swap top/bottom like a mirror.\n"
 	  " -G                Do not use mmap'ed memory - needed only for certain cams\n"
 	  " -X                Do not fork in daemon mode, good for testing/debbuging\n"
+	  " -Z 'commands'     Execute <commands> after each image.\n"
+	  "                   First occurence of %%s will be replaced by filename.\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
@@ -115,7 +117,8 @@ void debug_vconf(struct vconfig *vconf) {
 	  "vconf->timestamp          :%s*\nvconf->font               :%s*\n"
 	  "vconf->ftp.remoteHost     :%s*\nvconf->ftp.remoteDir      :%s*\n"
 	  "vconf->ftp.remoteImageName:%s*\nvconf->ftp.username       :%s*\n"
-	  "vconf->ftp.password       :%s*\n", vconf->in, vconf->out, vconf->timestamp,
+	  "vconf->ftp.password       :%s*\nvconf->commands           :%s*\n",
+	  vconf->in, vconf->out, vconf->timestamp,
 	  vconf->font, vconf->ftp.remoteHost, vconf->ftp.remoteDir,
 	  vconf->ftp.remoteImageName, vconf->ftp.username, vconf->ftp.password);
 }
@@ -264,6 +267,8 @@ static struct vconfig *init_defaults(struct vconfig *vconf) {
   l_opt[idx++].var  = &vconf->swaptb;
   vconf->nofork     = FALSE;
   l_opt[idx++].var  = &vconf->nofork;
+  vconf->commands   = NULL;
+  l_opt[idx++].var  = (char *)vconf->commands;
   if ( idx != sizeof(l_opt)/sizeof(l_opt[0])-1 ) {
     v_error(vconf, LOG_CRIT, "Bug in l_opt - contact developer with full debug details.");
   }
@@ -468,8 +473,10 @@ void v_update_ptr(struct vconfig *vconf) {
   vconf->ftp.remoteDir=(char *)l_opt[i++].var;
   i++;
 #endif
-  i=i+9;
-  vconf->archive=(char *)l_opt[i].var;
+  i+=9;
+  vconf->archive=(char *)l_opt[i++].var;
+  i+=6;
+  vconf->commands=(char *)l_opt[i].var;
   v_error(vconf, LOG_DEBUG, "Updated pointers to new allocated memory.");
 }
 
