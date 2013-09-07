@@ -107,7 +107,7 @@ void ftp_upload(struct vconfig *vconf){
 	  FtpClose(conn);
 	vconf->ftp.state = STATE_CONNECT;
       }
-      v_error(vconf, LOG_INFO, "ftp state 6: upload compleet");
+      v_error(vconf, LOG_INFO, "ftp state 6: upload complete");
       break;
     default:
       /* this should never happen */
