@@ -284,20 +284,23 @@ static void check_files(struct vconfig *vconf) {
   int dev;
   FILE *x;
   if ( (dev=v4l1_open(vconf->in, O_RDONLY)) < 0) {
-    v_error(vconf, LOG_CRIT, "Can't open \"%s\" as VideoDevice!", vconf->in);
+    v_error(vconf, LOG_CRIT, "Can't open \"%s\" as VideoDevice!: %s",
+		vconf->in, strerror(errno));
   } else {
     v4l1_close(dev);
   }
 
   if ( !(x=fopen(vconf->out, "w+"))) {
-    v_error(vconf, LOG_CRIT, "Can't open \"%s\" as OutputFile", vconf->out);
+    v_error(vconf, LOG_CRIT, "Can't open \"%s\" as OutputFile: %s",
+		vconf->out, strerror(errno));
   } else {
     fclose(x);
   }
 #ifdef LIBTTF
   if (vconf->use_ts) {
     if (!(x=fopen(vconf->font, "r"))) {
-      v_error(vconf, LOG_CRIT, "Can't open \"%s\" as FontFile!", vconf->font);
+      v_error(vconf, LOG_CRIT, "Can't open \"%s\" as FontFile!: %s",
+		  vconf->font, strerror(errno));
     } else {
       fclose(x);
     }
@@ -558,7 +561,8 @@ struct vconfig *parse_config(struct vconfig *vconf){
   /* Check for config file */
 
   if (! (fd = fopen(vconf->conf_file, "r") ) ) {
-    v_error(vconf, LOG_WARNING, "Could not open configfile %s, ignoring", vconf->conf_file);
+    v_error(vconf, LOG_WARNING, "Could not open configfile %s, ignoring: %s",
+		vconf->conf_file, strerror(errno));
     return vconf;
   }
 
