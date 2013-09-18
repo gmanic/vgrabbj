@@ -75,7 +75,7 @@ void open_device(struct vconfig *vconf) {
 void close_device(struct vconfig *vconf) {
   if(vconf->dev) {
     if ( (vconf->dev=v4l1_close(vconf->dev)) )
-      v_error(vconf, LOG_ERR, "Error while closing %s", vconf->in);
+      v_error(vconf, LOG_ERR, "Error while closing %s: %s", vconf->in, strerror(errno));
     else
       v_error(vconf, LOG_DEBUG, "Device %s closed", vconf->in);
   }
