@@ -64,7 +64,7 @@ void open_device(struct vconfig *vconf) {
   while ( ((vconf->dev=v4l1_open(vconf->in, O_RDONLY)) < 0) && (!(err_count++>200)) )
     usleep(25000);
   if (err_count>200)
-    v_error(vconf, LOG_ERR, "Problem opening input-device %s", vconf->in);
+    v_error(vconf, LOG_ERR, "Problem opening input-device %s: %s", vconf->in, strerror(errno));
   else
     v_error(vconf, LOG_DEBUG, "Device %s successfully opened", vconf->in);
 }
