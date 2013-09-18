@@ -73,7 +73,7 @@ void open_device(struct vconfig *vconf) {
 /* Closing Input Device */
 
 void close_device(struct vconfig *vconf) {
-  if(vconf->dev) {
+  if(vconf->dev >= 0) {
     if ( (vconf->dev=v4l1_close(vconf->dev)) )
       v_error(vconf, LOG_ERR, "Error while closing %s: %s", vconf->in, strerror(errno));
     else
