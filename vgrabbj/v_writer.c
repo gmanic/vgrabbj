@@ -138,6 +138,29 @@ FILE *open_outfile(char *filename) {
   return x;
 }
 
+static int copy_file(char *source_name, char *dest_name) {
+    FILE *source, *dest;
+    char buffer[1024];
+    size_t nitems;
+
+    dest = open_outfile(dest_name);
+    source = fopen (source_name, "r");
+    if (NULL == source || NULL == dest){
+	return -1;
+    }
+    while (!feof(source))
+    {
+	nitems = fread(buffer, 1, sizeof buffer, source);
+	if (fwrite(buffer, 1, nitems, dest) != nitems)
+	    return -1;
+    }
+    /* And now, close the files */
+    fclose (source);
+    fclose (dest);
+
+    return 0;
+}
+
 /* Function to write an image, called by main */
 
 void write_image(struct vconfig *vconf) {
@@ -215,7 +238,7 @@ void write_image(struct vconfig *vconf) {
       /* vconf->archive is a strftime format string, make the final path
        * to archive_path */
       char *ts;
-      if (-1 == link(vconf->out, (ts=timestring(vconf->archive))) )
+      if (-1 == copy_file(vconf->out, (ts=timestring(vconf->archive))) )
 	v_error(vconf, LOG_ERR, "Couldn't link to archive file %s", ts);
       else
 	v_error(vconf, LOG_DEBUG, "Archiving %s to %s", vconf->out, ts);
