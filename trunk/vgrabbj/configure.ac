@@ -44,16 +44,6 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AM_PROG_CC_C_O
 
-dnl Use -Wall if we have gcc.
-changequote(,)dnl
-if test "x$GCC" = "xyes"; then
-   case " $CFLAGS " in
-   *[\ \ ]-Wall[\ \ ]*) ;;
-   *) CFLAGS="$CFLAGS -Wall" ;;
-   esac
-fi
-changequote([,])dnl
-
 dnl Checks for libraries and appropriate headers.
 
 AC_CHECK_LIB(jpeg, jpeg_set_defaults,,
