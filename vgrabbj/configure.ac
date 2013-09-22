@@ -22,7 +22,7 @@ dnl USA
 
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT([vgrabbj], [0.9.7])
-AC_CONFIG_SRCDIR([vgrabbj.c])
+AC_CONFIG_SRCDIR([src/vgrabbj.c])
 
 # For automake
 AC_CONFIG_HEADERS([config.h])
@@ -100,5 +100,7 @@ else
   AC_DEFINE_UNQUOTED(SYSCONF_DIR,"${sysconfdir}/vgrabbj.conf")
 fi
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	src/Makefile])
 AC_OUTPUT
