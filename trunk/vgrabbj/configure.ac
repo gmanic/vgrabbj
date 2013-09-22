@@ -80,10 +80,6 @@ else
   echo "*** ftp disabled"
 fi
 
-AC_CHECK_LIB(z, crc32,,
-	AC_MSG_ERROR([*** libz library not found! Please install the appropriate library ***]))
-
-
 dnl Checks for other header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/ioctl.h syslog.h unistd.h linux/videodev.h)
