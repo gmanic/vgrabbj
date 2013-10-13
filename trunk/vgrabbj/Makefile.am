@@ -21,7 +21,8 @@ SUBDIRS = src
 
 #sysconf_DATA = vgrabbj.conf.default
 EXTRA_DIST = vgrabbj.conf.default $(man_MANS) \
-	examples/webcam.sh examples/vgrabbj.conf.dexxa
+	examples/webcam.sh examples/vgrabbj.conf.dexxa \
+	ChangeLog.svn
 
 man_MANS = vgrabbj.1 vgrabbj.conf.5
 
@@ -35,3 +36,9 @@ install-data-local: #install-sysconfDATA
 	        echo "$(INSTALL_DATA) $(srcdir)/vgrabbj.conf.default $(DESTDIR)$(sysconfdir)/vgrabbj.conf" ;\
 	        $(INSTALL_DATA) $(srcdir)/vgrabbj.conf.default $(DESTDIR)$(sysconfdir)/vgrabbj.conf; \
 	fi
+
+ChangeLog.svn:
+	-svn2cl --group-by-day --stdout --include-rev --reparagraph | perl -pe \
+	's/  ludov/  Ludovic Rousseau/; \
+	s/  gmaniac/  Jens Gecius/;' \
+	> $@
