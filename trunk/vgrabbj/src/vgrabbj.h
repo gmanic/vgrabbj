@@ -41,7 +41,6 @@
 #include <limits.h>
 #include <time.h>
 #include <pwd.h>
-#include <linux/types.h>
 #include <jpeglib.h>
 #include <png.h>
 #include <ccvt.h>
