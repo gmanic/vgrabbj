@@ -37,6 +37,9 @@ install-data-local: #install-sysconfDATA
 	        $(INSTALL_DATA) $(srcdir)/vgrabbj.conf.default $(DESTDIR)$(sysconfdir)/vgrabbj.conf; \
 	fi
 
+uninstall-local:
+	-rm $(DESTDIR)$(sysconfdir)/vgrabbj.conf
+
 ChangeLog.svn:
 	-svn2cl --group-by-day --stdout --include-rev --reparagraph | perl -pe \
 	's/  ludov/  Ludovic Rousseau/; \
