@@ -1,3 +1,9 @@
+2013-10-13  Ludovic Rousseau <ludovic.rousseau@free.fr>
+
+	* release 0.9.8
+	* add -Z 'commands' option
+	* add more error logs
+
 2013-09-04  Ludovic Rousseau <ludovic.rousseau@free.fr>
 
 	* release 0.9.7
