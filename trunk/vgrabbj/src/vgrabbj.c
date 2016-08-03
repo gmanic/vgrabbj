@@ -180,7 +180,7 @@ void show_capabilities(char *in, char *pname)
 	  win.width, win.height, win.chromakey);
   dev=v4l1_close(dev);
   if (dev)
-    fprintf(stderr, "Error occured while closing %s\n", in);
+    fprintf(stderr, "Error occurred while closing %s\n", in);
   exit(0);
 }
 
