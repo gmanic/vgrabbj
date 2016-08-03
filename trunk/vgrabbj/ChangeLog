@@ -1,3 +1,8 @@
+2015-8-3  Ludovic Rousseau <ludovic.rousseau@free.fr>
+
+	* release 0.9.9
+	* fix some typos reported by the Debian tool lintian
+
 2013-10-13  Ludovic Rousseau <ludovic.rousseau@free.fr>
 
 	* release 0.9.8
