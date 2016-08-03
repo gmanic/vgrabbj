@@ -131,7 +131,7 @@ int img_size(struct vconfig *vconf, int palette) {
 char *switch_color(struct vconfig *vconf) {
   char a;
   unsigned long int y;
-  v_error(vconf, LOG_DEBUG, "width: %d, heigth: %d", vconf->win.width, vconf->win.height);
+  v_error(vconf, LOG_DEBUG, "width: %d, height: %d", vconf->win.width, vconf->win.height);
   for (y = 0; y < (vconf->win.width * vconf->win.height); y++) {
     memcpy(&a, vconf->o_buffer+(y*3),1);
     memcpy(vconf->o_buffer+(y*3), vconf->o_buffer+(y*3)+2, 1);
