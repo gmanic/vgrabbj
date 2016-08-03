@@ -93,7 +93,7 @@ static void usage (char *pname)
 	  " -G                Do not use mmap'ed memory - needed only for certain cams\n"
 	  " -X                Do not fork in daemon mode, good for testing/debbuging\n"
 	  " -Z 'commands'     Execute <commands> after each image.\n"
-	  "                   First occurence of %%s will be replaced by filename.\n"
+	  "                   First occurrence of %%s will be replaced by filename.\n"
 	  "\n"
 	  "Example: %s -l 5 -f /usr/local/image.jpg\n"
 	  "         Would write a single jpeg-image to image.jpg approx. every five seconds\n"
