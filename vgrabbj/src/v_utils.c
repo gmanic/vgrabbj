@@ -50,7 +50,7 @@ void free_mmap(struct vconfig *vconf) {
       vconf->map=NULL;
     }
     else
-      v_error(vconf, LOG_ERR, "Error %d occured while unmapping map", errno);
+      v_error(vconf, LOG_ERR, "Error %d occurred while unmapping map", errno);
   }
   else
     v_error(vconf, LOG_WARNING, "There was no map allocated to be freed...");
